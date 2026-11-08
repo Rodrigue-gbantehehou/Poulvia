@@ -104,6 +104,10 @@ export const eggsApi = {
       totalEggsToday: kpi.eggProductionToday.totalEggs,
       traysCountToday: kpi.eggProductionToday.traysCount,
       layingRate: kpi.eggProductionToday.layingRatePercent,
+      chart: kpi.eggProductionChart ?? [],
+      chartError: kpi.dashboardError,
+      chartStartDate: kpi.eggChartStartDate,
+      chartEndDate: kpi.eggChartEndDate,
     };
   },
 };

@@ -339,6 +339,10 @@ export interface DashboardKPI {
   hasFinanceAccess?: boolean;
   subscription?: DashboardSubscription;
   health?: DashboardHealthOverview;
+  eggProductionChart?: Array<{ date: string; goodEggs: number }>;
+  dashboardError?: string;
+  eggChartStartDate?: string;
+  eggChartEndDate?: string;
 }
 
 /**

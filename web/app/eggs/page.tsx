@@ -29,6 +29,7 @@ import { api } from "@/lib/api-client";
 import { EggProduction, EggSession, Flock } from "@/lib/types";
 import { formatNumber, formatPercent, calcEggTrays, formatDate } from "@/lib/utils";
 import { ModuleLockedState } from "@/components/ui/module-locked-state";
+import { EggProductionChart, EggChartPoint } from "@/components/dashboard/egg-production-chart";
 
 export default function EggsPage() {
   const { activeFarm, hasPermission, hasModule } = useAuth();
@@ -41,7 +42,11 @@ export default function EggsPage() {
     totalEggsToday: number;
     traysCountToday: number;
     layingRate: number;
-  }>({ totalEggsToday: 0, traysCountToday: 0, layingRate: 0 });
+    chart: EggChartPoint[];
+    chartError?: string;
+    chartStartDate?: string;
+    chartEndDate?: string;
+  }>({ totalEggsToday: 0, traysCountToday: 0, layingRate: 0, chart: [] });
   const [isLoading, setIsLoading] = useState(true);
 
   const filteredProductions = useMemo(() => {
@@ -414,6 +419,10 @@ export default function EggsPage() {
           accent={todayDamaged > 0 ? "rose" : "zinc"}
           icon={<Layers className="h-5 w-5" />}
         />
+      </div>
+
+      <div className="mt-5 sm:mt-7">
+        <EggProductionChart points={summary.chart} isLoading={isLoading} error={summary.chartError} startDate={summary.chartStartDate} endDate={summary.chartEndDate} title="Évolution de la production" />
       </div>
 
 

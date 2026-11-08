@@ -6,6 +6,7 @@ import '../../core/models/flock.dart';
 import '../../core/models/transaction.dart';
 import '../auth/auth_provider.dart';
 import '../../core/sync/offline_cache_service.dart';
+import '../../core/widgets/egg_trend_chart.dart';
 
 class DashboardKpiData {
   final int todayGoodEggs;
@@ -19,6 +20,10 @@ class DashboardKpiData {
   final String currency;
   final List<Flock> flocks;
   final List<Transaction> recentTransactions;
+  final List<EggTrendPoint> eggTrend;
+  final DateTime? chartCachedAt;
+  final String? chartStartDate;
+  final String? chartEndDate;
 
   const DashboardKpiData({
     this.todayGoodEggs = 0,
@@ -32,13 +37,22 @@ class DashboardKpiData {
     this.currency = "FCFA",
     this.flocks = const [],
     this.recentTransactions = const [],
+    this.eggTrend = const [],
+    this.chartCachedAt,
+    this.chartStartDate,
+    this.chartEndDate,
   });
 
-  factory DashboardKpiData.fromJson(Map<String, dynamic> json, List<Flock> flocks) {
+  factory DashboardKpiData.fromJson(Map<String, dynamic> json, List<Flock> flocks, {DateTime? cachedAt}) {
     final eggToday = json['eggProduction']?['today'] as Map<String, dynamic>? ?? {};
     final flocksSummary = json['flocks'] as Map<String, dynamic>? ?? {};
     final finMonth = json['finances']?['currentMonth'] as Map<String, dynamic>? ?? {};
     final rawRecentTx = json['finances']?['recentTransactions'] as List<dynamic>? ?? [];
+    final rawChart = json['eggProduction']?['chart'] as List<dynamic>? ?? [];
+    final eggTrend = rawChart.map((item) {
+      final point = item as Map<String, dynamic>;
+      return EggTrendPoint(date: point['date'] as String? ?? '', goodEggs: (point['goodEggs'] as num?)?.toInt() ?? 0);
+    }).toList();
 
     final transactions = rawRecentTx
         .map((t) => Transaction.fromJson(t as Map<String, dynamic>))
@@ -56,6 +70,10 @@ class DashboardKpiData {
       currency: "FCFA",
       flocks: flocks,
       recentTransactions: transactions,
+      eggTrend: eggTrend,
+      chartCachedAt: cachedAt,
+      chartStartDate: json['period']?['startDate'] as String?,
+      chartEndDate: json['period']?['endDate'] as String?,
     );
   }
 }
@@ -117,8 +135,9 @@ class DashboardNotifier extends StateNotifier<DashboardState> {
         final flocks = (cachedFlocks ?? [])
             .map((item) => Flock.fromJson(item as Map<String, dynamic>))
             .toList();
+        final cachedAt = await OfflineCacheService().getCacheAge(farmId: activeFarm.id, category: 'dashboard');
         state = state.copyWith(
-          kpi: DashboardKpiData.fromJson(cachedDash, flocks),
+          kpi: DashboardKpiData.fromJson(cachedDash, flocks, cachedAt: cachedAt),
         );
       }
     }
@@ -154,9 +173,12 @@ class DashboardNotifier extends StateNotifier<DashboardState> {
         userId: currentUserId,
       );
 
+      final cachedAt = await OfflineCacheService().getCacheAge(farmId: activeFarm.id, category: 'dashboard');
+
       final kpi = DashboardKpiData.fromJson(
         dashData,
         flocks,
+        cachedAt: cachedAt,
       );
 
       state = state.copyWith(

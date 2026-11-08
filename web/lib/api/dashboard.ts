@@ -63,6 +63,15 @@ export const dashboardApi = {
         hasFinanceAccess: raw?.finances?.hasAccess ?? true,
         subscription: raw?.subscription ?? undefined,
         health: raw?.health ?? undefined,
+        eggProductionChart: Array.isArray(raw?.eggProduction?.chart)
+          ? raw.eggProduction.chart.flatMap((point: unknown) => {
+              if (typeof point !== "object" || point === null) return [];
+              const item = point as Record<string, unknown>;
+              return [{ date: String(item.date ?? ""), goodEggs: Number(item.goodEggs ?? 0) }];
+            })
+          : [],
+        eggChartStartDate: raw?.period?.startDate,
+        eggChartEndDate: raw?.period?.endDate,
       };
     } catch (err) {
       console.warn("Erreur chargement KPIs dashboard:", err);
@@ -82,6 +91,7 @@ export const dashboardApi = {
           expenseFcfa: 0,
           netCashflowFcfa: 0,
         },
+        dashboardError: "Impossible de charger les données du tableau de bord.",
       };
     }
   },

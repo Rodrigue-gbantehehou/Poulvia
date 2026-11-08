@@ -12,6 +12,7 @@ import '../eggs/record_egg_modal.dart';
 import '../inventory/record_feeding_modal.dart';
 import '../flocks/record_movement_modal.dart';
 import '../../core/design_system/app_shimmer.dart';
+import '../../core/widgets/egg_trend_chart.dart';
 import 'dashboard_provider.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -252,6 +253,10 @@ class DashboardScreen extends ConsumerWidget {
                             ),
                         ],
                       ),
+                      if (canViewEggs) ...[
+                        const SizedBox(height: 14),
+                        EggTrendChart(points: kpi.eggTrend, cachedAt: kpi.chartCachedAt, isLoading: dashState.isLoading, error: dashState.error, startDate: kpi.chartStartDate, endDate: kpi.chartEndDate),
+                      ],
                       const SizedBox(height: 20),
                     ],
 

@@ -32,6 +32,7 @@ import {
   PlanDetailsModal,
 } from "@/components/dashboard";
 import { StatCard } from "@/components/ui/stat-card";
+import { EggProductionChart } from "@/components/dashboard/egg-production-chart";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/context/auth-context";
 import { api } from "@/lib/api-client";
@@ -397,6 +398,10 @@ export default function DashboardPage() {
               />
             )}
           </div>
+
+          {canViewEgg && kpi?.hasEggAccess !== false && (
+            <EggProductionChart points={kpi?.eggProductionChart ?? []} isLoading={isLoading} error={kpi?.dashboardError} startDate={kpi?.eggChartStartDate} endDate={kpi?.eggChartEndDate} title="Tendance de ponte" />
+          )}
 
           {/* 3. Alertes (si stock bas ou vaccin en retard) */}
           {((canViewInventory && computedLowStock > 0) || (canViewHealth && overdueHealthCount > 0)) && (
