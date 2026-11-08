@@ -48,6 +48,7 @@ export default function EggsPage() {
     chartEndDate?: string;
   }>({ totalEggsToday: 0, traysCountToday: 0, layingRate: 0, chart: [] });
   const [isLoading, setIsLoading] = useState(true);
+  const showLoading = isLoading && Boolean(activeFarm?.id && hasModule("eggs"));
 
   const filteredProductions = useMemo(() => {
     if (sessionFilter === "ALL") return productions;
@@ -58,11 +59,7 @@ export default function EggsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [eggError, setEggError] = useState<string | null>(null);
   const [selectedFlockId, setSelectedFlockId] = useState("");
-  const [collectionDate, setCollectionDate] = useState("");
-
-  useEffect(() => {
-    setCollectionDate(new Date().toISOString().split("T")[0]);
-  }, []);
+  const [collectionDate, setCollectionDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [session, setSession] = useState<EggSession>("MORNING");
   const [goodEggs, setGoodEggs] = useState<number | string>(0);
   const [brokenEggs, setBrokenEggs] = useState<number | string>(0);
@@ -134,13 +131,10 @@ export default function EggsPage() {
   useEffect(() => {
     if (activeFarm?.id && hasModule("eggs")) {
       loadData();
-    } else {
-      setIsLoading(false);
     }
   }, [activeFarm?.id]);
 
   async function loadData() {
-    setIsLoading(true);
     try {
       const [prodsData, flocksData, summaryData] = await Promise.all([
         api.eggs.list({ farmId: activeFarm?.id }),
@@ -422,7 +416,7 @@ export default function EggsPage() {
       </div>
 
       <div className="mt-5 sm:mt-7">
-        <EggProductionChart points={summary.chart} isLoading={isLoading} error={summary.chartError} startDate={summary.chartStartDate} endDate={summary.chartEndDate} title="Évolution de la production" />
+        <EggProductionChart points={summary.chart} isLoading={showLoading} error={summary.chartError} startDate={summary.chartStartDate} endDate={summary.chartEndDate} title="Évolution de la production" />
       </div>
 
 
@@ -439,7 +433,7 @@ export default function EggsPage() {
           searchAccessor={(p) => `${p.flockName || ""} ${p.session} ${p.notes || ""}`}
           pageSize={15}
           initialSort={{ key: "date", direction: "desc" }}
-          isLoading={isLoading}
+          isLoading={showLoading}
           secondaryFilter={
             <div className="flex items-center gap-1.5 shrink-0">
               {[
@@ -483,6 +477,11 @@ export default function EggsPage() {
                 label: "Soir",
                 icon: Moon,
                 color: "text-indigo-500 bg-indigo-500/10 border-indigo-500/30",
+              },
+              ALL_DAY: {
+                label: "Toute la journée",
+                icon: Sun,
+                color: "text-primary bg-primary/10 border-primary/30",
               },
             }[p.session] || {
               label: p.session,

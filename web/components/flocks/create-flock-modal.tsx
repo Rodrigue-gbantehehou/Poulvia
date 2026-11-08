@@ -1,13 +1,20 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { Plus, Bird, Warehouse, AlertCircle } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { api } from "@/lib/api-client";
+import { Building } from "@/lib/types";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
 import { FlockType } from "@/lib/types";
 import { CreateBuildingModal } from "@/components/farms/create-building-modal";
+
+function getDefaultBreed(type: FlockType): string {
+  if (type === "BROILER") return "Cobb 500";
+  if (type === "MIXED") return "Goliath / Locale";
+  return "Lohmann Brown";
+}
 
 interface CreateFlockModalProps {
   isOpen: boolean;
@@ -22,52 +29,36 @@ export function CreateFlockModal({
 }: CreateFlockModalProps) {
   const { activeFarm } = useAuth();
   const { toast } = useToast();
+  const initialFlockType: FlockType = activeFarm?.productionType === "BROILER" ? "BROILER" : "LAYER";
 
   const [flockName, setFlockName] = useState("");
-  const [flockType, setFlockType] = useState<FlockType>("LAYER");
-  const [breed, setBreed] = useState("Lohmann Brown");
+  const [flockType, setFlockType] = useState<FlockType>(initialFlockType);
+  const [breed, setBreed] = useState(getDefaultBreed(initialFlockType));
   const [initialQuantity, setInitialQuantity] = useState<number | string>(500);
-  const [startDate, setStartDate] = useState("");
+  const [startDate, setStartDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [notes, setNotes] = useState("");
   const [selectedBuildingId, setSelectedBuildingId] = useState("");
 
-  const [buildings, setBuildings] = useState<any[]>([]);
+  const [buildings, setBuildings] = useState<Building[]>([]);
   const [buildingModalOpen, setBuildingModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const getInitialFlockType = useCallback((productionType?: string): FlockType => {
-    if (productionType === "BROILER") return "BROILER";
-    return "LAYER";
-  }, []);
-
-  const getDefaultBreed = useCallback((type: FlockType): string => {
-    if (type === "BROILER") return "Cobb 500";
-    if (type === "MIXED") return "Goliath / Locale";
-    return "Lohmann Brown";
-  }, []);
-
-  // Initialisation à l'ouverture
   useEffect(() => {
-    if (isOpen) {
-      setError(null);
-      setStartDate(new Date().toISOString().split("T")[0]);
-      const defaultType = getInitialFlockType(activeFarm?.productionType);
-      setFlockType(defaultType);
-      setBreed(getDefaultBreed(defaultType));
-      setFlockName("");
-      setInitialQuantity(500);
-      setNotes("");
-      setSelectedBuildingId("");
-
-      if (activeFarm?.id) {
-        api.farms
-          .listBuildings(activeFarm.id)
-          .then((b) => setBuildings(b || []))
-          .catch(() => setBuildings([]));
-      }
-    }
-  }, [isOpen, activeFarm?.id, activeFarm?.productionType, getInitialFlockType, getDefaultBreed]);
+    if (!isOpen || !activeFarm?.id) return;
+    let cancelled = false;
+    api.farms
+      .listBuildings(activeFarm.id)
+      .then((items) => {
+        if (!cancelled) setBuildings(items || []);
+      })
+      .catch(() => {
+        if (!cancelled) setBuildings([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, activeFarm?.id]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -95,8 +86,8 @@ export function CreateFlockModal({
       toast.success("Lot créé");
       onSuccess?.();
       onClose();
-    } catch (err: any) {
-      setError(err?.message || "Erreur lors de la création du lot.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erreur lors de la création du lot.");
     } finally {
       setSubmitting(false);
     }

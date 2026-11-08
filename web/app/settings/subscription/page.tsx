@@ -231,6 +231,7 @@ export default function SubscriptionPage() {
 
   const [publicPlans, setPublicPlans] = useState<PublicPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const showLoading = isLoading && isOwner;
   const [error, setError] = useState<string | null>(null);
   const [billingCycle, setBillingCycle] = useState<"MONTHLY" | "ANNUALLY">("MONTHLY");
 
@@ -243,16 +244,13 @@ export default function SubscriptionPage() {
   useEffect(() => {
     if (isOwner) {
       fetchPlans();
-    } else {
-      setIsLoading(false);
     }
   }, [isOwner]);
 
   async function fetchPlans() {
     try {
-      setIsLoading(true);
-      setError(null);
       const result = await api.subscriptions.getPlans();
+      setError(null);
       setPublicPlans(result.publicPlans);
     } catch (err: unknown) {
       setError((err as Error).message || "Impossible de charger les offres.");
@@ -401,7 +399,7 @@ export default function SubscriptionPage() {
         </div>
 
         {/* Grille du catalogue */}
-        {isLoading ? (
+        {showLoading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>

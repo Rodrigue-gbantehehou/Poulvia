@@ -1,6 +1,51 @@
 import { apiRequest } from "./client";
-import { Transaction } from "../types";
+import { PaymentMethod, PaymentStatus, Transaction, TransactionType } from "../types";
 import { localDateString } from "../utils";
+
+interface TransactionResponse {
+  id: string;
+  farmId: string;
+  flock?: { id: string; name?: string } | null;
+  contact?: Transaction["contact"];
+  type: TransactionType;
+  category: string;
+  amount?: number;
+  amountFcfa?: number;
+  paymentStatus?: PaymentStatus;
+  paidAmount?: number;
+  paidAmountFcfa?: number;
+  remainingAmount?: number;
+  remainingAmountFcfa?: number;
+  dueDate?: string | null;
+  isOverdue?: boolean;
+  paymentMethod: PaymentMethod;
+  reference?: string | null;
+  transactionDate?: string;
+  date?: string;
+  description?: string | null;
+  notes?: string | null;
+  createdAt: string;
+}
+
+interface CreateTransactionInput {
+  farmId: string;
+  type: TransactionType;
+  amountFcfa: number;
+  amount?: number;
+  category: string;
+  customCategory?: string;
+  paymentMethod: PaymentMethod;
+  reference?: string;
+  notes?: string;
+  contactId?: string;
+  flockId?: string;
+  date?: string;
+  transactionDate?: string;
+  paymentStatus?: PaymentStatus;
+  paidAmount?: number;
+  dueDate?: string;
+  description?: string;
+}
 
 export const financeApi = {
   listTransactions: async (params?: {
@@ -14,9 +59,9 @@ export const financeApi = {
     if (params?.type && params.type !== "ALL") q.append("type", params.type);
     if (params?.category) q.append("category", params.category);
     if (params?.contactId) q.append("contactId", params.contactId);
-    const res = await apiRequest<any>(`/farms/${params.farmId}/transactions?${q.toString()}`);
-    const rawList = Array.isArray(res) ? res : res?.data || [];
-    return rawList.map((t: any) => ({
+    const res = await apiRequest<TransactionResponse[] | { data?: TransactionResponse[] }>(`/farms/${params.farmId}/transactions?${q.toString()}`);
+    const rawList = Array.isArray(res) ? res : res.data || [];
+    return rawList.filter((t) => Boolean(t.transactionDate || t.date)).map((t) => ({
       id: t.id,
       farmId: t.farmId,
       flockId: t.flock?.id,
@@ -35,13 +80,13 @@ export const financeApi = {
       isOverdue: !!t.isOverdue,
       paymentMethod: t.paymentMethod,
       reference: t.reference,
-      date: t.transactionDate || t.date,
+      date: t.transactionDate || t.date!,
       notes: t.description || t.notes,
       createdAt: t.createdAt,
     }));
   },
 
-  createTransaction: async (data: any) => {
+  createTransaction: async (data: CreateTransactionInput) => {
     const categoryMap: Record<string, string> = {
       "Vente Oeufs": "EGG_SALE",
       "Vente Poulets Vifs": "MEAT_POULTRY_SALE",

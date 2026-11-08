@@ -1,5 +1,30 @@
 import { apiRequest } from "./client";
-import { DashboardKPI } from "../types";
+import { DashboardHealthOverview, DashboardKPI, DashboardSubscription } from "../types";
+
+type MetricValue = number | string | null;
+
+interface DashboardApiResponse {
+  flocks?: { totalBirds?: MetricValue; activeFlocksCount?: MetricValue; averageMortalityRate?: MetricValue };
+  activeFlocks?: { totalBirds?: MetricValue; count?: MetricValue };
+  mortality?: { ratePercent?: MetricValue };
+  eggProduction?: {
+    today?: { totalEggs?: MetricValue; traysCount?: MetricValue; looseEggsCount?: MetricValue; layingRate?: MetricValue };
+    hasAccess?: boolean;
+    chart?: unknown[];
+  };
+  todayEggs?: { total?: MetricValue };
+  layingRate?: { percent?: MetricValue };
+  inventory?: { lowStockCount?: MetricValue; hasAccess?: boolean };
+  inventoryAlerts?: { count?: MetricValue };
+  finances?: {
+    currentMonth?: { income?: MetricValue; expense?: MetricValue; netBalance?: MetricValue };
+    hasAccess?: boolean;
+  };
+  financials?: { incomeFcfa?: MetricValue; expenseFcfa?: MetricValue };
+  subscription?: DashboardSubscription;
+  health?: DashboardHealthOverview;
+  period?: { startDate?: string; endDate?: string };
+}
 
 export const dashboardApi = {
   getKpi: async (farmId?: string): Promise<DashboardKPI> => {
@@ -23,7 +48,7 @@ export const dashboardApi = {
       };
     }
     try {
-      const raw = await apiRequest<any>(`/farms/${farmId}/dashboard`);
+      const raw = await apiRequest<DashboardApiResponse>(`/farms/${farmId}/dashboard`);
       const liveBirds = Number(raw?.flocks?.totalBirds ?? raw?.activeFlocks?.totalBirds ?? 0);
       const activeCount = Number(raw?.flocks?.activeFlocksCount ?? raw?.activeFlocks?.count ?? 0);
       const mortalityRate = Number(raw?.flocks?.averageMortalityRate ?? raw?.mortality?.ratePercent ?? 0);

@@ -53,47 +53,28 @@ export default function ManagementPage() {
       if (!activeFarm?.id) return;
       try {
         setIsLoading(true);
-        // Chargement parallèle non bloquant des indicateurs clés
-        const promises: Promise<any>[] = [];
-
-        if (canViewFinance) {
-          promises.push(
-            api.finances.getSummary().catch(() => null)
-          );
-        } else {
-          promises.push(Promise.resolve(null));
-        }
-
-        if (canViewInventory) {
-          promises.push(
-            api.inventory.getItems().catch(() => null)
-          );
-        } else {
-          promises.push(Promise.resolve(null));
-        }
-
-        if (canViewContacts) {
-          promises.push(
-            api.contacts.getAll().catch(() => null)
-          );
-        } else {
-          promises.push(Promise.resolve(null));
-        }
-
-        const [finSummary, invItems, contactsList] = await Promise.all(promises);
+        const [transactions, invItems, contactsList] = await Promise.all([
+          canViewFinance
+            ? api.finance.listTransactions({ farmId: activeFarm.id }).catch(() => [])
+            : Promise.resolve([]),
+          canViewInventory
+            ? api.inventory.listItems({ farmId: activeFarm.id }).catch(() => [])
+            : Promise.resolve([]),
+          canViewContacts
+            ? api.contacts.list({ farmId: activeFarm.id }).catch(() => [])
+            : Promise.resolve([]),
+        ]);
 
         setSummary({
-          cashBalance: finSummary?.data?.balance ?? finSummary?.balance ?? undefined,
-          stockCount: Array.isArray(invItems?.data)
-            ? invItems.data.length
-            : Array.isArray(invItems)
-            ? invItems.length
+          cashBalance: canViewFinance
+            ? transactions.reduce(
+                (balance, transaction) =>
+                  balance + (transaction.type === "INCOME" ? transaction.amountFcfa : -transaction.amountFcfa),
+                0,
+              )
             : undefined,
-          contactCount: Array.isArray(contactsList?.data)
-            ? contactsList.data.length
-            : Array.isArray(contactsList)
-            ? contactsList.length
-            : undefined,
+          stockCount: canViewInventory ? invItems.length : undefined,
+          contactCount: canViewContacts ? contactsList.length : undefined,
         });
       } catch {
         // Ignorer les erreurs d'indicateurs

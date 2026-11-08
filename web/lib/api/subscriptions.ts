@@ -59,18 +59,40 @@ export interface PlansResponse {
   privatePlans: PublicPlan[];
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isPublicPlan(value: unknown): value is PublicPlan {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.id === "string" &&
+    typeof value.sku === "string" &&
+    typeof value.name === "string" &&
+    typeof value.tier === "string" &&
+    typeof value.priceMonthly === "number" &&
+    typeof value.priceAnnually === "number" &&
+    typeof value.currency === "string" &&
+    Array.isArray(value.modules) &&
+    Array.isArray(value.quotas) === false &&
+    isRecord(value.quotas) &&
+    Array.isArray(value.features) &&
+    isRecord(value.flags)
+  );
+}
+
 export const subscriptionsApi = {
   /**
    * Catalogue complet des offres : publiques (catalogue) + privées (sur devis).
    */
   async getPlans(): Promise<PlansResponse> {
-    const raw = await apiRequest<any>("/subscriptions/plans");
+    const raw: unknown = await apiRequest<unknown>("/subscriptions/plans");
 
     // Cas 1 : payload objet { publicPlans: [...] }
-    if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    if (isRecord(raw)) {
       if (Array.isArray(raw.publicPlans)) {
         return {
-          publicPlans: (raw.publicPlans as PublicPlan[]).filter(
+          publicPlans: raw.publicPlans.filter(isPublicPlan).filter(
             (p) => p.isVisibilityPublic !== false
           ),
           privatePlans: [],
@@ -78,7 +100,7 @@ export const subscriptionsApi = {
       }
       // Cas 2 : payload non déballé { data: [...] }
       if (Array.isArray(raw.data)) {
-        const publicPlans = (raw.data as PublicPlan[]).filter(
+        const publicPlans = raw.data.filter(isPublicPlan).filter(
           (p) => p.isVisibilityPublic !== false
         );
         return { publicPlans, privatePlans: [] };
@@ -87,7 +109,7 @@ export const subscriptionsApi = {
 
     // Cas 3 : tableau direct de plans (si apiRequest a déballé body.data qui était un tableau)
     if (Array.isArray(raw)) {
-      const publicPlans = (raw as PublicPlan[]).filter(
+      const publicPlans = raw.filter(isPublicPlan).filter(
         (p) => p.isVisibilityPublic !== false
       );
       return { publicPlans, privatePlans: [] };

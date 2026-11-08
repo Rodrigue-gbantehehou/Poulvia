@@ -35,6 +35,7 @@ export default function MembersManagementPage() {
   const [members, setMembers] = useState<FarmMember[]>([]);
   const [roles, setRoles] = useState<FarmRole[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const showLoading = authLoading || (isLoading && Boolean(activeFarm?.id && hasModule("team")));
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Modal Ajout Collaborateur
@@ -61,14 +62,11 @@ export default function MembersManagementPage() {
   useEffect(() => {
     if (activeFarm?.id && hasModule("team")) {
       loadData();
-    } else if (!authLoading) {
-      setIsLoading(false);
     }
   }, [activeFarm?.id, authLoading]);
 
   async function loadData() {
     if (!activeFarm?.id) return;
-    setIsLoading(true);
     try {
       const [membersData, rolesData] = await Promise.all([
         api.members.list(activeFarm.id).catch(() => []),
@@ -79,11 +77,11 @@ export default function MembersManagementPage() {
       if (Array.isArray(rolesData) && rolesData.length > 0 && !newRoleId) {
         setNewRoleId(rolesData[0].id);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       setFeedbackMsg({
         type: "error",
-        text: err?.message || "Impossible de charger la liste des collaborateurs.",
+        text: err instanceof Error ? err.message : "Impossible de charger la liste des collaborateurs.",
       });
     } finally {
       setIsLoading(false);
@@ -116,8 +114,8 @@ export default function MembersManagementPage() {
       setNewPhone("");
       setNewPassword("");
       await loadData();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors de l'ajout du collaborateur.";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de l'ajout du collaborateur.";
       setCreateError(msg);
       toast.error(msg);
     } finally {
@@ -151,8 +149,8 @@ export default function MembersManagementPage() {
       toast.success(`Accès et rôle de ${selectedMember.fullName} mis à jour avec succès.`);
       setEditModalOpen(false);
       await loadData();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors de la mise à jour du collaborateur.";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de la mise à jour du collaborateur.";
       setEditError(msg);
       toast.error(msg);
     } finally {
@@ -179,8 +177,8 @@ export default function MembersManagementPage() {
       await api.members.delete(activeFarm.id, member.id);
       toast.success(`${member.fullName} a été retiré de l'équipe avec succès.`);
       await loadData();
-    } catch (err: any) {
-      toast.error(err?.message || "Erreur lors de la dissociation du collaborateur.");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Erreur lors de la dissociation du collaborateur.");
     }
   }
 
@@ -384,7 +382,7 @@ export default function MembersManagementPage() {
           searchAccessor={(m) => `${m.fullName} ${m.email} ${m.phone || ""} ${m.roleDefinition?.name || m.role}`}
           pageSize={10}
           initialSort={{ key: "createdAt", direction: "desc" }}
-          isLoading={isLoading}
+          isLoading={showLoading}
           renderMobileCard={(m) => {
             const isCurrent = currentUser?.id === m.userId;
             const roleName = m.roleDefinition?.name || m.role || "Membre";

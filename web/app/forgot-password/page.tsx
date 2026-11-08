@@ -59,8 +59,8 @@ export default function ForgotPasswordPage() {
         setCode(res.devCode); // Pre-fill for instant local testing
       }
       setStep(2);
-    } catch (err: any) {
-      setError(err?.message || "Impossible de traiter la demande pour le moment.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Impossible de traiter la demande pour le moment.");
     } finally {
       setIsLoading(false);
     }
@@ -92,8 +92,8 @@ export default function ForgotPasswordPage() {
       });
 
       setStep(3);
-    } catch (err: any) {
-      setError(err?.message || "Le code saisi est invalide ou a expiré.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Le code saisi est invalide ou a expiré.");
     } finally {
       setIsLoading(false);
     }

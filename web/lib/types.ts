@@ -52,10 +52,13 @@ export interface FarmSubscription {
 
 export interface Building {
   id: string;
-  farmId: string;
+  farmId?: string;
   name: string;
-  type: string;
-  capacityBirds: number;
+  type: "POULTRY_HOUSE" | "BROODER" | "STORAGE" | "OTHER";
+  capacityBirds?: number;
+  capacity?: number;
+  isActive?: boolean;
+  createdAt?: string;
   lengthM?: number | null;
   widthM?: number | null;
   notes?: string | null;
@@ -148,7 +151,7 @@ export interface FlockMovement {
 /**
  * Egg Production
  */
-export type EggSession = "MORNING" | "NOON" | "EVENING";
+export type EggSession = "MORNING" | "NOON" | "EVENING" | "ALL_DAY";
 
 export interface EggProduction {
   id: string;

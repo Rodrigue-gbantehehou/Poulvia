@@ -65,7 +65,8 @@ export default function DashboardPage() {
   const [financeModalOpen, setFinanceModalOpen] = useState(false);
   const [financeTxType, setFinanceTxType] = useState<"INCOME" | "EXPENSE">("INCOME");
   const [selectedFlockId, setSelectedFlockId] = useState("");
-  const [todayStr, setTodayStr] = useState("");
+  const [todayStr] = useState(() => localDateString());
+  const showDashboardLoading = isLoading && Boolean(activeFarm?.id);
 
   function openCreateEggModal() {
     setEditingEgg(null);
@@ -83,13 +84,8 @@ export default function DashboardPage() {
   }
 
   useEffect(() => {
-    const today = localDateString();
-    setTodayStr(today);
-
     if (activeFarm?.id) {
       loadDashboardData();
-    } else {
-      setIsLoading(false);
     }
   }, [activeFarm?.id]);
 
@@ -111,11 +107,13 @@ export default function DashboardPage() {
       const params = new URLSearchParams(window.location.search);
       const actionParam = params.get("action");
       if (actionParam) {
-        if (actionParam === "egg") openCreateEggModal();
-        else if (actionParam === "feed") handleOpenFeedingModal();
-        else if (actionParam === "movement") setMovementModalOpen(true);
-        else if (actionParam === "income") openFinanceModal("INCOME");
-        else if (actionParam === "expense") openFinanceModal("EXPENSE");
+        window.setTimeout(() => {
+          window.dispatchEvent(
+            new CustomEvent("open-dashboard-action", {
+              detail: { action: actionParam },
+            }),
+          );
+        }, 0);
 
         // Nettoyer l'URL
         window.history.replaceState({}, "", "/");
@@ -126,7 +124,6 @@ export default function DashboardPage() {
   }, [flocks]);
 
   async function loadDashboardData() {
-    setIsLoading(true);
     try {
       const [kpiData, flocksData, eggsData, txData, invData] = await Promise.all([
         api.dashboard.getKpi(activeFarm?.id).catch((err) => {
@@ -400,7 +397,7 @@ export default function DashboardPage() {
           </div>
 
           {canViewEgg && kpi?.hasEggAccess !== false && (
-            <EggProductionChart points={kpi?.eggProductionChart ?? []} isLoading={isLoading} error={kpi?.dashboardError} startDate={kpi?.eggChartStartDate} endDate={kpi?.eggChartEndDate} title="Tendance de ponte" />
+            <EggProductionChart points={kpi?.eggProductionChart ?? []} isLoading={showDashboardLoading} error={kpi?.dashboardError} startDate={kpi?.eggChartStartDate} endDate={kpi?.eggChartEndDate} title="Tendance de ponte" />
           )}
 
           {/* 3. Alertes (si stock bas ou vaccin en retard) */}
@@ -654,6 +651,7 @@ export default function DashboardPage() {
 
       {/* MODALES DASHBOARD FONCTIONNELLES */}
       <RecordEggModal
+        key={`${eggModalOpen}-${editingEgg?.id ?? "new"}-${selectedFlockId}`}
         isOpen={eggModalOpen}
         onClose={() => {
           setEggModalOpen(false);
@@ -667,6 +665,7 @@ export default function DashboardPage() {
       />
 
       <RecordMovementModal
+        key={`${movementModalOpen}-${selectedFlockId}`}
         isOpen={movementModalOpen}
         onClose={() => setMovementModalOpen(false)}
         onSuccess={loadDashboardData}
@@ -675,6 +674,7 @@ export default function DashboardPage() {
       />
 
       <RecordFeedingModal
+        key={`${feedingModalOpen}-${selectedFlockId}`}
         isOpen={feedingModalOpen}
         onClose={() => setFeedingModalOpen(false)}
         onSuccess={loadDashboardData}
@@ -685,6 +685,7 @@ export default function DashboardPage() {
       />
 
       <RecordTransactionModal
+        key={`${financeModalOpen}-${financeTxType}`}
         isOpen={financeModalOpen}
         onClose={() => setFinanceModalOpen(false)}
         onSuccess={loadDashboardData}
@@ -698,6 +699,7 @@ export default function DashboardPage() {
       />
 
       <CreateFlockModal
+        key={String(createFlockModalOpen)}
         isOpen={createFlockModalOpen}
         onClose={() => setCreateFlockModalOpen(false)}
         onSuccess={loadDashboardData}

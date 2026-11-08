@@ -36,6 +36,7 @@ export default function InventoryPage() {
   const [filterCategory, setFilterCategory] = useState<string>("ALL");
   const [movementTypeFilter, setMovementTypeFilter] = useState<string>("ALL");
   const [isLoading, setIsLoading] = useState(true);
+  const showLoading = isLoading && Boolean(activeFarm?.id && hasModule("inventory"));
 
   // Create Item Modal
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -77,14 +78,11 @@ export default function InventoryPage() {
   useEffect(() => {
     if (activeFarm?.id && hasModule("inventory")) {
       loadInventory();
-    } else {
-      setIsLoading(false);
     }
   }, [activeFarm?.id]);
 
   async function loadInventory() {
     if (!activeFarm?.id) return;
-    setIsLoading(true);
     try {
       const [itemsData, movementsData] = await Promise.all([
         api.inventory.listItems({ farmId: activeFarm.id }),
@@ -125,8 +123,8 @@ export default function InventoryPage() {
       setCustomCategory("");
       toast.success("Article créé avec succès !");
       await loadInventory();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors de la création de l'article";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de la création de l'article";
       setCreateError(msg);
       toast.error(msg);
     } finally {
@@ -157,8 +155,8 @@ export default function InventoryPage() {
           : "Sortie de stock enregistrée avec succès !"
       );
       await loadInventory();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors du mouvement de stock";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors du mouvement de stock";
       setMoveError(msg);
       toast.error(msg);
     } finally {
@@ -549,7 +547,7 @@ export default function InventoryPage() {
             searchAccessor={(item) => `${item.name} ${item.sku} ${item.category}`}
             pageSize={15}
             initialSort={{ key: "name", direction: "asc" }}
-            isLoading={isLoading}
+            isLoading={showLoading}
             secondaryFilter={
               <div className="flex items-center gap-1.5 shrink-0">
                 {[
@@ -676,7 +674,7 @@ export default function InventoryPage() {
             searchAccessor={(m) => `${m.itemName} ${m.reason || ""} ${m.flock?.name || ""} ${m.type}`}
             pageSize={20}
             initialSort={{ key: "date", direction: "desc" }}
-            isLoading={isLoading}
+            isLoading={showLoading}
             renderMobileCard={(m) => {
               const isInc = m.type === "INCOMING" || (m.type as string) === "IN";
               const isFeed = m.type === "FEEDING" || (m.type as string) === "OUT";

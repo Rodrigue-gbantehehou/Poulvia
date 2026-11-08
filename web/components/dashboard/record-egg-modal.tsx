@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { AlertTriangle, CheckCircle2, Bird } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/context/toast-context";
@@ -28,45 +28,17 @@ export function RecordEggModal({
   defaultFlockId,
 }: RecordEggModalProps) {
   const { toast } = useToast();
-
-  const [selectedFlockId, setSelectedFlockId] = useState(editingEgg?.flockId || defaultFlockId || (flocks[0]?.id ?? ""));
-  const [eggDate, setEggDate] = useState("");
-  const [eggSession, setEggSession] = useState<EggSession>("MORNING");
-  const [goodEggs, setGoodEggs] = useState<number | string>(0);
-  const [brokenEggs, setBrokenEggs] = useState<number | string>(0);
-  const [abnormalEggs, setAbnormalEggs] = useState<number | string>(0);
-  const [eggNotes, setEggNotes] = useState("");
-  const [submittingEgg, setSubmittingEgg] = useState(false);
-  const [eggError, setEggError] = useState<string | null>(null);
-
   const todayStr = new Date().toISOString().split("T")[0];
 
-  useEffect(() => {
-    if (isOpen) {
-      setEggError(null);
-      if (editingEgg) {
-        setSelectedFlockId(editingEgg.flockId);
-        setEggDate(editingEgg.date);
-        setEggSession(editingEgg.session);
-        setGoodEggs(editingEgg.goodEggs);
-        setBrokenEggs(editingEgg.brokenEggs);
-        setAbnormalEggs(editingEgg.abnormalEggs);
-        setEggNotes(editingEgg.notes || "");
-      } else {
-        setEggDate(todayStr);
-        setEggSession("MORNING");
-        setGoodEggs(0);
-        setBrokenEggs(0);
-        setAbnormalEggs(0);
-        setEggNotes("");
-        if (defaultFlockId) {
-          setSelectedFlockId(defaultFlockId);
-        } else if (flocks.length > 0) {
-          setSelectedFlockId(flocks[0].id);
-        }
-      }
-    }
-  }, [isOpen, editingEgg, defaultFlockId, flocks, todayStr]);
+  const [selectedFlockId, setSelectedFlockId] = useState(editingEgg?.flockId || defaultFlockId || (flocks[0]?.id ?? ""));
+  const [eggDate, setEggDate] = useState(editingEgg?.date || todayStr);
+  const [eggSession, setEggSession] = useState<EggSession>(editingEgg?.session || "MORNING");
+  const [goodEggs, setGoodEggs] = useState<number | string>(editingEgg?.goodEggs ?? 0);
+  const [brokenEggs, setBrokenEggs] = useState<number | string>(editingEgg?.brokenEggs ?? 0);
+  const [abnormalEggs, setAbnormalEggs] = useState<number | string>(editingEgg?.abnormalEggs ?? 0);
+  const [eggNotes, setEggNotes] = useState(editingEgg?.notes || "");
+  const [submittingEgg, setSubmittingEgg] = useState(false);
+  const [eggError, setEggError] = useState<string | null>(null);
 
   async function handleEggSubmit(e: React.FormEvent) {
     e.preventDefault();

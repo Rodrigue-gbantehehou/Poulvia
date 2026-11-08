@@ -32,9 +32,9 @@ export default function RegisterPage() {
         password,
       });
       router.push("/");
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(
-        err?.message || "Erreur lors de la création du compte. Vérifiez les données saisies."
+        err instanceof Error ? err.message : "Erreur lors de la création du compte. Vérifiez les données saisies."
       );
     } finally {
       setIsLoading(false);

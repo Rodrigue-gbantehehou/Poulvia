@@ -46,6 +46,7 @@ export default function FinancesPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [filterType, setFilterType] = useState<string>("ALL");
   const [isLoading, setIsLoading] = useState(true);
+  const showLoading = isLoading && Boolean(activeFarm?.id && hasModule("finance") && (hasPermission("finance:read") || hasPermission("finance:view")));
 
   // New Transaction Modal
   const [modalOpen, setModalOpen] = useState(false);
@@ -58,7 +59,7 @@ export default function FinancesPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("MTN_MOMO");
   const [reference, setReference] = useState("");
   const [notes, setNotes] = useState("");
-  const [txDate, setTxDate] = useState("");
+  const [txDate, setTxDate] = useState(() => new Date().toISOString().split("T")[0]);
 
   // Credit / Partial Payment State
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("PAID");
@@ -69,21 +70,15 @@ export default function FinancesPage() {
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const [selectedTxForReceipt, setSelectedTxForReceipt] = useState<Transaction | null>(null);
 
-  useEffect(() => {
-    setTxDate(new Date().toISOString().split("T")[0]);
-  }, []);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (activeFarm?.id && hasModule("finance") && (hasPermission("finance:read") || hasPermission("finance:view"))) {
       loadTransactions();
-    } else {
-      setIsLoading(false);
     }
   }, [activeFarm?.id]);
 
   async function loadTransactions() {
-    setIsLoading(true);
     try {
       const [txData, contactsData] = await Promise.all([
         api.finance.listTransactions({ farmId: activeFarm?.id }),
@@ -134,8 +129,8 @@ export default function FinancesPage() {
           : "Dépense enregistrée avec succès !"
       );
       await loadTransactions();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors de la création de la transaction";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de la création de la transaction";
       setFormError(msg);
       toast.error(msg);
     } finally {
@@ -461,7 +456,7 @@ export default function FinancesPage() {
           searchAccessor={(tx) => `${tx.category} ${tx.reference || ""} ${tx.notes || ""}`}
           pageSize={15}
           initialSort={{ key: "date", direction: "desc" }}
-          isLoading={isLoading}
+          isLoading={showLoading}
           renderMobileCard={(tx) => {
             const isIncome = tx.type === "INCOME";
             return (

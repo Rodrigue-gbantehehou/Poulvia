@@ -60,6 +60,7 @@ export default function HealthPage() {
     upcomingCount: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const showLoading = isLoading && Boolean(activeFarm?.id && hasModule("health"));
 
   // Filtres
   const [selectedFlockId, setSelectedFlockId] = useState<string>("ALL");
@@ -153,14 +154,11 @@ export default function HealthPage() {
   useEffect(() => {
     if (activeFarm?.id && hasModule("health")) {
       loadData();
-    } else {
-      setIsLoading(false);
     }
   }, [activeFarm?.id, selectedFlockId, selectedStatus]);
 
   async function loadData() {
     if (!activeFarm?.id) return;
-    setIsLoading(true);
     try {
       const [treatmentsRes, flocksRes, itemsRes] = await Promise.all([
         api.health.list(activeFarm.id, {
@@ -253,8 +251,8 @@ export default function HealthPage() {
       setCreateCustomMethod("");
       toast.success("Soin planifié avec succès !");
       await loadData();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors de la planification du soin.";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de la planification du soin.";
       setCreateError(msg);
       toast.error(msg);
     } finally {
@@ -282,8 +280,8 @@ export default function HealthPage() {
       toast.success(`${res.length} interventions programmées avec succès pour cette bande !`);
       setProgramModalOpen(false);
       await loadData();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors de la génération du programme.";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de la génération du programme.";
       setProgramError(msg);
       toast.error(msg);
     } finally {
@@ -322,8 +320,8 @@ export default function HealthPage() {
       setCompleteModalOpen(false);
       toast.success("Administration du soin validée avec succès !");
       await loadData();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors de la validation du soin.";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de la validation du soin.";
       setCompleteError(msg);
       toast.error(msg);
     } finally {
@@ -337,8 +335,8 @@ export default function HealthPage() {
       await api.health.delete(id);
       toast.success("Intervention supprimée avec succès.");
       await loadData();
-    } catch (err: any) {
-      toast.error(err?.message || "Erreur lors de la suppression.");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Erreur lors de la suppression.");
     }
   }
 
@@ -510,7 +508,7 @@ export default function HealthPage() {
         </div>
 
         {/* Liste des interventions */}
-        {isLoading ? (
+        {showLoading ? (
           <div className="flex h-64 items-center justify-center rounded-xl border border-border bg-surface">
             <div className="flex items-center gap-3 text-muted">
               <Clock className="h-5 w-5 animate-spin text-accent" />

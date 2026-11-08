@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { AlertCircle } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/context/toast-context";
@@ -33,18 +33,6 @@ export function RecordTransactionModal({
   const [txNotes, setTxNotes] = useState("");
   const [submittingTx, setSubmittingTx] = useState(false);
   const [financeError, setFinanceError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (isOpen) {
-      setFinanceError(null);
-      setTxType(initialType);
-      setTxAmount(0);
-      setTxCategory(initialType === "EXPENSE" ? "Aliments" : "Vente Oeufs");
-      setTxCustomCategory("");
-      setTxPaymentMethod("MTN_MOMO");
-      setTxNotes("");
-    }
-  }, [isOpen, initialType]);
 
   async function handleFinanceSubmit(e: React.FormEvent) {
     e.preventDefault();

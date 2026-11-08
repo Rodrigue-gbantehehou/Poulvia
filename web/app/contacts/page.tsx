@@ -32,10 +32,11 @@ import { api } from "@/lib/api-client";
 import { Contact, ContactType } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import { ModuleLockedState } from "@/components/ui/module-locked-state";
+import type { LucideIcon } from "lucide-react";
 
 const TYPE_CONFIG: Record<
   ContactType,
-  { label: string; badge: "success" | "info" | "warning" | "neutral"; icon: any; desc: string }
+  { label: string; badge: "success" | "info" | "warning" | "neutral"; icon: LucideIcon; desc: string }
 > = {
   CLIENT: {
     label: "Client / Acheteur",
@@ -71,6 +72,7 @@ export default function ContactsPage() {
   const [filterType, setFilterType] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
+  const showLoading = isLoading && Boolean(activeFarm?.id && hasModule("contacts") && canViewContacts);
 
   // Modale Création / Édition
   const [modalOpen, setModalOpen] = useState(false);
@@ -94,17 +96,11 @@ export default function ContactsPage() {
   useEffect(() => {
     if (activeFarm?.id && hasModule("contacts") && canViewContacts) {
       loadContacts();
-    } else {
-      setIsLoading(false);
     }
   }, [activeFarm?.id, canViewContacts]);
 
   async function loadContacts() {
-    if (!activeFarm?.id || !canViewContacts) {
-      setIsLoading(false);
-      return;
-    }
-    setIsLoading(true);
+    if (!activeFarm?.id || !canViewContacts) return;
     try {
       const data = await api.contacts.list({
         farmId: activeFarm.id,
@@ -200,8 +196,8 @@ export default function ContactsPage() {
 
       setModalOpen(false);
       await loadContacts();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors de l'enregistrement du contact.";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de l'enregistrement du contact.";
       setContactError(msg);
       toast.error(msg);
     } finally {
@@ -224,8 +220,8 @@ export default function ContactsPage() {
       setContactToDelete(null);
       toast.success("Contact supprimé avec succès.");
       await loadContacts();
-    } catch (err: any) {
-      toast.error(err?.message || "Impossible de supprimer ce contact.");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Impossible de supprimer ce contact.");
     } finally {
       setDeleting(false);
     }
@@ -506,7 +502,7 @@ export default function ContactsPage() {
         </div>
 
         {/* Table de Données ou État Vide */}
-        {isLoading ? (
+        {showLoading ? (
           <div className="bg-surface rounded-xl border border-border p-12 flex flex-col items-center justify-center text-center">
             <RefreshCw className="h-8 w-8 text-primary animate-spin mb-3" />
             <p className="text-sm font-medium text-foreground">Chargement de votre carnet d&apos;adresses...</p>

@@ -53,10 +53,10 @@ import {
   ALL_UNITS_LIST,
 } from "@/lib/units";
 
-const CATEGORY_LABELS: Record<InventoryCategory, { label: string; badge: "default" | "success" | "warning" | "info" | "neutral" }> = {
+const CATEGORY_LABELS: Record<InventoryCategory, { label: string; badge: "default" | "success" | "warning" | "info" | "neutral" | "danger" }> = {
   FEED: { label: "Aliment & Nutrition", badge: "default" },
   VACCINE: { label: "Vaccin biologique", badge: "warning" },
-  MEDICINE: { label: "Médicament & Soins", badge: "danger" as any },
+  MEDICINE: { label: "Médicament & Soins", badge: "danger" },
   EQUIPMENT: { label: "Matériel & Équipement", badge: "info" },
   OTHER: { label: "Autre intrant", badge: "neutral" },
 };
@@ -131,14 +131,10 @@ function InventoryItemDetailContent() {
   const [moveUnit, setMoveUnit] = useState<string>("KG");
   const [moveQty, setMoveQty] = useState<number | string>(15);
   const [moveUnitPrice, setMoveUnitPrice] = useState<number | string>("");
-  const [moveDate, setMoveDate] = useState("");
+  const [moveDate, setMoveDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [moveReason, setMoveReason] = useState("");
   const [moveFlockId, setMoveFlockId] = useState("");
   const [submittingMove, setSubmittingMove] = useState(false);
-
-  useEffect(() => {
-    setMoveDate(new Date().toISOString().split("T")[0]);
-  }, []);
 
   // Détection article aliment / provende & conditionnement en sacs
   const isFeed = Boolean(
@@ -262,8 +258,8 @@ function InventoryItemDetailContent() {
       setMoveModalOpen(false);
       toast.success("Mouvement de stock enregistré avec succès !");
       await loadItemData();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors de l'enregistrement du mouvement.";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de l'enregistrement du mouvement.";
       setMoveError(msg);
       toast.error(msg);
     } finally {
@@ -294,8 +290,8 @@ function InventoryItemDetailContent() {
       setEditModalOpen(false);
       toast.success("Article mis à jour avec succès !");
       await loadItemData();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors de la modification de l'article.";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de la modification de l'article.";
       setEditError(msg);
       toast.error(msg);
     } finally {
@@ -311,8 +307,8 @@ function InventoryItemDetailContent() {
       });
       toast.success(item.isActive ? "Article archivé avec succès." : "Article restauré avec succès.");
       await loadItemData();
-    } catch (err: any) {
-      toast.error(err?.message || "Erreur lors du changement de statut d'archivage.");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Erreur lors du changement de statut d'archivage.");
     }
   }
 

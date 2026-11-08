@@ -1,11 +1,11 @@
 import { apiRequest } from "./client";
 import { authApi } from "./auth";
-import { Farm } from "../types";
+import { Building, Farm } from "../types";
 
 export const farmsApi = {
   list: async (): Promise<Farm[]> => {
     const me = await authApi.me();
-    return (me.farms || []).map((f: any) => ({
+    return (me.farms || []).map((f) => ({
       id: f.id,
       name: f.name,
       location: f.locationCity,
@@ -22,17 +22,17 @@ export const farmsApi = {
     locationCity?: string;
     locationCountry?: string;
     code?: string;
-  }): Promise<any> => {
-    const res = await apiRequest<any>("/farms", {
+  }): Promise<Farm> => {
+    const res = await apiRequest<Farm>("/farms", {
       method: "POST",
       body: JSON.stringify(data),
     });
-    return res?.data || res;
+    return res;
   },
 
-  get: async (id: string): Promise<any> => {
-    const res = await apiRequest<any>(`/farms/${id}`);
-    return res?.data || res;
+  get: async (id: string): Promise<Farm> => {
+    const res = await apiRequest<Farm>(`/farms/${id}`);
+    return res;
   },
 
   update: async (
@@ -50,12 +50,12 @@ export const farmsApi = {
       rccm?: string;
       description?: string;
     }
-  ): Promise<any> => {
-    const res = await apiRequest<any>(`/farms/${id}`, {
+  ): Promise<Farm> => {
+    const res = await apiRequest<Farm>(`/farms/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
     });
-    return res?.data || res;
+    return res;
   },
 
   delete: async (id: string): Promise<void> => {
@@ -64,12 +64,25 @@ export const farmsApi = {
     });
   },
 
-  listBuildings: async (farmId: string, params?: { onlyActive?: boolean }): Promise<any[]> => {
+  listBuildings: async (
+    farmId: string,
+    params?: { onlyActive?: boolean },
+  ): Promise<Array<Building & { capacity: number; isActive: boolean }>> => {
     const q = new URLSearchParams();
     if (params?.onlyActive !== undefined) q.append("onlyActive", String(params.onlyActive));
     const query = q.toString() ? `?${q.toString()}` : "";
-    const res = await apiRequest<any>(`/farms/${farmId}/buildings${query}`);
-    return res?.data || res || [];
+    const res = await apiRequest<Building[]>(`/farms/${farmId}/buildings${query}`);
+    const buildingTypes = ["POULTRY_HOUSE", "BROODER", "STORAGE", "OTHER"] as const;
+    return (res || []).map((building) => ({
+      ...building,
+      farmId: building.farmId || farmId,
+      type: buildingTypes.includes(building.type as (typeof buildingTypes)[number])
+        ? (building.type as (typeof buildingTypes)[number])
+        : "OTHER",
+      capacity: building.capacity ?? building.capacityBirds ?? 0,
+      capacityBirds: building.capacityBirds ?? building.capacity ?? 0,
+      isActive: building.isActive ?? true,
+    }));
   },
 
   createBuilding: async (
@@ -80,12 +93,12 @@ export const farmsApi = {
       capacity: number;
       surfaceArea?: number;
     }
-  ): Promise<any> => {
-    const res = await apiRequest<any>(`/farms/${farmId}/buildings`, {
+  ): Promise<Building> => {
+    const res = await apiRequest<Building>(`/farms/${farmId}/buildings`, {
       method: "POST",
       body: JSON.stringify(data),
     });
-    return res?.data || res;
+    return res;
   },
 
   updateBuilding: async (
@@ -98,12 +111,12 @@ export const farmsApi = {
       surfaceArea?: number;
       isActive?: boolean;
     }
-  ): Promise<any> => {
-    const res = await apiRequest<any>(`/farms/${farmId}/buildings/${buildingId}`, {
+  ): Promise<Building> => {
+    const res = await apiRequest<Building>(`/farms/${farmId}/buildings/${buildingId}`, {
       method: "PUT",
       body: JSON.stringify(data),
     });
-    return res?.data || res;
+    return res;
   },
 
   deleteBuilding: async (farmId: string, buildingId: string): Promise<void> => {

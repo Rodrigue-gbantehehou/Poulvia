@@ -46,14 +46,11 @@ export default function BuildingsPage() {
   useEffect(() => {
     if (activeFarm?.id && hasModule("buildings")) {
       loadBuildings();
-    } else {
-      setIsLoading(false);
     }
   }, [activeFarm?.id]);
 
   async function loadBuildings() {
     if (!activeFarm?.id) return;
-    setIsLoading(true);
     try {
       const data = await api.farms.listBuildings(activeFarm.id);
       setBuildings(Array.isArray(data) ? data : []);
@@ -71,8 +68,8 @@ export default function BuildingsPage() {
     try {
       await api.farms.deleteBuilding(activeFarm.id, id);
       await loadBuildings();
-    } catch (err: any) {
-      alert(err?.message || "Erreur lors de la suppression du bâtiment.");
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Erreur lors de la suppression du bâtiment.");
     } finally {
       setDeletingId(null);
     }
@@ -259,6 +256,7 @@ export default function BuildingsPage() {
 
       {/* Modales */}
       <CreateBuildingModal
+        key={`${createModalOpen}-${buildings.length}`}
         isOpen={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
         onSuccess={loadBuildings}
@@ -266,6 +264,7 @@ export default function BuildingsPage() {
 
       {editingBuilding && (
         <EditBuildingModal
+          key={editingBuilding.id}
           isOpen={true}
           building={editingBuilding}
           onClose={() => setEditingBuilding(null)}

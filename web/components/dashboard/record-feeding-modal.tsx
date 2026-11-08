@@ -48,25 +48,6 @@ export function RecordFeedingModal({
 }: RecordFeedingModalProps) {
   const { toast } = useToast();
 
-  const [feedFlockId, setFeedFlockId] = useState(defaultFlockId || (flocks[0]?.id ?? ""));
-  const [feedSession, setFeedSession] = useState<"MORNING" | "NOON" | "EVENING">("MORNING");
-  const [feedDate, setFeedDate] = useState("");
-  const [feedItemId, setFeedItemId] = useState("");
-  const [feedWeightKg, setFeedWeightKg] = useState<number | string>(25);
-  const [feedNotes, setFeedNotes] = useState("");
-
-  const [waterMode, setWaterMode] = useState<"CLEAR" | "TREATED">("CLEAR");
-  const [waterVolumeLiters, setWaterVolumeLiters] = useState<number | string>(50);
-  const [waterProducts, setWaterProducts] = useState<WaterProductItem[]>([]);
-
-  // Soins & Vaccins planifiés
-  const [scheduledTreatments, setScheduledTreatments] = useState<HealthTreatment[]>([]);
-  const [selectedTreatmentId, setSelectedTreatmentId] = useState<string | null>(null);
-  const [isLoadingTreatments, setIsLoadingTreatments] = useState(false);
-
-  const [submittingFeeding, setSubmittingFeeding] = useState(false);
-  const [feedingError, setFeedingError] = useState<string | null>(null);
-
   const availableFeeds = inventoryItems.filter(
     (i) =>
       i.category === "FEED" ||
@@ -76,6 +57,27 @@ export function RecordFeedingModal({
       i.name.toLowerCase().includes("farine")
   );
 
+  const [feedFlockId, setFeedFlockId] = useState(defaultFlockId || (flocks[0]?.id ?? ""));
+  const [feedSession, setFeedSession] = useState<"MORNING" | "NOON" | "EVENING">("MORNING");
+  const [feedDate, setFeedDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [feedItemId, setFeedItemId] = useState(availableFeeds[0]?.id ?? "");
+  const [feedWeightKg, setFeedWeightKg] = useState<number | string>(25);
+  const [feedNotes, setFeedNotes] = useState("");
+
+  const [waterMode, setWaterMode] = useState<"CLEAR" | "TREATED">("CLEAR");
+  const [waterVolumeLiters, setWaterVolumeLiters] = useState<number | string>(50);
+  const [waterProducts, setWaterProducts] = useState<WaterProductItem[]>([]);
+
+  // Soins & Vaccins planifiés
+  const [treatmentResult, setTreatmentResult] = useState<{
+    key: string;
+    treatments: HealthTreatment[];
+  } | null>(null);
+  const [selectedTreatmentId, setSelectedTreatmentId] = useState<string | null>(null);
+
+  const [submittingFeeding, setSubmittingFeeding] = useState(false);
+  const [feedingError, setFeedingError] = useState<string | null>(null);
+
   const availableHealthProducts = inventoryItems.filter(
     (i) =>
       i.category === "MEDICINE" ||
@@ -84,49 +86,31 @@ export function RecordFeedingModal({
       ["ML", "LITER", "G", "SACHET", "DOSE", "VIAL"].includes(i.unit)
   );
 
-  useEffect(() => {
-    if (isOpen) {
-      setFeedingError(null);
-      setFeedDate(new Date().toISOString().split("T")[0]);
-      const targetId = defaultFlockId || (flocks.length > 0 ? flocks[0].id : "");
-      setFeedFlockId(targetId);
-      if (availableFeeds.length > 0) {
-        setFeedItemId(availableFeeds[0].id);
-      }
-      setFeedWeightKg(25);
-      setFeedNotes("");
-      setWaterMode("CLEAR");
-      setWaterVolumeLiters(50);
-      setWaterProducts([]);
-      setSelectedTreatmentId(null);
-    }
-  }, [isOpen, defaultFlockId, flocks]);
-
   // Charger les soins programmés pour la bande ciblée
   useEffect(() => {
-    if (isOpen && activeFarmId && feedFlockId) {
-      setIsLoadingTreatments(true);
-      api.health
+    if (!isOpen || !activeFarmId || !feedFlockId) return;
+    let cancelled = false;
+    const key = `${activeFarmId}:${feedFlockId}`;
+    api.health
         .list(activeFarmId, {
           flockId: feedFlockId,
           status: "SCHEDULED",
         })
         .then((res) => {
-          setScheduledTreatments(res.data || []);
+          if (!cancelled) setTreatmentResult({ key, treatments: res.data || [] });
         })
         .catch((err) => {
           console.warn("Erreur chargement soins programmés:", err);
-          setScheduledTreatments([]);
-        })
-        .finally(() => {
-          setIsLoadingTreatments(false);
+          if (!cancelled) setTreatmentResult({ key, treatments: [] });
         });
-    } else {
-      setScheduledTreatments([]);
-      setSelectedTreatmentId(null);
-    }
+    return () => {
+      cancelled = true;
+    };
   }, [isOpen, activeFarmId, feedFlockId]);
 
+  const treatmentKey = activeFarmId && feedFlockId ? `${activeFarmId}:${feedFlockId}` : "";
+  const scheduledTreatments = treatmentResult?.key === treatmentKey ? treatmentResult.treatments : [];
+  const isLoadingTreatments = Boolean(isOpen && treatmentKey && treatmentResult?.key !== treatmentKey);
   const targetDate = feedDate || new Date().toISOString().split("T")[0];
   const todayTreatments = scheduledTreatments.filter((t) => {
     return t.scheduledDate === targetDate || t.isOverdue;

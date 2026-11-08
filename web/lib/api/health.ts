@@ -38,35 +38,34 @@ export const healthApi = {
       notes?: string;
     }
   ): Promise<HealthTreatment> => {
-    const res = await apiRequest<any>(`/farms/${farmId}/health-treatments`, {
+    const res = await apiRequest<HealthTreatment>(`/farms/${farmId}/health-treatments`, {
       method: "POST",
       body: JSON.stringify(data),
     });
-    return res?.data || res;
+    return res;
   },
 
   generateProgram: async (
     farmId: string,
     data: { flockId: string; programType?: string }
   ): Promise<HealthTreatment[]> => {
-    const res = await apiRequest<any>(`/farms/${farmId}/health-treatments/generate-program`, {
+    const res = await apiRequest<HealthTreatment[]>(`/farms/${farmId}/health-treatments/generate-program`, {
       method: "POST",
       body: JSON.stringify(data),
     });
-    return res?.data || res || [];
+    return res;
   },
 
   get: async (id: string): Promise<HealthTreatment> => {
-    const res = await apiRequest<any>(`/health-treatments/${id}`);
-    return res?.data || res;
+    return apiRequest<HealthTreatment>(`/health-treatments/${id}`);
   },
 
   update: async (id: string, data: Partial<HealthTreatment>): Promise<HealthTreatment> => {
-    const res = await apiRequest<any>(`/health-treatments/${id}`, {
+    const res = await apiRequest<HealthTreatment>(`/health-treatments/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
     });
-    return res?.data || res;
+    return res;
   },
 
   complete: async (
@@ -81,11 +80,11 @@ export const healthApi = {
       deductFromStock?: boolean;
     }
   ): Promise<HealthTreatment> => {
-    const res = await apiRequest<any>(`/health-treatments/${id}/complete`, {
+    const res = await apiRequest<HealthTreatment>(`/health-treatments/${id}/complete`, {
       method: "POST",
       body: JSON.stringify(data),
     });
-    return res?.data || res;
+    return res;
   },
 
   delete: async (id: string): Promise<void> => {

@@ -21,7 +21,7 @@ import { TimePeriod, TIME_PERIOD_LABELS, isDateInPeriod } from "@/lib/utils";
 export interface ColumnDef<T> {
   key: string;
   header: React.ReactNode;
-  accessor?: (item: T) => any;
+  accessor?: (item: T) => React.ReactNode;
   cell?: (item: T) => React.ReactNode;
   sortable?: boolean;
   align?: "left" | "center" | "right";
@@ -86,6 +86,26 @@ export interface DataTableProps<T> {
 
   isLoading?: boolean;
   className?: string;
+}
+
+function getRecordValue(item: unknown, key: string): unknown {
+  if (typeof item !== "object" || item === null || !(key in item)) return undefined;
+  return (item as Record<string, unknown>)[key];
+}
+
+function renderRecordValue(value: unknown): React.ReactNode {
+  if (
+    value === null ||
+    value === undefined ||
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean" ||
+    React.isValidElement(value)
+  ) {
+    return value;
+  }
+  if (Array.isArray(value)) return value.map(renderRecordValue);
+  return null;
 }
 
 export function DataTable<T>({
@@ -167,7 +187,7 @@ export function DataTable<T>({
         return searchAccessor(item).toLowerCase().includes(q);
       }
       // Recherche globale sur les valeurs primitives
-      return Object.values(item as any).some((val) => {
+      return typeof item === "object" && item !== null && Object.values(item).some((val) => {
         if (val === null || val === undefined) return false;
         return String(val).toLowerCase().includes(q);
       });
@@ -183,7 +203,7 @@ export function DataTable<T>({
 
     const getValue = (item: T) => {
       if (col.accessor) return col.accessor(item);
-      return (item as any)[col.key];
+      return getRecordValue(item, col.key);
     };
 
     return [...searchFilteredData].sort((a, b) => {
@@ -247,7 +267,8 @@ export function DataTable<T>({
 
   const getKey = (item: T, idx: number) => {
     if (keyExtractor) return keyExtractor(item, idx);
-    if ((item as any).id) return (item as any).id;
+    const id = getRecordValue(item, "id");
+    if (typeof id === "string" || typeof id === "number") return id;
     return idx;
   };
 
@@ -519,7 +540,7 @@ export function DataTable<T>({
                         ? firstCol.cell(item)
                         : firstCol?.accessor
                         ? firstCol.accessor(item)
-                        : (item as any)[firstCol?.key || ""]}
+                        : renderRecordValue(getRecordValue(item, firstCol?.key || ""))}
                     </div>
                     {rightCol && (
                       <div className="text-right shrink-0">
@@ -527,7 +548,7 @@ export function DataTable<T>({
                           ? rightCol.cell(item)
                           : rightCol.accessor
                           ? rightCol.accessor(item)
-                          : (item as any)[rightCol.key]}
+                          : renderRecordValue(getRecordValue(item, rightCol.key))}
                       </div>
                     )}
                   </div>
@@ -540,7 +561,7 @@ export function DataTable<T>({
                           ? col.cell(item)
                           : col.accessor
                           ? col.accessor(item)
-                          : (item as any)[col.key];
+                          : renderRecordValue(getRecordValue(item, col.key));
 
                         if (content === null || content === undefined || content === "") return null;
 
@@ -565,7 +586,7 @@ export function DataTable<T>({
                         ? actionCol.cell(item)
                         : actionCol.accessor
                         ? actionCol.accessor(item)
-                        : (item as any)[actionCol.key]}
+                        : renderRecordValue(getRecordValue(item, actionCol.key))}
                     </div>
                   )}
                 </div>
@@ -652,7 +673,7 @@ export function DataTable<T>({
                           } else if (col.accessor) {
                             content = col.accessor(item);
                           } else {
-                            content = (item as any)[col.key];
+                            content = renderRecordValue(getRecordValue(item, col.key));
                           }
 
                           return (

@@ -42,13 +42,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize from localStorage on client-side
   useEffect(() => {
-    const storedToken = localStorage.getItem("Poulvia_token");
-    if (storedToken) {
-      setToken(storedToken);
-      loadCurrentUser();
-    } else {
-      setIsLoading(false);
+    async function initializeSession() {
+      const storedToken = localStorage.getItem("Poulvia_token");
+      if (storedToken) {
+        setToken(storedToken);
+        await loadCurrentUser();
+      } else {
+        setIsLoading(false);
+      }
     }
+
+    void initializeSession();
   }, []);
 
   async function loadCurrentUser() {
@@ -64,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
       setUser(mappedUser);
 
-      const mappedFarms: any[] = (res.farms || []).map((f: any) => ({
+      const mappedFarms: Farm[] = (res.farms || []).map((f) => ({
         id: f.id,
         name: f.name,
         code: f.code,

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Building2,
@@ -20,23 +20,80 @@ import { Modal } from "@/components/ui/modal";
 import { PageHeader } from "@/components/ui/page-header";
 import { useAuth } from "@/context/auth-context";
 import { api } from "@/lib/api-client";
+import { Farm } from "@/lib/types";
+
+type FarmSettingsValues = {
+  name: string;
+  code: string;
+  productionType: NonNullable<Farm["productionType"]>;
+  locationCity: string;
+  locationCountry: string;
+  phone: string;
+  email: string;
+  address: string;
+  ifu: string;
+  rccm: string;
+  description: string;
+};
+
+function getFarmSettingsValues(farm: Farm | null): FarmSettingsValues {
+  return {
+    name: farm?.name || "",
+    code: farm?.code || "",
+    productionType: farm?.productionType || "LAYER",
+    locationCity: farm?.locationCity || farm?.location || "",
+    locationCountry: farm?.locationCountry || "BJ",
+    phone: farm?.phone || "",
+    email: farm?.email || "",
+    address: farm?.address || "",
+    ifu: farm?.ifu || "",
+    rccm: farm?.rccm || "",
+    description: farm?.description || "",
+  };
+}
 
 export default function FarmSettingsPage() {
   const router = useRouter();
   const { activeFarm, refreshMe, isOwner } = useAuth();
 
-  // Farm Details Form
-  const [name, setName] = useState("");
-  const [code, setCode] = useState("");
-  const [productionType, setProductionType] = useState<"LAYER" | "BROILER" | "MIXED">("LAYER");
-  const [locationCity, setLocationCity] = useState("");
-  const [locationCountry, setLocationCountry] = useState("BJ");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [address, setAddress] = useState("");
-  const [ifu, setIfu] = useState("");
-  const [rccm, setRccm] = useState("");
-  const [description, setDescription] = useState("");
+  const [farmDraft, setFarmDraft] = useState(() => ({
+    farmId: activeFarm?.id ?? null,
+    values: getFarmSettingsValues(activeFarm),
+  }));
+  const farmValues =
+    farmDraft.farmId === (activeFarm?.id ?? null)
+      ? farmDraft.values
+      : getFarmSettingsValues(activeFarm);
+  const {
+    name,
+    code,
+    productionType,
+    locationCity,
+    locationCountry,
+    phone,
+    email,
+    address,
+    ifu,
+    rccm,
+    description,
+  } = farmValues;
+  function setFarmField<Key extends keyof FarmSettingsValues>(key: Key, value: FarmSettingsValues[Key]) {
+    setFarmDraft({
+      farmId: activeFarm?.id ?? null,
+      values: { ...farmValues, [key]: value },
+    });
+  }
+  const setName = (value: string) => setFarmField("name", value);
+  const setCode = (value: string) => setFarmField("code", value);
+  const setProductionType = (value: FarmSettingsValues["productionType"]) => setFarmField("productionType", value);
+  const setLocationCity = (value: string) => setFarmField("locationCity", value);
+  const setLocationCountry = (value: string) => setFarmField("locationCountry", value);
+  const setPhone = (value: string) => setFarmField("phone", value);
+  const setEmail = (value: string) => setFarmField("email", value);
+  const setAddress = (value: string) => setFarmField("address", value);
+  const setIfu = (value: string) => setFarmField("ifu", value);
+  const setRccm = (value: string) => setFarmField("rccm", value);
+  const setDescription = (value: string) => setFarmField("description", value);
   const [savingFarm, setSavingFarm] = useState(false);
   const [farmSuccessMsg, setFarmSuccessMsg] = useState<string | null>(null);
   const [farmErrorMsg, setFarmErrorMsg] = useState<string | null>(null);
@@ -46,23 +103,6 @@ export default function FarmSettingsPage() {
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
   const [deletingFarm, setDeletingFarm] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-
-  // Sync form with active farm
-  useEffect(() => {
-    if (activeFarm) {
-      setName(activeFarm.name || "");
-      setCode(activeFarm.code || "");
-      setProductionType(activeFarm.productionType || "LAYER");
-      setLocationCity(activeFarm.locationCity || activeFarm.location || "");
-      setLocationCountry(activeFarm.locationCountry || "BJ");
-      setPhone(activeFarm.phone || "");
-      setEmail(activeFarm.email || "");
-      setAddress(activeFarm.address || "");
-      setIfu(activeFarm.ifu || "");
-      setRccm(activeFarm.rccm || "");
-      setDescription(activeFarm.description || "");
-    }
-  }, [activeFarm]);
 
   async function handleSaveFarm(e: React.FormEvent) {
     e.preventDefault();
@@ -90,8 +130,8 @@ export default function FarmSettingsPage() {
       await refreshMe();
       setFarmSuccessMsg("Les informations et coordonnées de l'exploitation ont été enregistrées avec succès !");
       setTimeout(() => setFarmSuccessMsg(null), 4000);
-    } catch (err: any) {
-      setFarmErrorMsg(err?.message || "Erreur lors de la mise à jour de l'exploitation.");
+    } catch (err: unknown) {
+      setFarmErrorMsg(err instanceof Error ? err.message : "Erreur lors de la mise à jour de l'exploitation.");
     } finally {
       setSavingFarm(false);
     }
@@ -111,8 +151,8 @@ export default function FarmSettingsPage() {
       await refreshMe();
       setDeleteModalOpen(false);
       router.push("/");
-    } catch (err: any) {
-      setDeleteError(err?.message || "Erreur lors de la suppression de l'exploitation.");
+    } catch (err: unknown) {
+      setDeleteError(err instanceof Error ? err.message : "Erreur lors de la suppression de l'exploitation.");
     } finally {
       setDeletingFarm(false);
     }
@@ -224,7 +264,12 @@ export default function FarmSettingsPage() {
                   </label>
                   <select
                     value={productionType}
-                    onChange={(e) => setProductionType(e.target.value as any)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === "LAYER" || value === "BROILER" || value === "MIXED") {
+                        setProductionType(value);
+                      }
+                    }}
                     className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-xs text-foreground focus:border-primary focus:bg-surface focus:outline-hidden transition-colors"
                   >
                     <option value="LAYER">Pondeuses (Œufs de table)</option>

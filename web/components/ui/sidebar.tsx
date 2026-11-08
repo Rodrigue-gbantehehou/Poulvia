@@ -7,6 +7,25 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 
 const SIDEBAR_COOKIE_NAME = "poulvia_sidebar_state";
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
+const SIDEBAR_CHANGE_EVENT = "poulvia:sidebar-change";
+
+function subscribeToSidebar(callback: () => void) {
+  window.addEventListener("storage", callback);
+  window.addEventListener(SIDEBAR_CHANGE_EVENT, callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(SIDEBAR_CHANGE_EVENT, callback);
+  };
+}
+
+function getSidebarSnapshot(defaultOpen: boolean) {
+  try {
+    const saved = localStorage.getItem(SIDEBAR_COOKIE_NAME);
+    return saved === null ? defaultOpen : saved === "true";
+  } catch {
+    return defaultOpen;
+  }
+}
 
 interface SidebarContextValue {
   state: "expanded" | "collapsed";
@@ -48,17 +67,18 @@ export function SidebarProvider({
   const [isMobile, setIsMobile] = React.useState(false);
   const [openMobile, setOpenMobile] = React.useState(false);
 
-  // Initialisation desktop state
-  const [_open, _setOpen] = React.useState(defaultOpen);
-  const open = openProp !== undefined ? openProp : _open;
+  const storedOpen = React.useSyncExternalStore(
+    subscribeToSidebar,
+    () => getSidebarSnapshot(defaultOpen),
+    () => defaultOpen
+  );
+  const open = openProp !== undefined ? openProp : storedOpen;
 
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === "function" ? value(open) : value;
       if (setOpenProp) {
         setOpenProp(openState);
-      } else {
-        _setOpen(openState);
       }
 
       try {
@@ -66,21 +86,10 @@ export function SidebarProvider({
       } catch {
         // Ignorer si localStorage indisponible
       }
+      window.dispatchEvent(new Event(SIDEBAR_CHANGE_EVENT));
     },
     [setOpenProp, open]
   );
-
-  // Charger préférence sauvegardée
-  React.useEffect(() => {
-    try {
-      const saved = localStorage.getItem(SIDEBAR_COOKIE_NAME);
-      if (saved !== null) {
-        _setOpen(saved === "true");
-      }
-    } catch {
-      // Ignorer
-    }
-  }, []);
 
   // Détection mobile (écran < 1024px)
   React.useEffect(() => {
