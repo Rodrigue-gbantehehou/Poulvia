@@ -164,11 +164,11 @@ export default function ContactsPage() {
   }
 
   async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
     if (!canManageContacts) {
       toast.error("Vous ne disposez pas des droits pour créer ou modifier un contact.");
       return;
     }
-    e.preventDefault();
     if (!activeFarm?.id || !name.trim()) return;
     setContactError(null);
     setSubmitting(true);
@@ -509,8 +509,8 @@ export default function ContactsPage() {
         {isLoading ? (
           <div className="bg-surface rounded-xl border border-border p-12 flex flex-col items-center justify-center text-center">
             <RefreshCw className="h-8 w-8 text-primary animate-spin mb-3" />
-            <p className="text-sm font-medium text-foreground">Chargement de votre carnet d'adresses...</p>
-            <p className="text-xs text-muted mt-1">Synchronisation des tiers de l'exploitation</p>
+            <p className="text-sm font-medium text-foreground">Chargement de votre carnet d&apos;adresses...</p>
+            <p className="text-xs text-muted mt-1">Synchronisation des tiers de l&apos;exploitation</p>
           </div>
         ) : filteredContacts.length === 0 ? (
           <EmptyState

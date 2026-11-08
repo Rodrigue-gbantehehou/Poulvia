@@ -95,8 +95,8 @@ export default function DashboardPage() {
 
   // Écouteur pour les actions rapides déclenchées depuis le BottomNav ou la barre d'action
   useEffect(() => {
-    function handleAction(e: any) {
-      const act = e.detail?.action;
+    function handleAction(e: Event) {
+      const act = (e as CustomEvent<{ action?: string }>).detail?.action;
       if (act === "egg") openCreateEggModal();
       else if (act === "feed") handleOpenFeedingModal();
       else if (act === "movement") setMovementModalOpen(true);

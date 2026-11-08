@@ -220,7 +220,7 @@ export function CreateFlockModal({
 
             <div>
               <label className="block text-[11px] font-bold text-foreground mb-1">
-                Date d'arrivée *
+                Date d&apos;arrivée *
               </label>
               <input
                 type="date"

@@ -81,7 +81,7 @@ export function HealthScheduleWidget({
               Calendrier vaccinal à jour !
             </p>
             <p className="text-muted mt-0.5">
-              Aucun soin ou vaccin n'est en attente pour les 14 prochains jours.
+              Aucun soin ou vaccin n&apos;est en attente pour les 14 prochains jours.
             </p>
           </div>
         </div>

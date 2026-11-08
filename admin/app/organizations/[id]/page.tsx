@@ -33,6 +33,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatDate, formatNumber } from "@/lib/utils";
 import { useAdminAuth } from "@/context/admin-auth-context";
+import type { CommercialPlan } from "@/lib/types";
 
 export default function OrganizationDetailPage() {
   const params = useParams<{ id: string }>();
@@ -44,7 +45,7 @@ export default function OrganizationDetailPage() {
   const canManageSubscriptions = hasPermission("admin:subscriptions:manage");
 
   const [org, setOrg] = useState<OrganizationItem | null>(null);
-  const [availablePlans, setAvailablePlans] = useState<any[]>([]);
+  const [availablePlans, setAvailablePlans] = useState<CommercialPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string>("");
@@ -75,7 +76,8 @@ export default function OrganizationDetailPage() {
   };
 
   useEffect(() => {
-    fetchOrganization();
+    const task = window.setTimeout(() => void fetchOrganization(), 0);
+    return () => window.clearTimeout(task);
   }, [orgId]);
 
   const handleToggleStatus = async () => {
@@ -254,7 +256,7 @@ export default function OrganizationDetailPage() {
                     <TableHead>Localisation</TableHead>
                     <TableHead>Devise</TableHead>
                     <TableHead>Collaborateurs</TableHead>
-                    <TableHead>Date d'ouverture</TableHead>
+                    <TableHead>Date d&apos;ouverture</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -373,7 +375,7 @@ export default function OrganizationDetailPage() {
               <div>
                 <CardTitle>Abonnement</CardTitle>
                 <CardDescription>
-                  Changer la formule de l'organisation.
+                  Changer la formule de l&apos;organisation.
                 </CardDescription>
               </div>
             </div>

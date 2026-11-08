@@ -144,7 +144,7 @@ export function CreateBuildingModal({
         {/* Type de bâtiment */}
         <div>
           <label className="block text-xs font-semibold text-foreground mb-1">
-            Type d'installation
+            Type d&apos;installation
           </label>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <button
@@ -203,7 +203,7 @@ export function CreateBuildingModal({
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="block text-xs font-semibold text-foreground">
-                Capacité d'accueil (poules) *
+                Capacité d&apos;accueil (poules) *
               </label>
             </div>
             <input

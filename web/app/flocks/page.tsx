@@ -644,7 +644,7 @@ export default function FlocksPage() {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-xs font-semibold text-foreground">
-                  Type d'élevage
+                  Type d&apos;élevage
                 </label>
                 {activeFarm?.productionType && (
                   <span className="text-[10px] font-semibold text-primary">
@@ -703,7 +703,7 @@ export default function FlocksPage() {
 
             <div>
               <label className="block text-xs font-semibold text-foreground mb-1">
-                Date d'arrivée *
+                Date d&apos;arrivée *
               </label>
               <input
                 type="date"

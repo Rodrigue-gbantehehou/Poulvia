@@ -161,7 +161,7 @@ function PlanCard({ plan, currentSku, billingCycle, onSelect }: PlanCardProps) {
         {plan.trialDays > 0 && !isCurrent && (
           <p className="text-[11px] text-success mt-1 font-medium flex items-center gap-1">
             <Check className="h-3 w-3" />
-            {plan.trialDays} jours d'essai gratuit
+            {plan.trialDays} jours d&apos;essai gratuit
           </p>
         )}
       </div>
@@ -300,7 +300,7 @@ export default function SubscriptionPage() {
           </div>
           <h2 className="text-lg font-bold text-foreground">Accès réservé</h2>
           <p className="text-xs text-muted leading-relaxed">
-            Seul le propriétaire de l'exploitation avicole est autorisé à consulter et gérer l'abonnement de la ferme.
+            Seul le propriétaire de l&apos;exploitation avicole est autorisé à consulter et gérer l&apos;abonnement de la ferme.
           </p>
           <div className="pt-2">
             <Link
@@ -452,10 +452,10 @@ export default function SubscriptionPage() {
             </div>
             <div>
               <p className="text-sm font-semibold text-foreground">
-                Comment fonctionne le changement d'offre ?
+                Comment fonctionne le changement d&apos;offre ?
               </p>
               <p className="text-xs text-muted mt-1 leading-relaxed">
-                Lorsque vous demandez un changement de formule, une notification est envoyée à l'équipe
+                Lorsque vous demandez un changement de formule, une notification est envoyée à l&apos;équipe
                 administratrice de Poulvia. Votre abonnement sera activé sans interruption de vos activités.
               </p>
             </div>
@@ -474,11 +474,11 @@ export default function SubscriptionPage() {
                   Changement de formule
                 </p>
                 <h3 className="text-base font-bold text-foreground">
-                  Passer à l'offre{" "}
+                  Passer à l&apos;offre{" "}
                   <span className="text-primary">{upgradeTarget.name}</span>
                 </h3>
                 <p className="text-xs text-muted mt-0.5">
-                  Pour l'exploitation : <strong>{activeFarm?.name}</strong>
+                  Pour l&apos;exploitation : <strong>{activeFarm?.name}</strong>
                 </p>
               </div>
               <button
@@ -525,7 +525,7 @@ export default function SubscriptionPage() {
               {/* Message facultatif */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-foreground">
-                  Message pour l'administrateur (facultatif)
+                  Message pour l&apos;administrateur (facultatif)
                 </label>
                 <textarea
                   value={upgradeMessage}

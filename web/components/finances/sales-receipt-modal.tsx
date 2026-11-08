@@ -153,7 +153,7 @@ export function SalesReceiptModal({
               </strong>
             </div>
             <div className="text-[11px] text-zinc-500">
-              Les marchandises vendues demeurent la propriété de l'exploitation jusqu'au règlement intégral.
+              Les marchandises vendues demeurent la propriété de l&apos;exploitation jusqu&apos;au règlement intégral.
             </div>
           </div>
 

@@ -558,7 +558,7 @@ export default function MembersManagementPage() {
                   ))}
               </optgroup>
               <optgroup label="Standards">
-                <option value="">Gestionnaire d'exploitation</option>
+                <option value="">Gestionnaire d&apos;exploitation</option>
               </optgroup>
             </select>
           </div>

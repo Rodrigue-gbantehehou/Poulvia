@@ -54,13 +54,16 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    checkAuth();
+    const task = window.setTimeout(() => void checkAuth(), 0);
 
     const handleUnauthorized = () => {
       setUser(null);
     };
     window.addEventListener("admin:unauthorized", handleUnauthorized);
-    return () => window.removeEventListener("admin:unauthorized", handleUnauthorized);
+    return () => {
+      window.clearTimeout(task);
+      window.removeEventListener("admin:unauthorized", handleUnauthorized);
+    };
   }, []);
 
   const login = async (credentials: { email: string; password: string }) => {

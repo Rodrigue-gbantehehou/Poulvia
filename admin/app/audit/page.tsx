@@ -100,7 +100,8 @@ export default function AuditLogPage() {
   }, [page, limit, actionFilter, debouncedSearch]);
 
   useEffect(() => {
-    fetchAuditLogs();
+    const task = window.setTimeout(() => void fetchAuditLogs(), 0);
+    return () => window.clearTimeout(task);
   }, [fetchAuditLogs]);
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
@@ -135,7 +136,7 @@ export default function AuditLogPage() {
           <div className="p-4 rounded-xl border border-warning/30 bg-warning-soft/70 text-xs text-foreground flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <AlertOctagon className="h-4 w-4 text-warning shrink-0" />
-              <span>API hors ligne : impossible de charger le journal d'audit.</span>
+              <span>API hors ligne : impossible de charger le journal d&apos;audit.</span>
             </div>
             <Button variant="outline" size="sm" onClick={fetchAuditLogs} className="text-xs h-7">
               Réessayer
@@ -429,7 +430,7 @@ export default function AuditLogPage() {
             {/* Description détaillée */}
             <div>
               <p className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-1.5">
-                Détails de l'opération
+                Détails de l&apos;opération
               </p>
               <div className="p-3 rounded-xl bg-surface-muted/50 border border-border font-mono text-[11px] text-foreground leading-relaxed whitespace-pre-wrap">
                 {selectedLog.details}

@@ -57,7 +57,7 @@ export function ModuleLockedState({
           className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-primary-hover transition-colors"
         >
           <Zap className="h-4 w-4" />
-          <span>Voir les détails de l'offre</span>
+          <span>Voir les détails de l&apos;offre</span>
         </button>
       </div>
 

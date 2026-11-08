@@ -194,8 +194,8 @@ export default function EggsPage() {
       setAbnormalEggs(0);
       setNotes("");
       await loadData();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors de l'enregistrement de la collecte";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de l'enregistrement de la collecte";
       setEggError(msg);
       toast.error(msg);
     } finally {
@@ -358,17 +358,17 @@ export default function EggsPage() {
           </div>
           <h2 className="text-xl font-bold text-foreground">Élevage de poulets de chair</h2>
           <p className="mt-2 text-sm text-muted leading-relaxed">
-            Votre exploitation <span className="font-semibold text-foreground">{activeFarm?.name}</span> est configurée pour l'élevage de poulets de chair (sans production d'œufs de ponte).
+            Votre exploitation <span className="font-semibold text-foreground">{activeFarm?.name}</span> est configurée pour l&apos;élevage de poulets de chair (sans production d&apos;œufs de ponte).
           </p>
           <p className="mt-1 text-xs text-muted">
-            Le suivi des effectifs, pesées, mortalités et ventes s'effectue dans l'espace Élevage.
+            Le suivi des effectifs, pesées, mortalités et ventes s&apos;effectue dans l&apos;espace Élevage.
           </p>
           <div className="mt-6 flex items-center gap-3">
             <Link
               href="/flocks"
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-primary-hover transition-colors"
             >
-              <span>Accéder à l'espace Élevage</span>
+            <span>Accéder à l&apos;espace Élevage</span>
             </Link>
           </div>
         </div>
@@ -453,7 +453,7 @@ export default function EggsPage() {
                   <button
                     key={tab.value}
                     type="button"
-                    onClick={() => setSessionFilter(tab.value as any)}
+                    onClick={() => setSessionFilter(tab.value as EggSession | "ALL")}
                     className={`rounded-full px-3 py-1.5 text-xs font-semibold shrink-0 transition-all active:scale-95 cursor-pointer ${
                       isActive
                         ? "bg-primary text-white shadow-xs"
@@ -568,7 +568,7 @@ export default function EggsPage() {
                 <div className="flex items-center justify-between pt-1 text-xs">
                   {p.notes ? (
                     <span className="text-[11px] text-muted truncate max-w-[190px] italic">
-                      "{p.notes}"
+                      &quot;{p.notes}&quot;
                     </span>
                   ) : (
                     <span className="text-[11px] text-muted/60">Sans remarque</span>
@@ -659,7 +659,7 @@ export default function EggsPage() {
                   onClick={setToday}
                   className="rounded-lg bg-surface-muted border border-border px-2 py-0.5 text-[10px] font-semibold text-muted hover:text-foreground"
                 >
-                  Aujourd'hui
+                  Aujourd&apos;hui
                 </button>
                 <button
                   type="button"

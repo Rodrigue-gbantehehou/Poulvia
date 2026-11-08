@@ -48,7 +48,8 @@ export default function AdminDashboardPage() {
   };
 
   useEffect(() => {
-    loadStats();
+    const task = window.setTimeout(() => void loadStats(), 0);
+    return () => window.clearTimeout(task);
   }, []);
 
   return (
@@ -251,10 +252,10 @@ export default function AdminDashboardPage() {
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-                        Journal d'audit
+                        Journal d&apos;audit
                       </p>
                       <p className="text-xs text-muted">
-                        Historique des actions d'administration.
+                        Historique des actions d&apos;administration.
                       </p>
                     </div>
                   </div>

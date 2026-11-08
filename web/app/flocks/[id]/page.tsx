@@ -759,7 +759,7 @@ function FlockDetailContent() {
                 }`}
               >
                 <Bird className="h-4 w-4" />
-                Mouvements d'effectif ({movements.length})
+                Mouvements d&apos;effectif ({movements.length})
               </button>
 
               {hasModule("inventory") && (
@@ -937,7 +937,7 @@ function FlockDetailContent() {
                 <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-xs">
                   <h2 className="text-sm font-bold text-foreground flex items-center gap-2 mb-4 border-b border-border pb-3">
                     <Bird className="h-4 w-4 text-primary" />
-                    <span>Fiche d'identification & Paramètres du lot</span>
+                    <span>Fiche d&apos;identification & Paramètres du lot</span>
                   </h2>
 
                   <dl className="space-y-3.5 text-xs">
@@ -947,7 +947,7 @@ function FlockDetailContent() {
                     </div>
 
                     <div className="flex justify-between py-1 border-b border-border/50">
-                      <dt className="text-muted">Code d'identification :</dt>
+                      <dt className="text-muted">Code d&apos;identification :</dt>
                       <dd className="font-mono font-bold text-foreground">{flock.code || "—"}</dd>
                     </div>
 
@@ -983,7 +983,7 @@ function FlockDetailContent() {
                     </div>
 
                     <div className="flex justify-between py-1 border-b border-border/50">
-                      <dt className="text-muted">Date d'arrivée :</dt>
+                      <dt className="text-muted">Date d&apos;arrivée :</dt>
                       <dd className="font-mono font-bold text-foreground flex items-center gap-1.5">
                         <Calendar className="h-3.5 w-3.5 text-muted" />
                         {formatDate(flock.startDate)}
@@ -1002,7 +1002,7 @@ function FlockDetailContent() {
 
                     {flock.initialAgeDays !== undefined && flock.initialAgeDays > 0 && (
                       <div className="flex justify-between py-1 border-b border-border/50">
-                        <dt className="text-muted">Âge à l'introduction :</dt>
+                        <dt className="text-muted">Âge à l&apos;introduction :</dt>
                         <dd className="font-mono font-bold text-foreground">{flock.initialAgeDays} jours</dd>
                       </div>
                     )}
@@ -1045,7 +1045,7 @@ function FlockDetailContent() {
                   <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-xs">
                     <h2 className="text-sm font-bold text-foreground flex items-center gap-2 mb-3 border-b border-border pb-3">
                       <Info className="h-4 w-4 text-primary" />
-                      <span>Observations & Notes d'élevage</span>
+                      <span>Observations & Notes d&apos;élevage</span>
                     </h2>
                     {flock.notes ? (
                       <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap bg-surface-muted p-3.5 rounded-xl border border-border">
@@ -1064,7 +1064,7 @@ function FlockDetailContent() {
                       <span>Actions & Administration</span>
                     </h2>
                     <p className="text-xs text-muted mb-4">
-                      Opérations de gestion, d'édition des paramètres et génération de rapports pour ce lot.
+                      Opérations de gestion, d&apos;édition des paramètres et génération de rapports pour ce lot.
                     </p>
                     <div className="flex flex-wrap gap-3">
                       <button

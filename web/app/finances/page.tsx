@@ -724,7 +724,7 @@ export default function FinancesPage() {
 
                   <div>
                     <label className="block text-[11px] font-semibold text-foreground mb-1">
-                      Date d'échéance du solde
+                      Date d&apos;échéance du solde
                     </label>
                     <input
                       type="date"
@@ -739,7 +739,7 @@ export default function FinancesPage() {
               {paymentStatus === "UNPAID" && (
                 <div className="pt-1">
                   <label className="block text-[11px] font-semibold text-foreground mb-1">
-                    Date d'échéance convenue (Règlement total attendu)
+                    Date d&apos;échéance convenue (Règlement total attendu)
                   </label>
                   <input
                     type="date"
@@ -777,7 +777,7 @@ export default function FinancesPage() {
                     <option value="Alimentation">Alimentation</option>
                     <option value="Vaccins & Soins">Vaccins & Soins</option>
                     <option value="Poussins / Achat Sujets">Achat Poussins / Sujets</option>
-                    <option value="Main d'oeuvre">Main d'œuvre / Salaires</option>
+                    <option value="Main d'oeuvre">Main d&apos;œuvre / Salaires</option>
                     <option value="Carburant & Electricite">Énergie / Carburant / Eau</option>
                     <option value="Materiel & Entretien">Matériel & Entretien</option>
                     <option value="Autre Depense">Autre Dépense</option>

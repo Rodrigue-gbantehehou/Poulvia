@@ -167,7 +167,7 @@ export function RecordTransactionModal({
                   <option value="Alimentation">Alimentation</option>
                   <option value="Vaccins & Soins">Vaccins & Soins</option>
                   <option value="Poussins / Achat Sujets">Achat Poussins</option>
-                  <option value="Main d'oeuvre">Main d'œuvre</option>
+                  <option value="Main d'oeuvre">Main d&apos;œuvre</option>
                   <option value="Carburant & Electricite">Énergie / Eau</option>
                   <option value="Autre Depense">Autre Dépense</option>
                 </>

@@ -124,7 +124,7 @@ export function RecordMovementModal({
 
         <div>
           <label className="block text-xs font-semibold text-foreground mb-1">
-            Type d'opération
+            Type d&apos;opération
           </label>
           <div className="grid grid-cols-3 gap-2">
             <button

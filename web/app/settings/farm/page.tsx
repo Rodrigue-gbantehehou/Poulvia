@@ -138,7 +138,7 @@ export default function FarmSettingsPage() {
           <Building2 className="mx-auto h-12 w-12 text-muted mb-3" />
           <h2 className="text-base font-bold text-foreground">Aucune exploitation active</h2>
           <p className="mt-1 text-xs text-muted">
-            Veuillez sélectionner ou créer une ferme depuis l'en-tête pour configurer ses paramètres.
+            Veuillez sélectionner ou créer une ferme depuis l&apos;en-tête pour configurer ses paramètres.
           </p>
         </div>
       ) : (
@@ -173,7 +173,7 @@ export default function FarmSettingsPage() {
             <form onSubmit={handleSaveFarm} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-foreground mb-1.5">
-                  Nom de l'exploitation avicole *
+                  Nom de l&apos;exploitation avicole *
                 </label>
                 <input
                   type="text"
@@ -187,7 +187,7 @@ export default function FarmSettingsPage() {
 
               <div>
                 <label className="block text-xs font-semibold text-foreground mb-1.5">
-                  Slogan & Activité de l'exploitation (visible sur les reçus et PDF)
+                  Slogan & Activité de l&apos;exploitation (visible sur les reçus et PDF)
                 </label>
                 <input
                   type="text"
@@ -237,7 +237,7 @@ export default function FarmSettingsPage() {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-xs font-semibold text-foreground mb-1.5">
-                    Commune / Ville d'implantation
+                    Commune / Ville d&apos;implantation
                   </label>
                   <input
                     type="text"
@@ -259,7 +259,7 @@ export default function FarmSettingsPage() {
                   >
                     <option value="BJ">Bénin (BJ)</option>
                     <option value="TG">Togo (TG)</option>
-                    <option value="CI">Côte d'Ivoire (CI)</option>
+                    <option value="CI">Côte d&apos;Ivoire (CI)</option>
                     <option value="SN">Sénégal (SN)</option>
                     <option value="NG">Nigeria (NG)</option>
                   </select>
@@ -385,7 +385,7 @@ export default function FarmSettingsPage() {
                 </h3>
               </div>
               <p className="text-xs text-muted max-w-xl leading-relaxed">
-                La suppression de l'exploitation avicole est irréversible. Toutes les données associées (bandes, ramassages d'œufs, mouvements de stock, finances, soins vétérinaires) seront définitivement effacées.
+                La suppression de l&apos;exploitation avicole est irréversible. Toutes les données associées (bandes, ramassages d&apos;œufs, mouvements de stock, finances, soins vétérinaires) seront définitivement effacées.
               </p>
               <div>
                 <button

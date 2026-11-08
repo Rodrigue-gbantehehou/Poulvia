@@ -288,7 +288,7 @@ export function BottomNav({ onOpenMenu }: BottomNavProps) {
                       <Egg className="h-5 w-5" />
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-foreground">Ponte d'œufs</div>
+                      <div className="text-xs font-bold text-foreground">Ponte d&apos;œufs</div>
                       <div className="text-[10px] text-muted">Ramassage du lot</div>
                     </div>
                   </button>

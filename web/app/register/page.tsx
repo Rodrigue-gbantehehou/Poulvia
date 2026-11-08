@@ -1,8 +1,7 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Bird, Lock, Mail, User, Phone, ArrowRight, AlertCircle, Sun, Moon } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
@@ -44,33 +43,17 @@ export default function RegisterPage() {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-background p-4 sm:p-6 lg:p-8">
-      {/* Theme Toggle Top Right */}
-      <div className="absolute top-4 right-4">
-        <button
-          type="button"
-          onClick={toggleTheme}
-          aria-label="Basculer le thème"
-          className="rounded-xl border border-border bg-surface p-2 text-muted shadow-xs transition-colors hover:bg-surface-hover hover:text-foreground"
-        >
-          {theme === "dark" ? (
-            <Sun className="h-4 w-4 text-accent" />
-          ) : (
-            <Moon className="h-4 w-4 text-primary" />
-          )}
-        </button>
-      </div>
-
       <div className="w-full max-w-lg">
         {/* Header / Logo */}
         <div className="text-center mb-8">
-          <div className="mx-auto mb-3 h-16 w-16 overflow-hidden rounded-2xl border border-border bg-surface p-1 shadow-md">
-            <Image src="/logo.png" alt="Poulvia" width={56} height={56} className="h-full w-full object-contain" priority />
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white shadow-md mb-3">
+            <Bird className="h-8 w-8 text-accent" />
           </div>
           <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
             Poulvia
           </h1>
           <p className="mt-1 text-xs text-muted">
-            Gestion avicole moderne & pilotage d'élevages
+            Gestion avicole moderne & pilotage d&apos;élevages
           </p>
         </div>
 

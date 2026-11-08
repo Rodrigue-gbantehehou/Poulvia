@@ -507,14 +507,14 @@ function InventoryItemDetailContent() {
           <AlertTriangle className="mx-auto h-12 w-12 text-warning mb-3" />
           <h2 className="text-base font-bold text-foreground">Article introuvable</h2>
           <p className="mt-1 text-xs text-muted">
-            L'article d'inventaire demandé n'existe pas ou a été supprimé.
+            L&apos;article d&apos;inventaire demandé n&apos;existe pas ou a été supprimé.
           </p>
           <Link
             href="/inventory"
             className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white hover:bg-primary-hover transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>Retour à l'inventaire</span>
+            <span>Retour à l&apos;inventaire</span>
           </Link>
         </div>
       </Shell>
@@ -814,7 +814,7 @@ function InventoryItemDetailContent() {
 
             <dl className="space-y-3.5 text-xs">
               <div className="flex justify-between py-1 border-b border-border/50">
-                <dt className="text-muted">Nom de l'article :</dt>
+                <dt className="text-muted">Nom de l&apos;article :</dt>
                 <dd className="font-bold text-foreground">{item.name}</dd>
               </div>
 
@@ -840,7 +840,7 @@ function InventoryItemDetailContent() {
               {isBagItem && (
                 <>
                   <div className="flex justify-between py-1 border-b border-border/50">
-                    <dt className="text-muted">Poids net d'un sac :</dt>
+                    <dt className="text-muted">Poids net d&apos;un sac :</dt>
                     <dd className="font-mono font-bold text-primary">{itemBagWeight} kg / sac</dd>
                   </div>
                   <div className="flex justify-between py-1 border-b border-border/50">
@@ -853,7 +853,7 @@ function InventoryItemDetailContent() {
               )}
 
               <div className="flex justify-between py-1 border-b border-border/50">
-                <dt className="text-muted">Seuil d'alerte sécurité :</dt>
+                <dt className="text-muted">Seuil d&apos;alerte sécurité :</dt>
                 <dd className="font-mono font-bold text-foreground">{formatNumber(item.minThreshold)} {unitShort}</dd>
               </div>
 
@@ -863,7 +863,7 @@ function InventoryItemDetailContent() {
               </div>
 
               <div className="flex justify-between py-1">
-                <dt className="text-muted">Statut d'activité :</dt>
+                <dt className="text-muted">Statut d&apos;activité :</dt>
                 <dd>
                   <Badge variant={item.isActive !== false ? "success" : "neutral"} size="sm">
                     {item.isActive !== false ? "Actif en exploitation" : "Archivé / Inactif"}
@@ -878,7 +878,7 @@ function InventoryItemDetailContent() {
             <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-xs">
               <h2 className="text-sm font-bold text-foreground flex items-center gap-2 mb-3 border-b border-border pb-3">
                 <Info className="h-4 w-4 text-primary" />
-                <span>Notes & Consignes d'utilisation</span>
+                <span>Notes & Consignes d&apos;utilisation</span>
               </h2>
               {item.notes ? (
                 <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap bg-surface-muted p-3.5 rounded-xl border border-border">
@@ -918,12 +918,12 @@ function InventoryItemDetailContent() {
                   {item.isActive !== false ? (
                     <>
                       <Archive className="h-3.5 w-3.5" />
-                      <span>Archiver l'article</span>
+                      <span>Archiver l&apos;article</span>
                     </>
                   ) : (
                     <>
                       <RotateCcw className="h-3.5 w-3.5" />
-                      <span>Restaurer l'article</span>
+                      <span>Restaurer l&apos;article</span>
                     </>
                   )}
                 </button>
@@ -1081,7 +1081,7 @@ function InventoryItemDetailContent() {
           {moveType === "IN" && (
             <div>
               <label className="block text-xs font-semibold text-foreground mb-1">
-                Prix unitaire d'achat (FCFA / {getUnitShortLabel(moveUnit)})
+                Prix unitaire d&apos;achat (FCFA / {getUnitShortLabel(moveUnit)})
               </label>
               <input
                 type="number"
@@ -1222,7 +1222,7 @@ function InventoryItemDetailContent() {
           {editCategory === "OTHER" && (
             <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
               <label className="block text-xs font-semibold text-foreground mb-1">
-                Précisez la catégorie / nature de l'intrant *
+                Précisez la catégorie / nature de l&apos;intrant *
               </label>
               <input
                 type="text"
@@ -1256,7 +1256,7 @@ function InventoryItemDetailContent() {
                 <span className="text-xs font-bold text-muted whitespace-nowrap">kg / sac</span>
               </div>
               <p className="text-[11px] text-muted">
-                Définit le poids exact d'un sac pour calculer fidèlement le poids total en magasin ({formatNumber(item.currentStock)} sacs = ~{formatNumber(item.currentStock * (Number(editPackageWeightKg) || 50))} kg) et convertir les pesées de machine.
+                Définit le poids exact d&apos;un sac pour calculer fidèlement le poids total en magasin ({formatNumber(item.currentStock)} sacs = ~{formatNumber(item.currentStock * (Number(editPackageWeightKg) || 50))} kg) et convertir les pesées de machine.
               </p>
             </div>
           )}
@@ -1264,7 +1264,7 @@ function InventoryItemDetailContent() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-foreground mb-1">
-                Seuil d'alerte de stock *
+                Seuil d&apos;alerte de stock *
               </label>
               <input
                 type="number"
@@ -1276,13 +1276,13 @@ function InventoryItemDetailContent() {
                 className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-xs font-mono text-foreground focus:border-primary focus:outline-hidden"
               />
               <span className="mt-1 block text-[10px] text-muted">
-                Déclenche l'alerte dès que le stock descend à ce niveau.
+                Déclenche l&apos;alerte dès que le stock descend à ce niveau.
               </span>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-foreground mb-1">
-                Prix unitaire d'achat moyen (FCFA)
+                Prix unitaire d&apos;achat moyen (FCFA)
               </label>
               <input
                 type="number"

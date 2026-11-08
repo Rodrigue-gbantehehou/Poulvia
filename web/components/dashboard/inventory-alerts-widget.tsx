@@ -44,7 +44,7 @@ export function InventoryAlertsWidget({
             </h2>
             {lowStockItems.length > 0 && (
               <p className="text-xs text-danger font-medium mt-0.5">
-                {lowStockItems.length} article(s) sous le seuil d'alerte
+                {lowStockItems.length} article(s) sous le seuil d&apos;alerte
               </p>
             )}
           </div>
@@ -108,7 +108,7 @@ export function InventoryAlertsWidget({
                     Stock restant
                   </th>
                   <th className="py-2.5 px-3 font-semibold text-right whitespace-nowrap">
-                    Seuil d'alerte
+                    Seuil d&apos;alerte
                   </th>
                   <th className="py-2.5 px-3 font-semibold text-right rounded-r-lg whitespace-nowrap">
                     Urgence
@@ -137,7 +137,7 @@ export function InventoryAlertsWidget({
                     <td className="py-3 px-3 text-right">
                       <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-danger">
                         <span className="h-1.5 w-1.5 rounded-full bg-danger animate-pulse" />
-                        Commander d'urgence
+                        Commander d&apos;urgence
                       </span>
                     </td>
                   </tr>
@@ -154,7 +154,7 @@ export function InventoryAlertsWidget({
               Toutes vos réserves sont au vert !
             </p>
             <p className="text-muted mt-0.5">
-              Aucun aliment ou produit vétérinaire n'est en rupture. Les quantités en stock couvrent les besoins de vos poules.
+              Aucun aliment ou produit vétérinaire n&apos;est en rupture. Les quantités en stock couvrent les besoins de vos poules.
             </p>
           </div>
         </div>

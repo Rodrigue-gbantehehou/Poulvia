@@ -849,7 +849,7 @@ export default function InventoryPage() {
           {category === "OTHER" && (
             <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
               <label className="block text-xs font-semibold text-foreground mb-1">
-                Précisez la catégorie / nature de l'intrant *
+                Précisez la catégorie / nature de l&apos;intrant *
               </label>
               <input
                 type="text"

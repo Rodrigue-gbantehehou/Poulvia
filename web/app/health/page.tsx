@@ -624,7 +624,7 @@ export default function HealthPage() {
 
                       {t.notes && (
                         <p className="mt-1 text-xs text-muted/90 italic">
-                          "{t.notes}"
+                          &quot;{t.notes}&quot;
                         </p>
                       )}
                     </div>
@@ -772,7 +772,7 @@ export default function HealthPage() {
 
             <div>
               <label className="text-xs font-semibold text-foreground block mb-1">
-                Mode d'administration *
+                Mode d&apos;administration *
               </label>
               <select
                 value={createMethod}
@@ -783,7 +783,7 @@ export default function HealthPage() {
                 <option value="INJECTION">Injection sous-cutanée / musculaire</option>
                 <option value="OCULAR_NASAL">Goutte oculaire ou nasale</option>
                 <option value="SPRAY">Nébulisation / Spray</option>
-                <option value="FEED">Mélange dans l'aliment</option>
+                <option value="FEED">Mélange dans l&apos;aliment</option>
                 <option value="TOPICAL">Application alaire / cutanée</option>
                 <option value="OTHER">Autre méthode</option>
               </select>

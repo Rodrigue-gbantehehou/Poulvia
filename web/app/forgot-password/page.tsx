@@ -1,8 +1,7 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Bird,
@@ -102,27 +101,11 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-background p-4 sm:p-6 lg:p-8">
-      {/* Theme Toggle Top Right */}
-      <div className="absolute top-4 right-4">
-        <button
-          type="button"
-          onClick={toggleTheme}
-          aria-label="Basculer le thème"
-          className="rounded-xl border border-border bg-surface p-2 text-muted shadow-xs transition-colors hover:bg-surface-hover hover:text-foreground"
-        >
-          {theme === "dark" ? (
-            <Sun className="h-4 w-4 text-accent" />
-          ) : (
-            <Moon className="h-4 w-4 text-primary" />
-          )}
-        </button>
-      </div>
-
       <div className="w-full max-w-md">
         {/* Brand Header */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-3 h-16 w-16 overflow-hidden rounded-2xl border border-border bg-surface p-1 shadow-md">
-            <Image src="/logo.png" alt="Poulvia" width={56} height={56} className="h-full w-full object-contain" priority />
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/25">
+            <Bird className="h-8 w-8" />
           </div>
           <h1 className="mt-4 text-2xl font-black tracking-tight text-foreground sm:text-3xl">
             Poulvia
@@ -158,11 +141,10 @@ export default function ForgotPasswordPage() {
                 <button
                   type="button"
                   onClick={() => setChannel("email")}
-                  className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-all ${
-                    channel === "email"
-                      ? "bg-primary text-white shadow-xs"
-                      : "text-muted hover:text-foreground"
-                  }`}
+                  className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-all ${channel === "email"
+                    ? "bg-primary text-white shadow-xs"
+                    : "text-muted hover:text-foreground"
+                    }`}
                 >
                   <Mail className="h-3.5 w-3.5" />
                   <span>Par E-mail</span>
@@ -170,11 +152,10 @@ export default function ForgotPasswordPage() {
                 <button
                   type="button"
                   onClick={() => setChannel("sms")}
-                  className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-all ${
-                    channel === "sms"
-                      ? "bg-primary text-white shadow-xs"
-                      : "text-muted hover:text-foreground"
-                  }`}
+                  className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-all ${channel === "sms"
+                    ? "bg-primary text-white shadow-xs"
+                    : "text-muted hover:text-foreground"
+                    }`}
                 >
                   <Phone className="h-3.5 w-3.5" />
                   <span>Par SMS</span>
@@ -329,7 +310,7 @@ export default function ForgotPasswordPage() {
                   onClick={() => setStep(1)}
                   className="text-muted hover:text-foreground transition-colors"
                 >
-                  ← Modifier l'identifiant
+                  ← Modifier l&apos;identifiant
                 </button>
                 <Link
                   href="/login"
@@ -361,7 +342,7 @@ export default function ForgotPasswordPage() {
                   href="/login"
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-bold text-white shadow-md hover:bg-primary-hover transition-colors"
                 >
-                  <span>Aller à l'écran de connexion</span>
+                  <span>Aller à l&apos;écran de connexion</span>
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>

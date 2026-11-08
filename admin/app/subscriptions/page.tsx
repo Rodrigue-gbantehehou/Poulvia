@@ -454,7 +454,8 @@ export default function SubscriptionsPage() {
   };
 
   useEffect(() => {
-    fetchData();
+    const task = window.setTimeout(() => void fetchData(), 0);
+    return () => window.clearTimeout(task);
   }, [subStatusFilter, subPlanFilter]);
 
   useEffect(() => {
@@ -462,7 +463,8 @@ export default function SubscriptionsPage() {
       const params = new URLSearchParams(window.location.search);
       const tab = params.get("tab") || params.get("view");
       if (tab === "requests" || tab === "subscriptions" || tab === "analytics" || tab === "offers") {
-        setActiveView(tab as any);
+        const task = window.setTimeout(() => setActiveView(tab), 0);
+        return () => window.clearTimeout(task);
       }
     }
   }, []);
@@ -883,7 +885,7 @@ export default function SubscriptionsPage() {
               </div>
               <div>
                 <p className="text-xs font-bold text-foreground flex items-center gap-2">
-                  <span>{pendingRequestsCount} demande{pendingRequestsCount > 1 ? "s" : ""} de changement d'offre en attente</span>
+                  <span>{pendingRequestsCount} demande{pendingRequestsCount > 1 ? "s" : ""} de changement d&apos;offre en attente</span>
                   <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500 text-white">
                     Action requise
                   </span>
@@ -1170,7 +1172,7 @@ export default function SubscriptionsPage() {
                           <div className="text-right">
                             {plan.trialDays > 0 ? (
                               <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-                                {plan.trialDays}j d'essai gratuit
+                                {plan.trialDays}j d&apos;essai gratuit
                               </span>
                             ) : (
                               <span className="text-[10px] text-muted block">Sans essai gratuit</span>
@@ -1869,7 +1871,7 @@ export default function SubscriptionsPage() {
                 className="text-xs gap-1.5"
               >
                 <Eye className="h-3.5 w-3.5 text-muted" />
-                <span>Aperçu de l'offre</span>
+                <span>Aperçu de l&apos;offre</span>
               </Button>
             </div>
 
@@ -1985,7 +1987,7 @@ export default function SubscriptionsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-foreground mb-1">
-                    Nom de l'offre <span className="text-danger">*</span>
+                    Nom de l&apos;offre <span className="text-danger">*</span>
                   </label>
                   <Input
                     placeholder="Ex: Standard (Éleveur Pro)"
@@ -2015,7 +2017,7 @@ export default function SubscriptionsPage() {
                     className="text-xs font-mono"
                     required
                   />
-                  <p className="text-[10px] text-muted mt-0.5">Code unique de l'offre.</p>
+                  <p className="text-[10px] text-muted mt-0.5">Code unique de l&apos;offre.</p>
                 </div>
               </div>
 
@@ -2172,10 +2174,10 @@ export default function SubscriptionsPage() {
                   <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs font-bold text-foreground">
-                      Validité de l'offre
+                      Validité de l&apos;offre
                     </p>
                     <p className="text-xs text-muted mt-0.5 leading-relaxed">
-                      Période pendant laquelle l'offre est disponible aux nouveaux clients. Les abonnés actuels conservent leur abonnement.
+                      Période pendant laquelle l&apos;offre est disponible aux nouveaux clients. Les abonnés actuels conservent leur abonnement.
                     </p>
                   </div>
                 </div>
@@ -2379,7 +2381,7 @@ export default function SubscriptionsPage() {
                     />
                     <div>
                       <span className="text-xs font-semibold text-foreground">Afficher sur la Landing page (poulvia.com)</span>
-                      <p className="text-[11px] text-muted">Cette formule apparaîtra dans la section Tarifs publique de la page d'accueil.</p>
+                      <p className="text-[11px] text-muted">Cette formule apparaîtra dans la section Tarifs publique de la page d&apos;accueil.</p>
                     </div>
                   </label>
                 )}
@@ -2729,7 +2731,7 @@ export default function SubscriptionsPage() {
             {previewPlan.trialDays > 0 && (
               <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-xs font-semibold flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-emerald-600 shrink-0" />
-                <span>Profitez de {previewPlan.trialDays} jours d'essai gratuit !</span>
+                <span>Profitez de {previewPlan.trialDays} jours d&apos;essai gratuit !</span>
               </div>
             )}
 
@@ -2780,7 +2782,7 @@ export default function SubscriptionsPage() {
             {/* Fonctionnalités incluses */}
             <div className="space-y-2 pt-2 border-t border-border">
               <span className="text-xs font-bold text-foreground uppercase tracking-wider block">
-                Inclus dans l'offre :
+                Inclus dans l&apos;offre :
               </span>
               <div className="space-y-1.5">
                 {previewPlan.features.map((feat, idx) => (

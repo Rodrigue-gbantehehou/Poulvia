@@ -117,7 +117,7 @@ export function PlanDetailsModal({
         {quotas && (
           <div className="space-y-2">
             <div className="text-xs font-bold uppercase tracking-wider text-muted">
-              Limites d'utilisation
+              Limites d&apos;utilisation
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <div className="rounded-xl border border-border bg-surface-muted p-2.5 text-center">
