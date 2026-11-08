@@ -53,6 +53,73 @@ class _EggsScreenState extends ConsumerState<EggsScreen> {
     final farm = ref.watch(authProvider).activeFarm;
     final canCreateFinance = farm == null || farm.canCreateFinance;
 
+    if (farm?.isBroilerOnly == true) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: widget.onBack != null
+              ? IconButton(
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  tooltip: "Retour",
+                  onPressed: widget.onBack,
+                )
+              : (Navigator.of(context).canPop()
+                  ? IconButton(
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      tooltip: "Retour",
+                      onPressed: () => Navigator.of(context).pop(),
+                    )
+                  : IconButton(
+                      icon: const Icon(Icons.menu_rounded),
+                      tooltip: "Menu",
+                      onPressed: widget.onOpenMenu ?? () => Scaffold.of(context).openDrawer(),
+                    )),
+          title: const Text("Production d'œufs"),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.egg_outlined,
+                    size: 36,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  "Élevage de poulets de chair",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  "Cette exploitation est configurée pour l'élevage de chair (sans production d'œufs de ponte). Le suivi de vos lots, pesées et ventes s'effectue dans l'espace Élevage.",
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.white60 : AppColors.textMutedLight,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         leading: widget.onBack != null

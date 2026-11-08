@@ -7,18 +7,12 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Bird,
-  Warehouse,
   Egg,
   HeartPulse,
-  Package,
-  Wallet,
-  ContactRound,
-  ShieldCheck,
-  Users,
+  Briefcase,
   X,
   Settings,
   CreditCard,
-  PanelLeftClose,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { cn } from "@/lib/utils";
@@ -39,7 +33,7 @@ import {
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { hasPermission, hasModule, activePlan, isOwner } = useAuth();
+  const { hasPermission, hasModule, activePlan, activeFarm, isOwner } = useAuth();
   const { state, isMobile, setOpenMobile } = useSidebar();
   const isCollapsed = state === "collapsed" && !isMobile;
 
@@ -49,90 +43,71 @@ export function Sidebar() {
     }
   };
 
-  const navigation = [
+  const isBroiler = activeFarm?.productionType === "BROILER";
+
+  // ─── 5 ESPACES PRINCIPAUX STANDARDISÉS ───
+  const mainNavigation = [
     {
-      name: "Tableau de bord",
+      name: "Accueil",
       href: "/",
       icon: LayoutDashboard,
-      module: undefined,
+      isActive: pathname === "/",
       show: true,
     },
     {
-      name: "Poulaillers & Bâtiments",
-      href: "/buildings",
-      icon: Warehouse,
-      module: "buildings",
-      show: hasPermission("building:manage") || hasPermission("farm:view"),
-    },
-    {
-      name: "Bandes de volailles",
+      name: "Élevage",
       href: "/flocks",
       icon: Bird,
-      module: "flocks",
-      show: hasPermission("flock:read") || hasPermission("flock:view"),
+      isActive: pathname.startsWith("/flocks") || pathname.startsWith("/buildings"),
+      show:
+        hasPermission("flock:read") ||
+        hasPermission("flock:view") ||
+        hasPermission("building:manage") ||
+        isOwner,
     },
     {
-      name: "Pontes d'œufs",
+      name: "Production",
       href: "/eggs",
       icon: Egg,
-      module: "eggs",
-      show: hasPermission("egg:read") || hasPermission("egg:view"),
+      isActive: pathname.startsWith("/eggs"),
+      // Si la ferme est strictement BROILER (chair), la ponte peut être masquée ou désactivée
+      show:
+        !isBroiler &&
+        hasModule("eggs") &&
+        (hasPermission("egg:read") || hasPermission("egg:view") || isOwner),
     },
     {
-      name: "Santé & Soins",
+      name: "Santé",
       href: "/health",
       icon: HeartPulse,
-      module: "health",
-      show: hasPermission("health:view") || hasPermission("health:manage"),
+      isActive: pathname.startsWith("/health"),
+      show:
+        hasModule("health") &&
+        (hasPermission("health:view") || hasPermission("health:manage") || isOwner),
     },
     {
-      name: "Stocks & Intrants",
-      href: "/inventory",
-      icon: Package,
-      module: "inventory",
-      show: hasPermission("inventory:read") || hasPermission("inventory:view"),
+      name: "Gestion",
+      href: "/management",
+      icon: Briefcase,
+      isActive:
+        pathname.startsWith("/management") ||
+        pathname.startsWith("/finances") ||
+        pathname.startsWith("/inventory") ||
+        pathname.startsWith("/contacts") ||
+        pathname.startsWith("/settings/members") ||
+        pathname.startsWith("/settings/roles"),
+      show: true,
     },
-    {
-      name: "Trésorerie & Ventes",
-      href: "/finances",
-      icon: Wallet,
-      module: "finance",
-      show: hasPermission("finance:read") || hasPermission("finance:view"),
-    },
-    {
-      name: "Contacts & Tiers",
-      href: "/contacts",
-      icon: ContactRound,
-      module: "contacts",
-      show: hasPermission("contact:read") || hasPermission("contact:view"),
-    },
-    {
-      name: "Équipe & Accès",
-      href: "/settings/members",
-      icon: Users,
-      module: "team",
-      show: hasPermission("member:manage") || hasPermission("member:read"),
-    },
-    {
-      name: "Rôles & Permissions",
-      href: "/settings/roles",
-      icon: ShieldCheck,
-      module: "custom_roles",
-      show: hasPermission("role:manage") || hasPermission("role:read"),
-    },
-    {
-      name: "Mon abonnement",
-      href: "/settings/subscription",
-      icon: CreditCard,
-      module: undefined,
-      show: isOwner,
-    },
+  ];
+
+  // ─── NAVIGATION SECONDAIRE (PARAMÈTRES FERME) ───
+  const secondaryNavigation = [
     {
       name: "Paramètres de la ferme",
       href: "/settings/farm",
       icon: Settings,
-      module: undefined,
-      show: true,
+      isActive: pathname.startsWith("/settings/farm"),
+      show: isOwner || hasPermission("farm:edit"),
     },
   ];
 
@@ -192,32 +167,21 @@ export function Sidebar() {
         )}
       </SidebarHeader>
 
-      {/* ─── Navigation ─── */}
+      {/* ─── 5 Espaces Principaux ─── */}
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Exploitation</SidebarGroupLabel>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigation.map((item) => {
-                const isModuleAllowed = item.module
-                  ? hasModule(item.module)
-                  : true;
-
-                if (!isModuleAllowed || !item.show) {
-                  return null;
-                }
-
-                const isActive =
-                  item.href === "/"
-                    ? pathname === "/"
-                    : pathname.startsWith(item.href);
+              {mainNavigation.map((item) => {
+                if (!item.show) return null;
                 const Icon = item.icon;
 
                 return (
                   <SidebarMenuItem key={item.name}>
                     <SidebarMenuButton
                       asChild
-                      isActive={isActive}
+                      isActive={item.isActive}
                       tooltip={item.name}
                       onClick={closeMobile}
                     >
@@ -229,7 +193,49 @@ export function Sidebar() {
                           className={cn(
                             "shrink-0 transition-colors",
                             isCollapsed ? "h-5 w-5" : "h-4 w-4",
-                            isActive
+                            item.isActive
+                              ? "text-accent"
+                              : "text-white/70 group-hover:text-white"
+                          )}
+                        />
+                        {!isCollapsed && (
+                          <span className="truncate">{item.name}</span>
+                        )}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* ─── Section Paramètres Secondaire ─── */}
+        <SidebarGroup className="mt-auto pt-3">
+          <SidebarGroupLabel>Configuration</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {secondaryNavigation.map((item) => {
+                if (!item.show) return null;
+                const Icon = item.icon;
+
+                return (
+                  <SidebarMenuItem key={item.name}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={item.isActive}
+                      tooltip={item.name}
+                      onClick={closeMobile}
+                    >
+                      <Link
+                        href={item.href}
+                        className="flex w-full items-center gap-3"
+                      >
+                        <Icon
+                          className={cn(
+                            "shrink-0 transition-colors",
+                            isCollapsed ? "h-5 w-5" : "h-4 w-4",
+                            item.isActive
                               ? "text-accent"
                               : "text-white/70 group-hover:text-white"
                           )}

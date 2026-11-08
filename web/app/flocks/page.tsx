@@ -316,15 +316,15 @@ export default function FlocksPage() {
         icon={<Bird className="h-4 w-4" />}
         actions={
           <>
-            {hasPermission("farm:update") && (
-              <button
-                type="button"
-                onClick={() => setBuildingModalOpen(true)}
+            {(hasPermission("building:manage") || hasPermission("farm:view") || isOwner) && (
+              <Link
+                href="/buildings"
                 className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-surface-hover shadow-2xs active:scale-95 transition-all cursor-pointer"
+                title="Voir et gérer les bâtiments & poulaillers"
               >
                 <Warehouse className="h-3.5 w-3.5 text-primary" />
-                <span className="hidden xs:inline">Poulailler</span>
-              </button>
+                <span className="hidden xs:inline">Poulaillers</span>
+              </Link>
             )}
 
             {hasPermission("flock:create") && (

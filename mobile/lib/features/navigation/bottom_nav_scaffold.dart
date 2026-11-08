@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/models/farm.dart';
 import '../../core/theme/app_theme.dart';
 import '../auth/auth_provider.dart';
 import '../dashboard/dashboard_screen.dart';
@@ -29,23 +28,8 @@ import '../sync/sync_screen.dart';
 import '../subscriptions/subscription_screen.dart';
 import '../contacts/contacts_screen.dart';
 import '../settings/farm_settings_screen.dart';
+import '../management/management_screen.dart';
 import 'app_drawer.dart';
-
-class _NavDestination {
-  final String key;
-  final String label;
-  final IconData icon;
-  final IconData activeIcon;
-  final Widget Function(VoidCallback onOpenMenu) screenBuilder;
-
-  const _NavDestination({
-    required this.key,
-    required this.label,
-    required this.icon,
-    required this.activeIcon,
-    required this.screenBuilder,
-  });
-}
 
 class BottomNavScaffold extends ConsumerStatefulWidget {
   const BottomNavScaffold({super.key});
@@ -78,19 +62,12 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
 
     if (index == 0) {
       ref.read(dashboardProvider.notifier).loadDashboard(showLoading: false);
-      return;
-    }
-
-    if (index == 1) {
+    } else if (index == 1) {
       ref.read(flockProvider.notifier).loadFlocks(showLoading: false);
-      return;
-    }
-
-    final farm = ref.read(authProvider).activeFarm;
-    final rightDestinations = _getRightDestinations(farm);
-    if (index >= 2 && (index - 2) < rightDestinations.length) {
-      final destKey = rightDestinations[index - 2].key;
-      _refreshModuleData(destKey);
+    } else if (index == 2) {
+      ref.read(eggProvider.notifier).loadData(showLoading: false);
+    } else if (index == 3) {
+      // Gestion
     }
   }
 
@@ -169,89 +146,7 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
     );
   }
 
-  List<_NavDestination> _getRightDestinations(Farm? farm) {
-    final role = (farm?.role ?? '').toUpperCase();
-    final List<String> priorityOrder;
-    if (role == 'ACCOUNTANT') {
-      priorityOrder = ['finance', 'reports', 'inventory', 'health', 'eggs'];
-    } else if (role == 'STOCK_KEEPER') {
-      priorityOrder = ['inventory', 'health', 'reports', 'finance', 'eggs'];
-    } else if (role == 'VET_CONSULTANT') {
-      priorityOrder = ['health', 'inventory', 'reports', 'finance', 'eggs'];
-    } else if (role == 'PRODUCTION_LEAD') {
-      priorityOrder = ['inventory', 'eggs', 'health', 'reports', 'finance'];
-    } else {
-      // OWNER, ADMIN, MANAGER ou profil par défaut
-      priorityOrder = ['finance', 'inventory', 'health', 'reports', 'eggs'];
-    }
-
-    final canFinance = farm == null ? true : farm.canViewFinance;
-    final canInventory = farm == null ? true : farm.canViewInventory;
-    final canHealth = farm == null ? true : farm.canViewHealth;
-    final canReports = farm == null ? true : farm.canViewReports;
-    final canEggs = farm == null ? true : farm.canViewEggs;
-
-    final candidates = <String, _NavDestination>{
-      if (canFinance)
-        'finance': _NavDestination(
-          key: 'finance',
-          label: "Caisse",
-          icon: Icons.account_balance_wallet_outlined,
-          activeIcon: Icons.account_balance_wallet_rounded,
-          screenBuilder: (openMenu) => FinancesScreen(onOpenMenu: openMenu),
-        ),
-      if (canInventory)
-        'inventory': _NavDestination(
-          key: 'inventory',
-          label: "Stocks",
-          icon: Icons.inventory_2_outlined,
-          activeIcon: Icons.inventory_2_rounded,
-          screenBuilder: (openMenu) => InventoryScreen(onOpenMenu: openMenu),
-        ),
-      if (canHealth)
-        'health': _NavDestination(
-          key: 'health',
-          label: "Santé",
-          icon: Icons.medical_services_outlined,
-          activeIcon: Icons.medical_services_rounded,
-          screenBuilder: (openMenu) => HealthScreen(onOpenMenu: openMenu),
-        ),
-      if (canReports)
-        'reports': _NavDestination(
-          key: 'reports',
-          label: "Rapports",
-          icon: Icons.bar_chart_outlined,
-          activeIcon: Icons.bar_chart_rounded,
-          screenBuilder: (openMenu) => ReportsScreen(onOpenMenu: openMenu),
-        ),
-      if (canEggs)
-        'eggs': _NavDestination(
-          key: 'eggs',
-          label: "Ponte",
-          icon: Icons.egg_outlined,
-          activeIcon: Icons.egg_rounded,
-          screenBuilder: (openMenu) => EggsScreen(onOpenMenu: openMenu),
-        ),
-    };
-
-    final result = <_NavDestination>[];
-    for (final key in priorityOrder) {
-      if (candidates.containsKey(key)) {
-        result.add(candidates[key]!);
-        if (result.length == 2) break;
-      }
-    }
-    // Compléter si moins de 2
-    for (final entry in candidates.entries) {
-      if (!result.any((d) => d.key == entry.key)) {
-        result.add(entry.value);
-        if (result.length == 2) break;
-      }
-    }
-    return result;
-  }
-
-  void _navigateToModule(String key, List<_NavDestination> rightDestinations) {
+  void _navigateToModule(String key) {
     if (key == 'dashboard') {
       setState(() {
         _activeSecondaryKey = null;
@@ -266,20 +161,24 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
       });
       return;
     }
-
-    _refreshModuleData(key);
-
-    final rightIdx = rightDestinations.indexWhere((d) => d.key == key);
-    if (rightIdx != -1) {
+    if (key == 'eggs') {
       setState(() {
         _activeSecondaryKey = null;
-        _currentIndex = 2 + rightIdx;
+        _currentIndex = 2;
+      });
+      return;
+    }
+    if (key == 'management') {
+      setState(() {
+        _activeSecondaryKey = null;
+        _currentIndex = 3;
       });
       return;
     }
 
-    // Le module n'est pas dans les 4 onglets : l'afficher à l'intérieur du scaffold
-    // afin de conserver la barre du bas et le FAB (+) en permanence
+    _refreshModuleData(key);
+
+    // Module secondaire affiché à l'intérieur du scaffold
     setState(() {
       _activeSecondaryKey = key;
     });
@@ -287,8 +186,8 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
 
   Widget _buildSecondaryScreen(String key) {
     switch (key) {
-      case 'eggs':
-        return EggsScreen(
+      case 'health':
+        return HealthScreen(
           onOpenMenu: _openDrawer,
           onBack: _closeSecondaryModule,
         );
@@ -299,11 +198,6 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
         );
       case 'inventory':
         return InventoryScreen(
-          onOpenMenu: _openDrawer,
-          onBack: _closeSecondaryModule,
-        );
-      case 'health':
-        return HealthScreen(
           onOpenMenu: _openDrawer,
           onBack: _closeSecondaryModule,
         );
@@ -322,6 +216,11 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
           onOpenMenu: _openDrawer,
           onBack: _closeSecondaryModule,
         );
+      case 'contacts':
+        return ContactsScreen(
+          onOpenMenu: _openDrawer,
+          onBack: _closeSecondaryModule,
+        );
       case 'sync':
         return SyncScreen(
           onOpenMenu: _openDrawer,
@@ -329,11 +228,6 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
         );
       case 'subscription':
         return SubscriptionScreen(
-          onOpenMenu: _openDrawer,
-          onBack: _closeSecondaryModule,
-        );
-      case 'contacts':
-        return ContactsScreen(
           onOpenMenu: _openDrawer,
           onBack: _closeSecondaryModule,
         );
@@ -372,23 +266,21 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final navBgColor = isDark ? AppColors.navBarDark : AppColors.navBarLight;
 
-    // Détermination dynamique des 2 onglets de droite selon les droits et l'abonnement
-    final rightDestinations = _getRightDestinations(farm);
-
+    // ─── 4 ÉCRANS STABLES EN BAS ───
     final screens = <Widget>[
       DashboardScreen(
         onOpenQuickActions: _openQuickActions,
-        onNavigateToEggs: () => _navigateToModule('eggs', rightDestinations),
-        onNavigateToFlocks: () => _navigateToModule('flocks', rightDestinations),
-        onNavigateToFinances: () => _navigateToModule('finance', rightDestinations),
-        onNavigateToSync: () => _navigateToModule('sync', rightDestinations),
+        onNavigateToEggs: () => _navigateToModule('eggs'),
+        onNavigateToFlocks: () => _navigateToModule('flocks'),
+        onNavigateToFinances: () => _navigateToModule('finance'),
+        onNavigateToSync: () => _navigateToModule('sync'),
         onOpenMenu: _openDrawer,
       ),
       FlocksScreen(onOpenMenu: _openDrawer),
-      ...rightDestinations.map((d) => d.screenBuilder(_openDrawer)),
+      EggsScreen(onOpenMenu: _openDrawer),
+      ManagementScreen(onOpenMenu: _openDrawer),
     ];
 
-    // Sécurité d'index
     final safeIndex = _currentIndex < screens.length ? _currentIndex : 0;
 
     return PopScope(
@@ -402,7 +294,7 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
       child: Scaffold(
         key: _scaffoldKey,
         drawer: AppDrawer(
-          onSelectModule: (modKey) => _navigateToModule(modKey, rightDestinations),
+          onSelectModule: (modKey) => _navigateToModule(modKey),
           onSelectTab: (idx) {
             if (idx < screens.length) {
               setState(() {
@@ -419,84 +311,82 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
                 index: safeIndex,
                 children: screens,
               ),
-      floatingActionButton: (farm == null || farm.hasAnyQuickAction)
-          ? FloatingActionButton(
-              heroTag: 'fab_nav_center',
-              onPressed: _openQuickActions,
-              backgroundColor: AppColors.accentLight,
-              foregroundColor: Colors.white,
-              elevation: 6,
-              shape: const CircleBorder(),
-              tooltip: "Actions rapides",
-              child: const Icon(Icons.add_rounded, size: 28),
-            )
-          : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-        elevation: 10,
-        shadowColor: Colors.black.withValues(alpha: 0.35),
-        color: navBgColor,
-        notchMargin: 6,
-        shape: const CircularNotchedRectangle(),
-        clipBehavior: Clip.antiAlias,
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        height: 64,
-        child: SafeArea(
-          top: false,
-          child: Row(
-            children: [
-              // Bloc gauche : 2 onglets fondamentaux (Accueil, Bandes)
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildNavItem(
-                      index: 0,
-                      icon: Icons.dashboard_outlined,
-                      activeIcon: Icons.dashboard_rounded,
-                      label: "Accueil",
-                    ),
-                    _buildNavItem(
-                      index: 1,
-                      icon: Icons.pets_outlined,
-                      activeIcon: Icons.pets_rounded,
-                      label: "Bandes",
-                    ),
-                  ],
+        floatingActionButton: (farm == null || farm.hasAnyQuickAction)
+            ? FloatingActionButton(
+                heroTag: 'fab_nav_center',
+                onPressed: _openQuickActions,
+                backgroundColor: AppColors.accentLight,
+                foregroundColor: Colors.white,
+                elevation: 6,
+                shape: const CircleBorder(),
+                tooltip: "Actions rapides",
+                child: const Icon(Icons.add_rounded, size: 28),
+              )
+            : null,
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        bottomNavigationBar: BottomAppBar(
+          elevation: 10,
+          shadowColor: Colors.black.withValues(alpha: 0.35),
+          color: navBgColor,
+          notchMargin: 6,
+          shape: const CircularNotchedRectangle(),
+          clipBehavior: Clip.antiAlias,
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          height: 64,
+          child: SafeArea(
+            top: false,
+            child: Row(
+              children: [
+                // Bloc gauche : Accueil & Élevage
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildNavItem(
+                        index: 0,
+                        icon: Icons.dashboard_outlined,
+                        activeIcon: Icons.dashboard_rounded,
+                        label: "Accueil",
+                      ),
+                      _buildNavItem(
+                        index: 1,
+                        icon: Icons.pets_outlined,
+                        activeIcon: Icons.pets_rounded,
+                        label: "Élevage",
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
-              // Espace central pour le FAB encastré
-              const SizedBox(width: 56),
+                // Espace central pour le FAB encastré (+)
+                const SizedBox(width: 56),
 
-              // Bloc droit : 2 modules personnalisés selon le rôle et les droits
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    if (rightDestinations.isNotEmpty)
+                // Bloc droit : Production & Gestion
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
                       _buildNavItem(
                         index: 2,
-                        icon: rightDestinations[0].icon,
-                        activeIcon: rightDestinations[0].activeIcon,
-                        label: rightDestinations[0].label,
+                        icon: Icons.egg_outlined,
+                        activeIcon: Icons.egg_rounded,
+                        label: "Production",
                       ),
-                    if (rightDestinations.length > 1)
                       _buildNavItem(
                         index: 3,
-                        icon: rightDestinations[1].icon,
-                        activeIcon: rightDestinations[1].activeIcon,
-                        label: rightDestinations[1].label,
+                        icon: Icons.business_center_outlined,
+                        activeIcon: Icons.business_center_rounded,
+                        label: "Gestion",
                       ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
   }
 
   Widget _buildNavItem({

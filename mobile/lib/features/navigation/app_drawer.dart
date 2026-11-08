@@ -5,16 +5,12 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_provider.dart';
 import '../auth/auth_provider.dart';
 import '../auth/login_screen.dart';
-import '../eggs/eggs_screen.dart';
 import '../health/health_screen.dart';
-import '../inventory/inventory_screen.dart';
 import '../buildings/buildings_screen.dart';
-import '../members/members_screen.dart';
+import '../reports/reports_screen.dart';
 import '../sync/sync_provider.dart';
 import '../sync/sync_screen.dart';
 import '../subscriptions/subscription_screen.dart';
-import '../finances/finances_screen.dart';
-import '../contacts/contacts_screen.dart';
 import '../settings/farm_settings_screen.dart';
 
 class AppDrawer extends ConsumerWidget {
@@ -33,6 +29,16 @@ class AppDrawer extends ConsumerWidget {
     }
   }
 
+  void _selectTab(BuildContext context, int index, String key) {
+    HapticFeedback.lightImpact();
+    Navigator.of(context).pop();
+    if (onSelectModule != null) {
+      onSelectModule!(key);
+    } else {
+      onSelectTab?.call(index);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
@@ -44,7 +50,7 @@ class AppDrawer extends ConsumerWidget {
       child: SafeArea(
         child: Column(
           children: [
-            // En-tête compact et épuré avec rappel de la ferme active
+            // En-tête avec rappel de la ferme active
             Container(
               padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
               decoration: BoxDecoration(
@@ -72,7 +78,35 @@ class AppDrawer extends ConsumerWidget {
                       fit: BoxFit.contain,
                     ),
                   ),
-                  const Spacer(),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          farm?.name ?? "Poulvia",
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (farm?.productionType != null)
+                          Text(
+                            farm!.isBroilerOnly
+                                ? "Poulets de chair"
+                                : (farm.productionType == 'LAYER'
+                                    ? "Poules pondeuses"
+                                    : "Élevage avicole"),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isDark ? Colors.white60 : AppColors.textMutedLight,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                   IconButton(
                     icon: const Icon(Icons.close_rounded, size: 20),
                     padding: EdgeInsets.zero,
@@ -84,77 +118,61 @@ class AppDrawer extends ConsumerWidget {
               ),
             ),
 
-            // Liste continue, compacte et bien ordonnée (sans en-têtes de section)
+            // Liste de navigation organisée en 5 espaces cibles + outils secondaires
             Expanded(
               child: ListView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 children: [
-                  // 1. Tableau de bord
+                  // --- 5 ESPACES PRINCIPAUX ---
+                  _SectionHeader(label: "ESPACES PRINCIPAUX", isDark: isDark),
+
+                  // 1. Accueil / Tableau de bord
                   _DrawerItem(
                     icon: Icons.dashboard_rounded,
                     label: "Tableau de bord",
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      Navigator.of(context).pop();
-                      if (onSelectModule != null) {
-                        onSelectModule!('dashboard');
-                      } else {
-                        onSelectTab?.call(0);
-                      }
-                    },
+                    onTap: () => _selectTab(context, 0, 'dashboard'),
                   ),
 
-                  // 2. Bandes de volailles
+                  // 2. Élevage & Bandes
                   if (farm == null || farm.canViewFlocks)
                     _DrawerItem(
                       icon: Icons.grid_view_rounded,
-                      label: "Bandes de volailles",
-                      badge: farm?.productionType,
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        Navigator.of(context).pop();
-                        if (onSelectModule != null) {
-                          onSelectModule!('flocks');
-                        } else {
-                          onSelectTab?.call(1);
-                        }
-                      },
+                      label: "Élevage & Bandes",
+                      onTap: () => _selectTab(context, 1, 'flocks'),
                     ),
 
-                  // 3. Pontes d'œufs
+                  // 3. Production d'œufs (non affiché si élevage exclusivement chair)
                   if (farm?.canViewEggs == true)
                     _DrawerItem(
                       icon: Icons.egg_rounded,
-                      label: "Pontes d'œufs",
-                      onTap: () => _navigateTo(context, 'eggs', const EggsScreen()),
+                      label: "Production d'œufs",
+                      onTap: () => _selectTab(context, 2, 'eggs'),
                     ),
 
-                  // 4. Trésorerie & Ventes
-                  if (farm?.canViewFinance == true)
-                    _DrawerItem(
-                      icon: Icons.account_balance_wallet_rounded,
-                      label: "Trésorerie & Ventes",
-                      onTap: () => _navigateTo(context, 'finance', const FinancesScreen()),
-                    ),
-
-                  // 5. Stocks & Intrants
-                  if (farm?.canViewInventory == true)
-                    _DrawerItem(
-                      icon: Icons.inventory_2_rounded,
-                      label: "Stocks & Intrants",
-                      onTap: () => _navigateTo(context, 'inventory', const InventoryScreen()),
-                    ),
-
-                  // 6. Santé & Traitements
-                  if (farm?.canViewHealth == true)
+                  // 4. Santé & Traitements (Navigation secondaire pérenne)
+                  if (farm == null || farm.canViewHealth)
                     _DrawerItem(
                       icon: Icons.medical_services_rounded,
                       label: "Santé & Traitements",
                       onTap: () => _navigateTo(context, 'health', const HealthScreen()),
                     ),
 
-                  // 7. Bâtiments & Poulaillers
+                  // 5. Espace Gestion (Hub Caisse, Stocks, Contacts, Équipe)
+                  _DrawerItem(
+                    icon: Icons.business_center_rounded,
+                    label: "Espace Gestion",
+                    onTap: () => _selectTab(context, 3, 'management'),
+                  ),
+
+                  const SizedBox(height: 12),
+                  const Divider(height: 1),
+                  const SizedBox(height: 8),
+
+                  // --- OUTILS & CONFIGURATION SECONDAIRE ---
+                  _SectionHeader(label: "OUTILS & CONFIGURATION", isDark: isDark),
+
+                  // Bâtiments & Poulaillers
                   if (farm?.canManageBuildings == true)
                     _DrawerItem(
                       icon: Icons.home_work_rounded,
@@ -162,22 +180,15 @@ class AppDrawer extends ConsumerWidget {
                       onTap: () => _navigateTo(context, 'buildings', const BuildingsScreen()),
                     ),
 
-                  // 8. Équipe & Collaborateurs
-                  if (farm?.canManageMembers == true)
+                  // Rapports & Synthèses (WhatsApp/PDF)
+                  if (farm == null || farm.canViewReports)
                     _DrawerItem(
-                      icon: Icons.people_alt_rounded,
-                      label: "Équipe & Collaborateurs",
-                      onTap: () => _navigateTo(context, 'members', const MembersScreen()),
+                      icon: Icons.bar_chart_rounded,
+                      label: "Rapports & Synthèses",
+                      onTap: () => _navigateTo(context, 'reports', const ReportsScreen()),
                     ),
 
-                  // 9. Répertoire & Contacts
-                  _DrawerItem(
-                    icon: Icons.contacts_rounded,
-                    label: "Répertoire & Contacts",
-                    onTap: () => _navigateTo(context, 'contacts', const ContactsScreen()),
-                  ),
-
-                  // 10. Synchronisation
+                  // Synchronisation hors-ligne
                   _DrawerItem(
                     icon: Icons.sync_rounded,
                     label: "Synchronisation",
@@ -188,7 +199,7 @@ class AppDrawer extends ConsumerWidget {
                     onTap: () => _navigateTo(context, 'sync', const SyncScreen()),
                   ),
 
-                  // 11. Abonnement & Formules
+                  // Abonnement & Formules
                   if (farm?.canManageSubscription == true)
                     _DrawerItem(
                       icon: Icons.workspace_premium_rounded,
@@ -196,7 +207,7 @@ class AppDrawer extends ConsumerWidget {
                       onTap: () => _navigateTo(context, 'subscription', const SubscriptionScreen()),
                     ),
 
-                  // 12. Paramètres de la ferme
+                  // Paramètres de la ferme
                   if (farm?.isOwner == true)
                     _DrawerItem(
                       icon: Icons.settings_rounded,
@@ -372,6 +383,29 @@ class AppDrawer extends ConsumerWidget {
             child: const Text("Forcer la déconnexion"),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String label;
+  final bool isDark;
+
+  const _SectionHeader({required this.label, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, top: 4, bottom: 4),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.8,
+          color: isDark ? Colors.white38 : AppColors.textMutedLight.withValues(alpha: 0.7),
+        ),
       ),
     );
   }

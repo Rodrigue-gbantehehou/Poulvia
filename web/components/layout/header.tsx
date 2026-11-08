@@ -55,10 +55,10 @@ export function Header({ onToggleSidebar }: HeaderProps = {}) {
       className="sticky top-0 z-30 flex h-14 sm:h-16 w-full items-center justify-between border-b border-white/15 bg-gradient-to-r from-[#1d4d38] via-primary to-[#184431] dark:from-[#1b4331] dark:via-primary dark:to-[#143627] px-3 sm:px-6 backdrop-blur-2xl shadow-[0_4px_20px_-4px_rgba(20,55,38,0.25)] text-white"
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
-      {/* Left section: SidebarTrigger (desktop) + Brand Icon + Farm Selector */}
+      {/* Left section: SidebarTrigger (desktop/mobile) + Brand Icon + Farm Selector */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Déclencheur pliage/dépliage sidebar sur desktop */}
-        <SidebarTrigger className="hidden lg:flex" />
+        {/* Déclencheur sidebar / drawer (mobile et desktop) */}
+        <SidebarTrigger className="flex" />
 
         <Link
           href="/"

@@ -374,7 +374,7 @@ export default function HealthPage() {
           actions={
             canManageHealth && (
               <>
-                {hasModule("prophylaxis_program") ? (
+                {hasModule("prophylaxis_program") && (
                   <button
                     type="button"
                     onClick={() => {
@@ -388,16 +388,6 @@ export default function HealthPage() {
                     className="inline-flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent/20 transition-colors shadow-2xs active:scale-95 cursor-pointer"
                   >
                     <Zap className="h-3.5 w-3.5" />
-                    <span className="hidden xs:inline">1-Clic</span>
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => toast.info("La génération automatique 1-clic des programmes prophylactiques selon la souche est disponible à partir de la formule Professionnel.")}
-                    className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-muted/60 px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-muted hover:text-foreground transition-colors cursor-pointer"
-                    title="Disponible à partir de la formule Professionnel"
-                  >
-                    <Lock className="h-3 w-3 text-muted" />
                     <span className="hidden xs:inline">1-Clic</span>
                   </button>
                 )}

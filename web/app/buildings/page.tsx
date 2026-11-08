@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Warehouse,
   Plus,
@@ -11,6 +12,7 @@ import {
   RefreshCw,
   Users,
   CheckCircle2,
+  Bird,
 } from "lucide-react";
 import { Shell } from "@/components/layout/shell";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -105,6 +107,15 @@ export default function BuildingsPage() {
         icon={<Warehouse className="h-4 w-4" />}
         actions={
           <div className="flex items-center gap-1.5">
+            <Link
+              href="/flocks"
+              className="inline-flex h-8 items-center justify-center gap-1.5 rounded-full border border-border bg-surface px-3 text-xs font-semibold text-foreground hover:bg-surface-hover shadow-2xs active:scale-95 transition-all"
+              title="Retour aux bandes d'élevage"
+            >
+              <Bird className="h-3.5 w-3.5 text-primary" />
+              <span>Bandes</span>
+            </Link>
+
             <button
               type="button"
               onClick={loadBuildings}

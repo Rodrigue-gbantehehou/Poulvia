@@ -393,7 +393,7 @@ export default function FinancesPage() {
         icon={<Wallet className="h-4 w-4" />}
         actions={
           <>
-            {hasModule("reports_accounting") ? (
+            {hasModule("reports_accounting") && (
               <button
                 type="button"
                 onClick={() => exportTransactionsToCsv(transactions, activeFarm?.name || "ferme")}
@@ -401,16 +401,6 @@ export default function FinancesPage() {
                 title="Exporter CSV"
               >
                 <Download className="h-3.5 w-3.5 text-muted" />
-                <span className="hidden xs:inline">Export</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => toast.info("L'export comptable complet SYSCOHADA (CSV/PDF) est disponible à partir de la formule Professionnel.")}
-                className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-surface-muted/50 px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-muted hover:text-foreground transition-all cursor-pointer"
-                title="Disponible à partir de la formule Professionnel"
-              >
-                <Lock className="h-3.5 w-3.5 text-muted" />
                 <span className="hidden xs:inline">Export</span>
               </button>
             )}

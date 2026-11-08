@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
+import Link from "next/link";
 import {
   Plus,
   Egg,
@@ -335,6 +336,37 @@ export default function EggsPage() {
           moduleName="Production d'œufs"
           description="L'enregistrement des ramassages d'œufs et le calcul des plateaux de 30 alvéoles ne sont pas inclus dans votre formule actuelle."
         />
+      </Shell>
+    );
+  }
+
+  const isBroilerOnly =
+    activeFarm?.productionType?.toUpperCase() === "BROILER" ||
+    activeFarm?.productionType?.toUpperCase() === "BROILERS";
+
+  if (isBroilerOnly) {
+    return (
+      <Shell>
+        <div className="flex flex-col items-center justify-center py-16 px-4 text-center max-w-lg mx-auto">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 mb-4">
+            <Egg className="h-8 w-8 text-primary" />
+          </div>
+          <h2 className="text-xl font-bold text-foreground">Élevage de poulets de chair</h2>
+          <p className="mt-2 text-sm text-muted leading-relaxed">
+            Votre exploitation <span className="font-semibold text-foreground">{activeFarm?.name}</span> est configurée pour l'élevage de poulets de chair (sans production d'œufs de ponte).
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            Le suivi des effectifs, pesées, mortalités et ventes s'effectue dans l'espace Élevage.
+          </p>
+          <div className="mt-6 flex items-center gap-3">
+            <Link
+              href="/flocks"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-primary-hover transition-colors"
+            >
+              <span>Accéder à l'espace Élevage</span>
+            </Link>
+          </div>
+        </div>
       </Shell>
     );
   }
