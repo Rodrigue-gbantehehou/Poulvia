@@ -1,282 +1,226 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Bird,
+  Warehouse,
   Egg,
   HeartPulse,
-  Briefcase,
+  Package,
+  Wallet,
+  ContactRound,
+  ShieldCheck,
+  Users,
   X,
   Settings,
+  Lock,
   CreditCard,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { cn } from "@/lib/utils";
-import {
-  Sidebar as SidebarContainer,
-  SidebarHeader,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarTrigger,
-  useSidebar,
-} from "@/components/ui/sidebar";
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const { hasPermission, hasModule, activePlan, activeFarm, isOwner } = useAuth();
-  const { state, isMobile, setOpenMobile } = useSidebar();
-  const isCollapsed = state === "collapsed" && !isMobile;
+  const { user, hasPermission, hasModule, activePlan, isOwner } = useAuth();
 
-  const closeMobile = () => {
-    if (isMobile) {
-      setOpenMobile(false);
-    }
-  };
-
-  const isBroiler = activeFarm?.productionType === "BROILER";
-
-  // ─── 5 ESPACES PRINCIPAUX STANDARDISÉS ───
-  const mainNavigation = [
+  const navigation = [
     {
-      name: "Accueil",
+      name: "Tableau de bord",
       href: "/",
       icon: LayoutDashboard,
-      isActive: pathname === "/",
+      module: undefined,
       show: true,
     },
     {
-      name: "Élevage",
+      name: "Poulaillers & Bâtiments",
+      href: "/buildings",
+      icon: Warehouse,
+      module: "buildings",
+      show: hasPermission("building:manage") || hasPermission("farm:view"),
+    },
+    {
+      name: "Bandes de volailles",
       href: "/flocks",
       icon: Bird,
-      isActive: pathname.startsWith("/flocks") || pathname.startsWith("/buildings"),
-      show:
-        hasPermission("flock:read") ||
-        hasPermission("flock:view") ||
-        hasPermission("building:manage") ||
-        isOwner,
+      module: "flocks",
+      show: hasPermission("flock:read") || hasPermission("flock:view"),
     },
     {
-      name: "Production",
+      name: "Pontes d'œufs",
       href: "/eggs",
       icon: Egg,
-      isActive: pathname.startsWith("/eggs"),
-      // Si la ferme est strictement BROILER (chair), la ponte peut être masquée ou désactivée
-      show:
-        !isBroiler &&
-        hasModule("eggs") &&
-        (hasPermission("egg:read") || hasPermission("egg:view") || isOwner),
+      module: "eggs",
+      show: hasPermission("egg:read") || hasPermission("egg:view"),
     },
     {
-      name: "Santé",
+      name: "Santé & Soins",
       href: "/health",
       icon: HeartPulse,
-      isActive: pathname.startsWith("/health"),
-      show:
-        hasModule("health") &&
-        (hasPermission("health:view") || hasPermission("health:manage") || isOwner),
+      module: "health",
+      show: hasPermission("health:view") || hasPermission("health:manage"),
     },
     {
-      name: "Gestion",
-      href: "/management",
-      icon: Briefcase,
-      isActive:
-        pathname.startsWith("/management") ||
-        pathname.startsWith("/finances") ||
-        pathname.startsWith("/inventory") ||
-        pathname.startsWith("/contacts") ||
-        pathname.startsWith("/settings/members") ||
-        pathname.startsWith("/settings/roles"),
-      show: true,
+      name: "Stocks & Intrants",
+      href: "/inventory",
+      icon: Package,
+      module: "inventory",
+      show: hasPermission("inventory:read") || hasPermission("inventory:view"),
     },
-  ];
-
-  // ─── NAVIGATION SECONDAIRE (PARAMÈTRES FERME) ───
-  const secondaryNavigation = [
+    {
+      name: "Trésorerie & Ventes",
+      href: "/finances",
+      icon: Wallet,
+      module: "finance",
+      show: hasPermission("finance:read") || hasPermission("finance:view"),
+    },
+    {
+      name: "Contacts & Tiers",
+      href: "/contacts",
+      icon: ContactRound,
+      module: "contacts",
+      show: hasPermission("contact:read") || hasPermission("contact:view"),
+    },
+    {
+      name: "Équipe & Accès",
+      href: "/settings/members",
+      icon: Users,
+      module: "team",
+      show: hasPermission("member:manage") || hasPermission("member:read"),
+    },
+    {
+      name: "Rôles & Permissions",
+      href: "/settings/roles",
+      icon: ShieldCheck,
+      module: "custom_roles",
+      show: hasPermission("role:manage") || hasPermission("role:read"),
+    },
+    {
+      name: "Mon abonnement",
+      href: "/settings/subscription",
+      icon: CreditCard,
+      module: undefined,
+      show: isOwner,
+    },
     {
       name: "Paramètres de la ferme",
       href: "/settings/farm",
       icon: Settings,
-      isActive: pathname.startsWith("/settings/farm"),
-      show: isOwner || hasPermission("farm:edit"),
+      module: undefined,
+      show: true,
     },
   ];
 
   return (
-    <SidebarContainer collapsible="icon">
-      {/* ─── En-tête / Brand ─── */}
-      <SidebarHeader
+    <>
+      {/* Mobile Backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs transition-opacity lg:hidden animate-in fade-in duration-200"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Sidebar container */}
+      <aside
         className={cn(
-          "flex-row items-center transition-all duration-300 h-16 p-0",
-          isCollapsed ? "justify-center px-2" : "justify-between px-5"
+          "fixed top-0 bottom-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col rounded-r-3xl border-r border-white/10 bg-gradient-to-b from-[#1b4331] via-[#163627] to-[#11291d] text-white shadow-2xl transition-transform duration-250 ease-out lg:static lg:w-64 lg:rounded-none lg:shadow-none lg:translate-x-0",
+          isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <Link
-          href="/"
-          onClick={closeMobile}
-          className="flex items-center gap-3 text-lg font-bold tracking-tight text-white group min-w-0"
-          title="Poulvia"
-        >
-          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/10 p-1 shadow-md border border-white/20 group-hover:scale-105 transition-transform backdrop-blur-xs">
-            <Image
-              src="/logo.png"
-              alt="Poulvia"
-              width={36}
-              height={36}
-              className="h-full w-full object-contain"
-              priority
-            />
-          </div>
-
-          {!isCollapsed && (
-            <div className="flex flex-col leading-tight min-w-0 transition-opacity duration-200">
-              <span className="text-base font-extrabold text-white tracking-tight truncate">
+        {/* Header / Brand */}
+        <div className="flex h-16 items-center justify-between px-6 border-b border-white/10">
+          <Link
+            href="/"
+            onClick={onClose}
+            className="flex items-center gap-3 text-lg font-bold tracking-tight text-white group"
+          >
+            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/10 p-1 shadow-md border border-white/20 group-hover:scale-105 transition-transform backdrop-blur-xs">
+              <Image src="/logo.png" alt="Poulvia" width={36} height={36} className="h-full w-full object-contain" priority />
+            </div>
+            <div className="flex flex-col leading-tight">
+              <span className="text-base font-extrabold text-white tracking-tight">
                 Poulvia
               </span>
-              <span className="text-[10px] font-semibold tracking-wider uppercase text-white/60 truncate">
-                Bénin &amp; Ouest-Afrik
-              </span>
-            </div>
-          )}
-        </Link>
 
-        {/* Fermeture sur mobile */}
-        {isMobile && (
+            </div>
+          </Link>
+
           <button
             type="button"
-            onClick={closeMobile}
-            className="rounded-lg p-1.5 text-white/70 hover:bg-white/10 hover:text-white cursor-pointer"
-            aria-label="Fermer le menu"
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-white/70 hover:bg-white/10 hover:text-white lg:hidden cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
-        )}
-
-        {/* Bouton de repli shadcn (desktop) */}
-        {!isCollapsed && !isMobile && (
-          <SidebarTrigger />
-        )}
-      </SidebarHeader>
-
-      {/* ─── 5 Espaces Principaux ─── */}
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {mainNavigation.map((item) => {
-                if (!item.show) return null;
-                const Icon = item.icon;
-
-                return (
-                  <SidebarMenuItem key={item.name}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={item.isActive}
-                      tooltip={item.name}
-                      onClick={closeMobile}
-                    >
-                      <Link
-                        href={item.href}
-                        className="flex w-full items-center gap-3"
-                      >
-                        <Icon
-                          className={cn(
-                            "shrink-0 transition-colors",
-                            isCollapsed ? "h-5 w-5" : "h-4 w-4",
-                            item.isActive
-                              ? "text-accent"
-                              : "text-white/70 group-hover:text-white"
-                          )}
-                        />
-                        {!isCollapsed && (
-                          <span className="truncate">{item.name}</span>
-                        )}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* ─── Section Paramètres Secondaire ─── */}
-        <SidebarGroup className="mt-auto pt-3">
-          <SidebarGroupLabel>Configuration</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {secondaryNavigation.map((item) => {
-                if (!item.show) return null;
-                const Icon = item.icon;
-
-                return (
-                  <SidebarMenuItem key={item.name}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={item.isActive}
-                      tooltip={item.name}
-                      onClick={closeMobile}
-                    >
-                      <Link
-                        href={item.href}
-                        className="flex w-full items-center gap-3"
-                      >
-                        <Icon
-                          className={cn(
-                            "shrink-0 transition-colors",
-                            isCollapsed ? "h-5 w-5" : "h-4 w-4",
-                            item.isActive
-                              ? "text-accent"
-                              : "text-white/70 group-hover:text-white"
-                          )}
-                        />
-                        {!isCollapsed && (
-                          <span className="truncate">{item.name}</span>
-                        )}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-
-      {/* ─── Bouton de repli/dépli bas de page (desktop) ─── */}
-      {!isMobile && (
-        <div className="border-t border-white/10 p-2">
-          <SidebarTrigger
-            className={cn(
-              "w-full h-10 gap-3 text-xs font-semibold text-white/70 hover:bg-white/10 hover:text-white transition-all",
-              isCollapsed && "justify-center p-0"
-            )}
-          />
         </div>
-      )}
 
-      {/* ─── Footer Abonnement ─── */}
-      {isOwner && (
-        <SidebarFooter
-          className={cn(
-            "transition-all duration-300",
-            isCollapsed ? "p-2" : "p-4"
-          )}
-        >
-          {!isCollapsed ? (
+        {/* Navigation links */}
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3.5 py-4 scrollbar-thin">
+          <div className="px-3 pb-2 text-[10px] font-bold tracking-wider uppercase text-white/50">
+            Exploitation
+          </div>
+          {navigation.map((item) => {
+            const isModuleAllowed = item.module ? hasModule(item.module) : true;
+
+            // Ne pas afficher les modules non concernés par l'offre ou non autorisés par le rôle
+            if (!isModuleAllowed || !item.show) {
+              return null;
+            }
+
+            const isActive =
+              item.href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(item.href);
+            const Icon = item.icon;
+
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                onClick={onClose}
+                className={cn(
+                  "group relative flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-xs font-semibold transition-all active:scale-[0.98]",
+                  isActive
+                    ? "bg-white/15 text-white shadow-xs ring-1 ring-white/20 font-bold"
+                    : "text-white/75 hover:bg-white/10 hover:text-white"
+                )}
+              >
+                {/* Indicateur vertical d'onglet actif */}
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-accent shadow-[0_0_8px_rgba(221,166,75,0.9)]" />
+                )}
+
+                <Icon
+                  className={cn(
+                    "h-4 w-4 shrink-0 transition-colors",
+                    isActive ? "text-accent" : "text-white/70 group-hover:text-white"
+                  )}
+                />
+                <span className="truncate">{item.name}</span>
+
+                {isActive && (
+                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_6px_rgba(221,166,75,0.9)]" />
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Footer avec formule active (réservé au propriétaire) */}
+        {isOwner && (
+          <div className="border-t border-white/10 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
             <Link
               href="/settings/subscription"
-              onClick={closeMobile}
+              onClick={onClose}
               className="block rounded-2xl bg-white/10 border border-white/15 p-3.5 hover:bg-white/15 hover:border-accent/40 transition-all group shadow-2xs"
             >
               <div className="text-[10px] font-bold uppercase tracking-wider text-white/60 group-hover:text-accent transition-colors">
@@ -295,20 +239,9 @@ export function Sidebar() {
                 Gérer mon abonnement →
               </div>
             </Link>
-          ) : (
-            <div className="flex justify-center">
-              <Link
-                href="/settings/subscription"
-                onClick={closeMobile}
-                title={`Formule: ${activePlan?.planName || "Starter"}`}
-                className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-accent transition-all cursor-pointer"
-              >
-                <CreditCard className="h-5 w-5" />
-              </Link>
-            </div>
-          )}
-        </SidebarFooter>
-      )}
-    </SidebarContainer>
+          </div>
+        )}
+      </aside>
+    </>
   );
 }

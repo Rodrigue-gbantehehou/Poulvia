@@ -53,11 +53,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
 }
 
 function ShellLayout({ children }: { children: React.ReactNode }) {
-  const { setOpenMobile } = useSidebar();
+  const { openMobile, setOpenMobile } = useSidebar();
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
-      <Sidebar />
+      <Sidebar isOpen={openMobile} onClose={() => setOpenMobile(false)} />
       <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
         <Header />
         <main className="flex-1 overflow-y-auto p-3 sm:p-6 lg:p-8 pb-28 sm:pb-32 lg:pb-8">
