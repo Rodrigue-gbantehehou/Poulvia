@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -142,8 +143,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             onClick={onClose}
             className="flex items-center gap-3 text-lg font-bold tracking-tight text-white group"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent text-white shadow-md border border-white/20 group-hover:scale-105 transition-transform">
-              <Bird className="h-6 w-6 text-white" />
+            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/10 p-1 shadow-md border border-white/20 group-hover:scale-105 transition-transform backdrop-blur-xs">
+              <Image src="/logo.png" alt="Poulvia" width={36} height={36} className="h-full w-full object-contain" priority />
             </div>
             <div className="flex flex-col leading-tight">
               <span className="text-base font-extrabold text-white tracking-tight">

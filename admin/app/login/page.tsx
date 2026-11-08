@@ -1,16 +1,15 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAdminAuth } from "@/context/admin-auth-context";
 import {
-  ShieldAlert,
   Lock,
   Mail,
   ArrowRight,
   AlertCircle,
   ShieldCheck,
-  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,13 +46,21 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-md space-y-6">
         {/* Brand Header */}
         <div className="text-center space-y-2">
-         
+          <div className="mx-auto mb-3 h-16 w-16 overflow-hidden rounded-2xl border border-border bg-surface p-1 shadow-md">
+            <Image
+              src="/logo.png"
+              alt="Poulvia"
+              width={56}
+              height={56}
+              className="h-full w-full object-contain"
+              priority
+            />
+          </div>
           <div>
             <div className="flex items-center justify-center gap-2">
               <h1 className="text-2xl font-bold tracking-tight text-foreground">
                 Poulvia
               </h1>
-             
             </div>
             <p className="text-xs text-muted mt-1">
               Console Centrale d&apos;Administration Plateforme
@@ -63,8 +70,6 @@ export default function AdminLoginPage() {
 
         {/* Login Card */}
         <div className="rounded-2xl border border-border bg-surface p-6 sm:p-8 shadow-xl space-y-6">
-        
-
           {error && (
             <div className="p-3.5 rounded-xl border border-danger/30 bg-danger-soft/70 text-xs text-danger flex items-start gap-3">
               <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
@@ -75,7 +80,7 @@ export default function AdminLoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-foreground">
-                Adresse e-mail 
+                Adresse e-mail
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted" />
@@ -124,7 +129,6 @@ export default function AdminLoginPage() {
               <ShieldCheck className="h-3.5 w-3.5 text-primary shrink-0" />
               <span>Chiffrement asymétrique</span>
             </div>
-            
           </div>
         </div>
       </div>

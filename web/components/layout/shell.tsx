@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -6,7 +6,7 @@ import { useAuth } from "@/context/auth-context";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 import { BottomNav } from "./bottom-nav";
-import { Bird } from "lucide-react";
+import Image from "next/image";
 
 export function Shell({ children }: { children: React.ReactNode }) {
   const { user, token, isLoading } = useAuth();
@@ -23,8 +23,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
-          <div className="flex h-14 w-14 animate-bounce items-center justify-center rounded-2xl bg-primary text-white shadow-lg">
-            <Bird className="h-8 w-8 text-accent" />
+          <div className="relative flex h-16 w-16 animate-bounce items-center justify-center overflow-hidden rounded-2xl bg-surface p-1 shadow-lg border border-border">
+            <Image src="/logo.png" alt="Poulvia" width={56} height={56} className="h-full w-full object-contain" priority />
           </div>
           <p className="text-xs font-semibold text-muted">
             Chargement de Poulvia...

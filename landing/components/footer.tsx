@@ -1,6 +1,7 @@
-﻿import React from "react";
+import React from "react";
 import Link from "next/link";
-import { Bird, ShieldCheck, Heart } from "lucide-react";
+import Image from "next/image";
+import { ShieldCheck } from "lucide-react";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -13,15 +14,21 @@ export function Footer() {
           {/* Brand Col */}
           <div className="md:col-span-5 space-y-3">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-white shadow-2xs">
-                <Bird className="h-5 w-5" />
+              <div className="relative h-8 w-8 overflow-hidden rounded-xl border border-border bg-surface p-0.5 shadow-2xs">
+                <Image
+                  src="/logo.png"
+                  alt="Poulvia"
+                  width={28}
+                  height={28}
+                  className="h-full w-full object-contain"
+                />
               </div>
               <span className="text-lg font-extrabold font-mono text-foreground">
                 Poul<span className="text-primary">via</span>
               </span>
             </div>
             <p className="text-xs text-muted max-w-sm leading-relaxed">
-              Le logiciel professionnel de pilotage d'exploitations avicoles conçu pour les réalités d'Afrique de l'Ouest : plateaux de 30 œufs, sacs de provende 50 kg et caisse en FCFA.
+              Le logiciel professionnel de pilotage d&apos;exploitations avicoles conçu pour les réalités d&apos;Afrique de l&apos;Ouest : plateaux de 30 œufs, sacs de provende 50 kg et caisse en FCFA.
             </p>
             <div className="pt-2 flex items-center gap-2 text-[11px] text-muted">
               <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
@@ -37,7 +44,7 @@ export function Footer() {
             <ul className="space-y-2">
               <li>
                 <a href="#features" className="hover:text-primary transition-colors">
-                  Modules & Fonctionnalités
+                  Modules &amp; Fonctionnalités
                 </a>
               </li>
               <li>
@@ -81,7 +88,7 @@ export function Footer() {
               </li>
               <li>
                 <a href="#contact" className="hover:text-primary transition-colors">
-                  Demande d'accompagnement
+                  Demande d&apos;accompagnement
                 </a>
               </li>
             </ul>
@@ -91,7 +98,7 @@ export function Footer() {
                 href={`${appUrl}/login`}
                 className="inline-flex items-center gap-1.5 rounded-xl border border-primary/20 bg-primary/5 px-3.5 py-2 font-bold text-primary hover:bg-primary/10 transition-colors"
               >
-                <span>Accéder à l'application Poulvia →</span>
+                <span>Accéder à l&apos;application Poulvia →</span>
               </a>
             </div>
           </div>
@@ -100,7 +107,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-muted">
           <div>
-            © {currentYear} Poulvia. Tous droits réservés. Développé pour l'aviculture ouest-africaine.
+            © {currentYear} Poulvia. Tous droits réservés. Développé pour l&apos;aviculture ouest-africaine.
           </div>
           <div className="flex items-center gap-4">
             <span className="hover:text-foreground cursor-pointer">Mentions Légales</span>

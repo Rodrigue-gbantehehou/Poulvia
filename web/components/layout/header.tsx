@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Menu,
   Sun,
@@ -62,8 +63,8 @@ export function Header({ onToggleSidebar }: HeaderProps) {
           className="flex items-center gap-2 rounded-xl p-1 hover:opacity-90 transition-opacity"
           title="Poulvia"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent text-white shadow-xs border border-white/25">
-            <span className="text-xs font-black tracking-tighter">LF</span>
+          <div className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-xl bg-white/10 p-0.5 shadow-xs border border-white/25">
+            <Image src="/logo.png" alt="Poulvia" width={28} height={28} className="h-full w-full object-contain" priority />
           </div>
           <span className="text-sm font-extrabold tracking-tight text-white hidden xs:inline">
             Poulvia

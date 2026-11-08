@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Bird, Menu, X, ArrowRight } from "lucide-react";
+import Image from "next/image";
+import { Menu, X, ArrowRight } from "lucide-react";
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -30,8 +31,15 @@ export function Navbar() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-white shadow-xs">
-              <Bird className="h-5 w-5" />
+            <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-surface p-0.5 shadow-xs border border-border">
+              <Image
+                src="/logo.png"
+                alt="Poulvia"
+                width={34}
+                height={34}
+                className="h-full w-full object-contain"
+                priority
+              />
             </div>
             <div>
               <span className="text-lg font-bold tracking-tight text-foreground">
@@ -43,7 +51,7 @@ export function Navbar() {
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-6 text-xs font-medium text-muted">
             <a href="#simple-features" className="hover:text-primary transition-colors">
-              Ce que fait l'application
+              Ce que fait l&apos;application
             </a>
             <a href="#how-it-works" className="hover:text-primary transition-colors">
               Comment ça marche
@@ -107,7 +115,7 @@ export function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="py-1 px-2 rounded hover:bg-surface-hover"
               >
-                Ce que fait l'application
+                Ce que fait l&apos;application
               </a>
               <a
                 href="#how-it-works"

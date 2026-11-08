@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAdminAuth } from "@/context/admin-auth-context";
 import {
@@ -12,10 +13,7 @@ import {
   ShieldCheck,
   Activity,
   LogOut,
-  ExternalLink,
-  ShieldAlert,
   KeyRound,
-  ArrowUpRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -51,7 +49,6 @@ const navigationItems = [
     icon: CreditCard,
     permission: "admin:subscriptions:view",
   },
- 
   {
     label: "Journal d'audit",
     href: "/audit",
@@ -74,7 +71,9 @@ export function AdminSidebar() {
     ? `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase() || "AD"
     : "AD";
 
-  const roleLabel = user?.adminRole?.name || (user?.roles?.includes("ROLE_SUPER_ADMIN") ? "Super-Admin" : "Collaborateur");
+  const roleLabel =
+    user?.adminRole?.name ||
+    (user?.roles?.includes("ROLE_SUPER_ADMIN") ? "Super-Admin" : "Collaborateur");
 
   const visibleNavItems = navigationItems.filter(
     (item) => !item.permission || hasPermission(item.permission)
@@ -86,8 +85,14 @@ export function AdminSidebar() {
       <div>
         <div className="p-5 border-b border-border/70 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center text-white shadow-xs">
-              <ShieldAlert className="h-5 w-5" />
+            <div className="relative h-9 w-9 overflow-hidden rounded-xl border border-border bg-surface p-0.5 shadow-xs">
+              <Image
+                src="/logo.png"
+                alt="Poulvia"
+                width={34}
+                height={34}
+                className="h-full w-full object-contain"
+              />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
@@ -129,8 +134,6 @@ export function AdminSidebar() {
             );
           })}
         </div>
-
-     
       </div>
 
       {/* Footer Profile & Logout */}
