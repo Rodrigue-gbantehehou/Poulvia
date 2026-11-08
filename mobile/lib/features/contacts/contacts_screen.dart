@@ -28,11 +28,10 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(contactsProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final farm = ref.watch(authProvider).activeFarm;
     final canView = farm == null || farm.canViewContacts;
     final canCreate = farm == null || farm.canCreateContacts;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (!canView) {
       return Scaffold(
@@ -87,6 +86,8 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
         ),
       );
     }
+
+    final state = ref.watch(contactsProvider);
 
     ref.listen<ContactsState>(contactsProvider, (_, next) {
       if (next.error != null) {

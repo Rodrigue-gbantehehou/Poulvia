@@ -78,12 +78,15 @@ class ContactsNotifier extends StateNotifier<ContactsState> {
   final Ref _ref;
 
   ContactsNotifier(this._apiClient, this._ref) : super(const ContactsState()) {
-    loadContacts();
+    final activeFarm = _ref.read(authProvider).activeFarm;
+    if (activeFarm != null && activeFarm.canViewContacts) {
+      loadContacts();
+    }
   }
 
   Future<void> loadContacts({bool showLoading = true}) async {
     final activeFarm = _ref.read(authProvider).activeFarm;
-    if (activeFarm == null) {
+    if (activeFarm == null || !activeFarm.canViewContacts) {
       state = state.copyWith(isLoading: false);
       return;
     }
@@ -139,7 +142,10 @@ class ContactsNotifier extends StateNotifier<ContactsState> {
     String? notes,
   }) async {
     final activeFarm = _ref.read(authProvider).activeFarm;
-    if (activeFarm == null) return false;
+    if (activeFarm == null || !activeFarm.canCreateContacts) {
+      state = state.copyWith(isSubmitting: false, error: "Action non autorisée.");
+      return false;
+    }
 
     state = state.copyWith(isSubmitting: true, clearError: true);
 
@@ -202,6 +208,11 @@ class ContactsNotifier extends StateNotifier<ContactsState> {
     String? notes,
     bool isActive = true,
   }) async {
+    final activeFarm = _ref.read(authProvider).activeFarm;
+    if (activeFarm == null || !activeFarm.canCreateContacts) {
+      state = state.copyWith(isSubmitting: false, error: "Action non autorisée.");
+      return false;
+    }
     state = state.copyWith(isSubmitting: true, clearError: true);
 
     final payload = {
@@ -254,6 +265,11 @@ class ContactsNotifier extends StateNotifier<ContactsState> {
   }
 
   Future<bool> deleteContact(String contactId) async {
+    final activeFarm = _ref.read(authProvider).activeFarm;
+    if (activeFarm == null || !activeFarm.canCreateContacts) {
+      state = state.copyWith(isSubmitting: false, error: "Action non autorisée.");
+      return false;
+    }
     state = state.copyWith(isSubmitting: true, clearError: true);
 
     try {

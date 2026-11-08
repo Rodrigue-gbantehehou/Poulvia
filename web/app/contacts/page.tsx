@@ -17,6 +17,7 @@ import {
   ExternalLink,
   Users,
   AlertCircle,
+  Lock,
 } from "lucide-react";
 import { Shell } from "@/components/layout/shell";
 import { StatCard } from "@/components/ui/stat-card";
@@ -62,6 +63,17 @@ export default function ContactsPage() {
   const { activeFarm, hasPermission, hasModule, isOwner } = useAuth();
   const { toast } = useToast();
 
+  // Permissions effectives calculées selon Symfony (contact:view / contact:create)
+  const canViewContacts =
+    isOwner ||
+    hasPermission("contact:view") ||
+    hasPermission("contact:read");
+
+  const canManageContacts =
+    isOwner ||
+    hasPermission("contact:create") ||
+    hasPermission("contact:manage");
+
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [filterType, setFilterType] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -87,15 +99,18 @@ export default function ContactsPage() {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    if (activeFarm?.id && hasModule("contacts")) {
+    if (activeFarm?.id && hasModule("contacts") && canViewContacts) {
       loadContacts();
     } else {
       setIsLoading(false);
     }
-  }, [activeFarm?.id]);
+  }, [activeFarm?.id, canViewContacts]);
 
   async function loadContacts() {
-    if (!activeFarm?.id) return;
+    if (!activeFarm?.id || !canViewContacts) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     try {
       const data = await api.contacts.list({
@@ -144,6 +159,10 @@ export default function ContactsPage() {
   }
 
   async function handleSubmit(e: React.FormEvent) {
+    if (!canManageContacts) {
+      toast.error("Vous ne disposez pas des droits pour créer ou modifier un contact.");
+      return;
+    }
     e.preventDefault();
     if (!activeFarm?.id || !name.trim()) return;
     setContactError(null);
@@ -309,7 +328,7 @@ export default function ContactsPage() {
       className: "text-right",
       cell: (c) => (
         <div className="flex items-center justify-end gap-1">
-          {hasPermission("contact:update") && (
+          {canManageContacts && (
             <button
               onClick={() => openEditModal(c)}
               className="p-1.5 rounded-lg text-muted hover:text-primary hover:bg-primary-soft transition-colors cursor-pointer"
@@ -318,7 +337,7 @@ export default function ContactsPage() {
               <Edit2 className="h-4 w-4" />
             </button>
           )}
-          {hasPermission("contact:delete") && (
+          {canManageContacts && (
             <button
               onClick={() => openDeleteModal(c)}
               className="p-1.5 rounded-lg text-muted hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer"
@@ -342,11 +361,6 @@ export default function ContactsPage() {
       </Shell>
     );
   }
-
-  const canViewContacts =
-    isOwner ||
-    hasPermission("contact:view") ||
-    hasPermission("contact:read");
 
   if (!canViewContacts) {
     return (
@@ -373,7 +387,7 @@ export default function ContactsPage() {
           subtitle={`${stats.total} tiers enregistré(s)`}
           icon={<ContactRound className="h-4 w-4" />}
           actions={
-            hasPermission("contact:create") && (
+            canManageContacts && (
               <button
                 type="button"
                 onClick={() => openCreateModal("CLIENT")}
@@ -496,7 +510,7 @@ export default function ContactsPage() {
                 ? `Aucun tiers ne correspond au filtre "${searchQuery}". Essayez un autre critère.`
                 : "Constituez votre répertoire d'acheteurs d'œufs, clients de poulets de chair et fournisseurs d'aliments."
             }
-            actionLabel={hasPermission("contact:create") ? "Ajouter un premier contact" : undefined}
+            actionLabel={canManageContacts ? "Ajouter un premier contact" : undefined}
             onAction={() => openCreateModal()}
           />
         ) : (
