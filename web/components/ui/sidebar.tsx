@@ -402,7 +402,7 @@ export const SidebarMenuButton = React.forwardRef<
         ? "h-11 w-11 mx-auto justify-center p-0"
         : "gap-3 px-3.5 py-2.5",
       isActive
-        ? "bg-white/15 text-white shadow-xs ring-1 ring-white/20 font-bold"
+        ? "bg-white/15 text-white font-bold"
         : "text-white/75 hover:bg-white/10 hover:text-white",
       className
     );
@@ -416,7 +416,7 @@ export const SidebarMenuButton = React.forwardRef<
 
         {/* Puce d'état actif sur l'icône (mode replié) */}
         {isActive && isCollapsed && (
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-accent shadow-[0_0_6px_rgba(221,166,75,0.9)] ring-1 ring-white/40" />
+          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-accent shadow-[0_0_6px_rgba(221,166,75,0.9)]" />
         )}
 
         {children}
