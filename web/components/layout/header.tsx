@@ -4,11 +4,9 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  Menu,
   Sun,
   Moon,
   ChevronDown,
-  Building2,
   LogOut,
   Check,
   Users,
@@ -18,14 +16,15 @@ import {
 import { useAuth } from "@/context/auth-context";
 import { useTheme } from "@/context/theme-context";
 import { CreateFarmModal } from "@/components/farms/create-farm-modal";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 
 interface HeaderProps {
-  onToggleSidebar: () => void;
+  onToggleSidebar?: () => void;
 }
 
-export function Header({ onToggleSidebar }: HeaderProps) {
-  const { user, activeFarm, farms, switchFarm, logout, role, refreshMe } = useAuth();
+export function Header({ onToggleSidebar }: HeaderProps = {}) {
+  const { user, activeFarm, farms, switchFarm, logout, role } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
   const [farmDropdownOpen, setFarmDropdownOpen] = useState(false);
@@ -56,15 +55,25 @@ export function Header({ onToggleSidebar }: HeaderProps) {
       className="sticky top-0 z-30 flex h-14 sm:h-16 w-full items-center justify-between border-b border-white/15 bg-gradient-to-r from-[#1d4d38] via-primary to-[#184431] dark:from-[#1b4331] dark:via-primary dark:to-[#143627] px-3 sm:px-6 backdrop-blur-2xl shadow-[0_4px_20px_-4px_rgba(20,55,38,0.25)] text-white"
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
-      {/* Left section: Brand Icon + Farm Selector */}
+      {/* Left section: SidebarTrigger (desktop) + Brand Icon + Farm Selector */}
       <div className="flex items-center gap-2 sm:gap-3">
+        {/* Déclencheur pliage/dépliage sidebar sur desktop */}
+        <SidebarTrigger className="hidden lg:flex" />
+
         <Link
           href="/"
           className="flex items-center gap-2 rounded-xl p-1 hover:opacity-90 transition-opacity"
           title="Poulvia"
         >
           <div className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-xl bg-white/10 p-0.5 shadow-xs border border-white/25">
-            <Image src="/logo.png" alt="Poulvia" width={28} height={28} className="h-full w-full object-contain" priority />
+            <Image
+              src="/logo.png"
+              alt="Poulvia"
+              width={28}
+              height={28}
+              className="h-full w-full object-contain"
+              priority
+            />
           </div>
           <span className="text-sm font-extrabold tracking-tight text-white hidden xs:inline">
             Poulvia
@@ -213,7 +222,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                 className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-foreground hover:bg-surface-hover transition-colors mb-1"
               >
                 <Users className="h-4 w-4 text-primary" />
-                Utilisateurs & Employés
+                Utilisateurs &amp; Employés
               </Link>
 
               <button
