@@ -29,7 +29,7 @@ class ManagementScreen extends ConsumerWidget {
 
     final canFinance = farm == null || farm.canViewFinance;
     final canInventory = farm == null || farm.canViewInventory;
-    const canContacts = true; // Toujours accessible
+    final canContacts = farm == null || farm.canViewContacts;
     final canMembers = farm == null || farm.canManageMembers;
     final canReports = farm == null || farm.canViewReports;
 

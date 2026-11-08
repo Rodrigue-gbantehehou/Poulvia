@@ -5,6 +5,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_provider.dart';
 import '../../core/widgets/brand_loader.dart';
 import 'contacts_provider.dart';
+import '../auth/auth_provider.dart';
 
 class ContactsScreen extends ConsumerStatefulWidget {
   final VoidCallback? onBack;
@@ -29,6 +30,63 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(contactsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final farm = ref.watch(authProvider).activeFarm;
+    final canView = farm == null || farm.canViewContacts;
+    final canCreate = farm == null || farm.canCreateContacts;
+
+    if (!canView) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: widget.onBack != null
+              ? IconButton(
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  tooltip: "Retour",
+                  onPressed: widget.onBack,
+                )
+              : (widget.onOpenMenu != null
+                  ? IconButton(
+                      icon: const Icon(Icons.menu_rounded),
+                      tooltip: "Menu",
+                      onPressed: widget.onOpenMenu,
+                    )
+                  : null),
+          title: const Text("Répertoire & Contacts"),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: AppColors.danger.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.lock_outline_rounded, color: AppColors.danger, size: 32),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "Accès restreint",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Vous ne disposez pas des autorisations nécessaires pour consulter le carnet de contacts de cette exploitation.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.white60 : AppColors.textMutedLight,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     ref.listen<ContactsState>(contactsProvider, (_, next) {
       if (next.error != null) {
@@ -246,7 +304,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                         separatorBuilder: (_, __) => const SizedBox(height: 10),
                         itemBuilder: (ctx, index) {
                           final contact = state.filteredContacts[index];
-                          return _buildContactCard(context, contact, isDark);
+                          return _buildContactCard(context, contact, isDark, canCreate);
                         },
                       ),
                   ],
@@ -342,7 +400,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
     );
   }
 
-  Widget _buildContactCard(BuildContext context, Contact contact, bool isDark) {
+  Widget _buildContactCard(BuildContext context, Contact contact, bool isDark, bool canCreate) {
     Color badgeColor;
     String badgeLabel;
     switch (contact.type) {
@@ -439,7 +497,8 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                     ],
                   ),
                 ),
-                PopupMenuButton<String>(
+                if (canCreate)
+                  PopupMenuButton<String>(
                   icon: const Icon(Icons.more_vert_rounded, size: 20),
                   onSelected: (val) {
                     if (val == 'edit') {
@@ -595,6 +654,16 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
   }
 
   void _openContactModal(BuildContext context, {Contact? contact}) {
+    final farm = ref.read(authProvider).activeFarm;
+    if (farm != null && !farm.canCreateContacts) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Vous n'avez pas la permission de créer ou modifier des contacts."),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+      return;
+    }
     final isEditing = contact != null;
     final nameController = TextEditingController(text: contact?.name ?? "");
     final phoneController = TextEditingController(text: contact?.phone ?? "");
@@ -888,6 +957,16 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
   }
 
   void _confirmDelete(BuildContext context, Contact contact) {
+    final farm = ref.read(authProvider).activeFarm;
+    if (farm != null && !farm.canCreateContacts) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Vous n'avez pas la permission de supprimer des contacts."),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+      return;
+    }
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(

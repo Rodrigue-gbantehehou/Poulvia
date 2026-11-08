@@ -15,6 +15,8 @@ class FarmPermission {
   static const String healthManage = 'health:manage';
   static const String buildingManage = 'building:manage';
   static const String memberManage = 'member:manage';
+  static const String contactView = 'contact:view';
+  static const String contactCreate = 'contact:create';
 }
 
 class Farm {
@@ -186,6 +188,7 @@ class Farm {
           FarmPermission.eggCreate,
           FarmPermission.inventoryView,
           FarmPermission.inventoryMovement,
+          FarmPermission.contactView,
         ].contains(permission);
       case 'STOCK_KEEPER':
         return const [
@@ -196,6 +199,8 @@ class Farm {
         return const [
           FarmPermission.financeView,
           FarmPermission.financeCreate,
+          FarmPermission.contactView,
+          FarmPermission.contactCreate,
         ].contains(permission);
       case 'VET_CONSULTANT':
         return const [
@@ -203,6 +208,7 @@ class Farm {
           FarmPermission.healthManage,
           FarmPermission.flockView,
           FarmPermission.inventoryView,
+          FarmPermission.contactView,
         ].contains(permission);
       default:
         return false;
@@ -228,6 +234,10 @@ class Farm {
   /// Suivi sanitaire et soins
   bool get canViewHealth => hasPermission(FarmPermission.healthView);
   bool get canManageHealth => hasPermission(FarmPermission.healthManage);
+
+  /// Contacts & Tiers
+  bool get canViewContacts => hasPermission(FarmPermission.contactView);
+  bool get canCreateContacts => hasPermission(FarmPermission.contactCreate);
 
   /// Administration
   bool get canManageBuildings => hasPermission(FarmPermission.buildingManage);

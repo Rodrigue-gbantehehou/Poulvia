@@ -59,7 +59,7 @@ const TYPE_CONFIG: Record<
 const CITY_PRESETS = ["Cotonou", "Abomey-Calavi", "Allada", "Porto-Novo", "Bohicon", "Parakou", "Ouidah", "Zè"];
 
 export default function ContactsPage() {
-  const { activeFarm, hasPermission, hasModule } = useAuth();
+  const { activeFarm, hasPermission, hasModule, isOwner } = useAuth();
   const { toast } = useToast();
 
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -339,6 +339,27 @@ export default function ContactsPage() {
           moduleName="Contacts & Tiers"
           description="Le carnet de contacts des acheteurs, fournisseurs et partenaires n'est pas inclus dans votre formule actuelle."
         />
+      </Shell>
+    );
+  }
+
+  const canViewContacts =
+    isOwner ||
+    hasPermission("contact:view") ||
+    hasPermission("contact:read");
+
+  if (!canViewContacts) {
+    return (
+      <Shell>
+        <div className="flex flex-col items-center justify-center py-16 px-4 text-center max-w-md mx-auto">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-danger/10 text-danger border border-danger/20 mb-4">
+            <Lock className="h-6 w-6 text-danger" />
+          </div>
+          <h2 className="text-lg font-bold text-foreground">Accès restreint</h2>
+          <p className="mt-1 text-xs text-muted leading-relaxed">
+            Vous ne disposez pas des permissions requises pour consulter le carnet de contacts de cette exploitation.
+          </p>
+        </div>
       </Shell>
     );
   }
