@@ -1,4 +1,4 @@
-﻿import type { Metadata, Viewport } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/auth-context";
 import { ThemeProvider } from "@/context/theme-context";
@@ -9,7 +9,13 @@ export const metadata: Metadata = {
   description:
     "Solution professionnelle de gestion d'exploitations avicoles africaine. Suivi des bandes, ponte, stocks et finances.",
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
   manifest: "/manifest.json",
   appleWebApp: {
@@ -32,7 +38,6 @@ export const viewport: Viewport = {
     { media: "(prefers-color-scheme: dark)", color: "#0f1713" },
   ],
 };
-
 
 export default function RootLayout({
   children,

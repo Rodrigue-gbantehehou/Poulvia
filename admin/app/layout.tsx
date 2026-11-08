@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import "./globals.css";
 import { AdminAuthProvider } from "@/context/admin-auth-context";
 import { AdminGuard } from "@/components/admin-guard";
@@ -6,6 +6,15 @@ import { AdminGuard } from "@/components/admin-guard";
 export const metadata: Metadata = {
   title: "Poulvia — Console d'Administration Centrale",
   description: "Back-office privé de supervision et gouvernance de la plateforme avicole Poulvia.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
 };
 
 export default function RootLayout({

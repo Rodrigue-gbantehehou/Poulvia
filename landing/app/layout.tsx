@@ -5,6 +5,15 @@ export const metadata: Metadata = {
   title: "Poulvia — Logiciel de Gestion Avicole en Afrique de l'Ouest",
   description:
     "Organisez le suivi de votre ferme : enregistrez vos pontes en plateaux de 30 alvéoles, gérez vos stocks de provende en sacs ou kg, suivez vos vaccins et tenez votre trésorerie en FCFA.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
   keywords: [
     "aviculture",
     "élevage avicole",
@@ -54,6 +63,7 @@ export default function RootLayout({
     <html lang="fr" className="scroll-smooth">
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
