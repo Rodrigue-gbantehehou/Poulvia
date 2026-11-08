@@ -63,16 +63,9 @@ export default function ContactsPage() {
   const { activeFarm, hasPermission, hasModule, isOwner } = useAuth();
   const { toast } = useToast();
 
-  // Permissions effectives calculées selon Symfony (contact:view / contact:create)
-  const canViewContacts =
-    isOwner ||
-    hasPermission("contact:view") ||
-    hasPermission("contact:read");
-
-  const canManageContacts =
-    isOwner ||
-    hasPermission("contact:create") ||
-    hasPermission("contact:manage");
+  // Permissions effectives du catalogue officiel Symfony (contact:view / contact:create)
+  const canViewContacts = isOwner || hasPermission("contact:view");
+  const canManageContacts = isOwner || hasPermission("contact:create");
 
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [filterType, setFilterType] = useState<string>("ALL");
@@ -126,6 +119,10 @@ export default function ContactsPage() {
   }
 
   function openCreateModal(defaultType: ContactType = "CLIENT") {
+    if (!canManageContacts) {
+      toast.error("Vous ne disposez pas des droits nécessaires pour créer un contact.");
+      return;
+    }
     setContactError(null);
     setEditingContact(null);
     setName("");
@@ -140,6 +137,10 @@ export default function ContactsPage() {
   }
 
   function openEditModal(c: Contact) {
+    if (!canManageContacts) {
+      toast.error("Vous ne disposez pas des droits nécessaires pour modifier un contact.");
+      return;
+    }
     setContactError(null);
     setEditingContact(c);
     setName(c.name);
@@ -154,6 +155,10 @@ export default function ContactsPage() {
   }
 
   function openDeleteModal(c: Contact) {
+    if (!canManageContacts) {
+      toast.error("Vous ne disposez pas des droits nécessaires pour supprimer un contact.");
+      return;
+    }
     setContactToDelete(c);
     setDeleteModalOpen(true);
   }
@@ -206,6 +211,12 @@ export default function ContactsPage() {
 
   async function handleDeleteConfirm() {
     if (!contactToDelete) return;
+    if (!canManageContacts) {
+      toast.error("Vous ne disposez pas des droits nécessaires pour supprimer ce contact.");
+      setDeleteModalOpen(false);
+      setContactToDelete(null);
+      return;
+    }
     setDeleting(true);
     try {
       await api.contacts.delete(contactToDelete.id);
@@ -556,22 +567,26 @@ export default function ContactsPage() {
                     ) : (
                       <span className="flex-1 text-xs text-muted italic">Aucun téléphone</span>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => openEditModal(c)}
-                      aria-label={`Modifier ${c.name}`}
-                      className="flex h-10 w-10 items-center justify-center rounded-lg border border-border text-muted hover:text-primary active:scale-95 transition-all"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => openDeleteModal(c)}
-                      aria-label={`Supprimer ${c.name}`}
-                      className="flex h-10 w-10 items-center justify-center rounded-lg border border-border text-muted hover:text-danger active:scale-95 transition-all"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    {canManageContacts && (
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(c)}
+                        aria-label={`Modifier ${c.name}`}
+                        className="flex h-10 w-10 items-center justify-center rounded-lg border border-border text-muted hover:text-primary active:scale-95 transition-all"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                    )}
+                    {canManageContacts && (
+                      <button
+                        type="button"
+                        onClick={() => openDeleteModal(c)}
+                        aria-label={`Supprimer ${c.name}`}
+                        className="flex h-10 w-10 items-center justify-center rounded-lg border border-border text-muted hover:text-danger active:scale-95 transition-all"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               );
