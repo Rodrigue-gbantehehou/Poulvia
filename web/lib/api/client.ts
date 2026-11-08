@@ -22,11 +22,17 @@ export function getApiBaseUrl(): string {
 
 export const API_BASE_URL = getApiBaseUrl();
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return typeof value === "object" && value !== null
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
 export class ApiError extends Error {
   status: number;
-  data: any;
+  data: unknown;
 
-  constructor(message: string, status: number, data?: any) {
+  constructor(message: string, status: number, data?: unknown) {
     super(message);
     this.name = "ApiError";
     this.status = status;
@@ -37,7 +43,7 @@ export class ApiError extends Error {
 /**
  * Universal fetch wrapper with JWT injection & error handling
  */
-export async function apiRequest<T = any>(
+export async function apiRequest<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
@@ -83,7 +89,7 @@ export async function apiRequest<T = any>(
     return {} as T;
   }
 
-  let body: any;
+  let body: unknown;
   try {
     body = await response.json();
   } catch {
@@ -113,17 +119,27 @@ export async function apiRequest<T = any>(
       }
     } else if (response.status === 403) {
       errorMsg = "Action non autorisée avec vos permissions actuelles.";
-    } else if (Array.isArray(body?.violations) && body.violations.length > 0) {
-      errorMsg = body.violations
-        .map((v: any) => v.title || v.message)
-        .filter(Boolean)
-        .join(". ");
-    } else if (body?.detail) {
-      errorMsg = body.detail;
-    } else if (body?.message) {
-      errorMsg = body.message;
-    } else if (body?.error) {
-      errorMsg = body.error;
+    } else {
+      const errorBody = asRecord(body);
+      const violations = Array.isArray(errorBody?.violations)
+        ? errorBody.violations
+            .map(asRecord)
+            .map((violation) => violation?.title ?? violation?.message)
+            .filter((message): message is string => typeof message === "string")
+        : [];
+      const detail = errorBody?.detail;
+      const message = errorBody?.message;
+      const error = errorBody?.error;
+
+      if (violations.length > 0) {
+        errorMsg = violations.join(". ");
+      } else if (typeof detail === "string") {
+        errorMsg = detail;
+      } else if (typeof message === "string") {
+        errorMsg = message;
+      } else if (typeof error === "string") {
+        errorMsg = error;
+      }
     }
 
     throw new ApiError(errorMsg, response.status, body);
@@ -150,7 +166,7 @@ export async function apiRequest<T = any>(
  *   '/api/health-treatments'
  * );
  */
-export async function apiRequestFull<T = any>(
+export async function apiRequestFull<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
@@ -188,7 +204,7 @@ export async function apiRequestFull<T = any>(
     return {} as T;
   }
 
-  let body: any;
+  let body: unknown;
   try {
     body = await response.json();
   } catch {
@@ -214,12 +230,21 @@ export async function apiRequestFull<T = any>(
       }
     } else if (response.status === 403) {
       errorMsg = "Action non autorisée avec vos permissions actuelles.";
-    } else if (Array.isArray(body?.violations) && body.violations.length > 0) {
-      errorMsg = body.violations.map((v: any) => v.title || v.message).filter(Boolean).join(". ");
-    } else if (body?.detail) {
-      errorMsg = body.detail;
-    } else if (body?.message) {
-      errorMsg = body.message;
+    } else {
+      const errorBody = asRecord(body);
+      const violations = Array.isArray(errorBody?.violations)
+        ? errorBody.violations
+            .map(asRecord)
+            .map((violation) => violation?.title ?? violation?.message)
+            .filter((message): message is string => typeof message === "string")
+        : [];
+      if (violations.length > 0) {
+        errorMsg = violations.join(". ");
+      } else if (typeof errorBody?.detail === "string") {
+        errorMsg = errorBody.detail;
+      } else if (typeof errorBody?.message === "string") {
+        errorMsg = errorBody.message;
+      }
     }
     throw new ApiError(errorMsg, response.status, body);
   }
@@ -312,7 +337,7 @@ export function generateIdempotencyKey(): string {
  * // Sur reprise réseau, réutiliser le même `key`
  * await apiRequestWithKey('/api/transactions', { method: 'POST', body: JSON.stringify(data) }, key);
  */
-export async function apiRequestWithKey<T = any>(
+export async function apiRequestWithKey<T = unknown>(
   endpoint: string,
   options: RequestInit = {},
   idempotencyKey: string
