@@ -403,6 +403,7 @@ export default function SubscriptionsPage() {
     featuresText: "Suivi des lots et mortalité\nCollecte et calibrage des œufs\nGestion des stocks et magasins\nCalcul de rentabilité et marges\nSupport email réactif sous 24h",
     isPopular: false,
     isRecommended: false,
+    showOnLanding: true,
   };
 
   const [planForm, setPlanForm] = useState(initialPlanForm);
@@ -541,6 +542,7 @@ export default function SubscriptionsPage() {
       featuresText: plan.features.join("\n"),
       isPopular: !!plan.isPopular,
       isRecommended: !!plan.isRecommended,
+      showOnLanding: plan.flags?.showOnLanding ?? true,
     });
 
     setActiveSection("general");
@@ -638,6 +640,16 @@ export default function SubscriptionsPage() {
         .split("\n")
         .map((f) => f.trim())
         .filter((f) => f.length > 0),
+      flags: {
+        ...(editingPlan?.flags || {
+          accountingExports: false,
+          healthAlerts: false,
+          iotSensors: false,
+          apiAccess: false,
+          prioritySupport: false,
+        }),
+        showOnLanding: planForm.showOnLanding,
+      },
       isPopular: planForm.isPopular,
       isRecommended: planForm.isRecommended,
     };
@@ -1070,10 +1082,17 @@ export default function SubscriptionsPage() {
 
                             {/* Badge visibilité */}
                             {plan.isVisibilityPublic ? (
-                              <span className="text-[10px] font-medium text-muted flex items-center gap-1 bg-surface-muted px-1.5 py-0.5 rounded">
-                                <Globe className="h-2.5 w-2.5" />
-                                Publique
-                              </span>
+                              <>
+                                <span className="text-[10px] font-medium text-muted flex items-center gap-1 bg-surface-muted px-1.5 py-0.5 rounded">
+                                  <Globe className="h-2.5 w-2.5" />
+                                  Publique
+                                </span>
+                                {(plan.flags?.showOnLanding ?? true) && (
+                                  <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                                    Landing
+                                  </span>
+                                )}
+                              </>
                             ) : (
                               <span className="text-[10px] font-medium text-amber-600 flex items-center gap-1 bg-amber-500/10 px-1.5 py-0.5 rounded">
                                 <Lock className="h-2.5 w-2.5" />
@@ -2349,6 +2368,21 @@ export default function SubscriptionsPage() {
                     </div>
                   </label>
                 </div>
+
+                {planForm.isVisibilityPublic && (
+                  <label className="flex items-center gap-2.5 mt-3 pt-3 border-t border-border/60 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={planForm.showOnLanding}
+                      onChange={(e) => setPlanForm((prev) => ({ ...prev, showOnLanding: e.target.checked }))}
+                      className="rounded text-primary focus:ring-primary h-4 w-4"
+                    />
+                    <div>
+                      <span className="text-xs font-semibold text-foreground">Afficher sur la Landing page (poulvia.com)</span>
+                      <p className="text-[11px] text-muted">Cette formule apparaîtra dans la section Tarifs publique de la page d'accueil.</p>
+                    </div>
+                  </label>
+                )}
               </div>
 
               {/* Essai gratuit */}

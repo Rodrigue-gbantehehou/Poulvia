@@ -59,6 +59,7 @@ security:
         - { path: ^/api/docs, roles: PUBLIC_ACCESS }
         - { path: ^/api/openapi, roles: PUBLIC_ACCESS }
         - { path: ^/api/permissions, roles: PUBLIC_ACCESS }
+        - { path: ^/api/public, roles: PUBLIC_ACCESS }
         - { path: ^/api/admin, roles: [ROLE_ADMIN_SUPPORT, ROLE_ADMIN_FINANCE, ROLE_ADMIN_AUDIT, ROLE_ADMIN, ROLE_SUPER_ADMIN] }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 
