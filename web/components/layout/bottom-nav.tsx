@@ -90,35 +90,35 @@ export function BottomNav({ onOpenMenu }: BottomNavProps) {
         className="fixed bottom-2.5 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-[450px] z-40 lg:hidden pointer-events-none"
         style={{ marginBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
-        <div className="pointer-events-auto flex h-16 items-center justify-between px-2.5 rounded-[26px] bg-gradient-to-r from-[#1d4d38] via-primary to-[#184431] dark:from-[#1b4331] dark:via-primary dark:to-[#143627] backdrop-blur-2xl border border-white/20 text-white shadow-xl">
+        <div className="pointer-events-auto flex h-16 items-center justify-between px-2.5 rounded-card bg-surface border border-border text-foreground shadow-card">
           {/* 1. Accueil */}
           <Link
             href="/"
             className={cn(
-              "group relative flex flex-1 flex-col items-center justify-center py-1.5 transition-all duration-200 active:scale-90",
-              isHomeActive ? "text-white" : "text-white/70 hover:text-white"
+              "group relative flex flex-1 flex-col items-center justify-center py-1.5 transition-colors",
+              isHomeActive ? "text-primary" : "text-muted hover:text-foreground"
             )}
           >
             <div
               className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-2xl transition-all duration-200",
+                "flex h-8 w-8 items-center justify-center rounded-control transition-colors",
                 isHomeActive
-                  ? "bg-white/20 text-accent scale-110"
-                  : "bg-transparent text-white/75 group-hover:bg-white/10 group-hover:text-white"
+                  ? "bg-primary-soft text-primary"
+                  : "bg-transparent text-muted group-hover:bg-surface-hover group-hover:text-foreground"
               )}
             >
-              <LayoutDashboard className="h-4 w-4" />
+              <LayoutDashboard className="h-5 w-5" />
             </div>
             <span
               className={cn(
-                "text-[10px] leading-none mt-1 tracking-tight",
-                isHomeActive ? "font-bold text-accent" : "font-medium text-white/80"
+                "text-caption leading-none mt-1",
+                isHomeActive ? "font-semibold text-primary" : "font-medium text-muted"
               )}
             >
               Accueil
             </span>
             {isHomeActive && (
-              <span className="h-1 w-1 rounded-full bg-accent mt-0.5 animate-in zoom-in-50" />
+              <span className="h-1 w-1 rounded-full bg-primary mt-0.5" />
             )}
           </Link>
 
@@ -126,30 +126,30 @@ export function BottomNav({ onOpenMenu }: BottomNavProps) {
           <Link
             href="/flocks"
             className={cn(
-              "group relative flex flex-1 flex-col items-center justify-center py-1.5 transition-all duration-200 active:scale-90",
-              isFlocksActive ? "text-white" : "text-white/70 hover:text-white"
+              "group relative flex flex-1 flex-col items-center justify-center py-1.5 transition-colors",
+              isFlocksActive ? "text-primary" : "text-muted hover:text-foreground"
             )}
           >
             <div
               className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-2xl transition-all duration-200",
+                "flex h-8 w-8 items-center justify-center rounded-control transition-colors",
                 isFlocksActive
-                  ? "bg-white/20 text-accent scale-110"
-                  : "bg-transparent text-white/75 group-hover:bg-white/10 group-hover:text-white"
+                  ? "bg-primary-soft text-primary"
+                  : "bg-transparent text-muted group-hover:bg-surface-hover group-hover:text-foreground"
               )}
             >
-              <Bird className="h-4 w-4" />
+              <Bird className="h-5 w-5" />
             </div>
             <span
               className={cn(
-                "text-[10px] leading-none mt-1 tracking-tight",
-                isFlocksActive ? "font-bold text-accent" : "font-medium text-white/80"
+                "text-caption leading-none mt-1",
+                isFlocksActive ? "font-semibold text-primary" : "font-medium text-muted"
               )}
             >
               Élevage
             </span>
             {isFlocksActive && (
-              <span className="h-1 w-1 rounded-full bg-accent mt-0.5 animate-in zoom-in-50" />
+              <span className="h-1 w-1 rounded-full bg-primary mt-0.5" />
             )}
           </Link>
 
@@ -163,7 +163,7 @@ export function BottomNav({ onOpenMenu }: BottomNavProps) {
             >
               <div
                 className={cn(
-                  "flex h-13 w-13 items-center justify-center rounded-full text-white border-[3.5px] border-[#1d4d38] ring-2 ring-white/20 transition-all duration-300 shadow-lg",
+                  "flex h-12 w-12 items-center justify-center rounded-full text-white border-2 border-surface ring-1 ring-border transition-colors shadow-card",
                   sheetOpen
                     ? "rotate-45 bg-danger"
                     : "bg-accent group-hover:scale-105 group-hover:bg-accent-hover"
@@ -171,7 +171,7 @@ export function BottomNav({ onOpenMenu }: BottomNavProps) {
               >
                 <Plus className="h-6 w-6 stroke-[2.5]" />
               </div>
-              <span className="text-[9px] font-extrabold text-white mt-0.5 uppercase tracking-wider">
+              <span className="text-caption font-semibold text-foreground mt-1">
                 Action
               </span>
             </button>
@@ -181,30 +181,30 @@ export function BottomNav({ onOpenMenu }: BottomNavProps) {
           <Link
             href="/eggs"
             className={cn(
-              "group relative flex flex-1 flex-col items-center justify-center py-1.5 transition-all duration-200 active:scale-90",
-              isEggsActive ? "text-white" : "text-white/70 hover:text-white"
+              "group relative flex flex-1 flex-col items-center justify-center py-1.5 transition-colors",
+              isEggsActive ? "text-primary" : "text-muted hover:text-foreground"
             )}
           >
             <div
               className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-2xl transition-all duration-200",
+                "flex h-8 w-8 items-center justify-center rounded-control transition-colors",
                 isEggsActive
-                  ? "bg-white/20 text-accent scale-110"
-                  : "bg-transparent text-white/75 group-hover:bg-white/10 group-hover:text-white"
+                  ? "bg-primary-soft text-primary"
+                  : "bg-transparent text-muted group-hover:bg-surface-hover group-hover:text-foreground"
               )}
             >
-              <Egg className="h-4 w-4" />
+              <Egg className="h-5 w-5" />
             </div>
             <span
               className={cn(
-                "text-[10px] leading-none mt-1 tracking-tight",
-                isEggsActive ? "font-bold text-accent" : "font-medium text-white/80"
+                "text-caption leading-none mt-1",
+                isEggsActive ? "font-semibold text-primary" : "font-medium text-muted"
               )}
             >
               Production
             </span>
             {isEggsActive && (
-              <span className="h-1 w-1 rounded-full bg-accent mt-0.5 animate-in zoom-in-50" />
+              <span className="h-1 w-1 rounded-full bg-primary mt-0.5" />
             )}
           </Link>
 
@@ -212,30 +212,30 @@ export function BottomNav({ onOpenMenu }: BottomNavProps) {
           <Link
             href="/management"
             className={cn(
-              "group relative flex flex-1 flex-col items-center justify-center py-1.5 transition-all duration-200 active:scale-90",
-              isManagementActive ? "text-white" : "text-white/70 hover:text-white"
+              "group relative flex flex-1 flex-col items-center justify-center py-1.5 transition-colors",
+              isManagementActive ? "text-primary" : "text-muted hover:text-foreground"
             )}
           >
             <div
               className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-2xl transition-all duration-200",
+                "flex h-8 w-8 items-center justify-center rounded-control transition-colors",
                 isManagementActive
-                  ? "bg-white/20 text-accent scale-110"
-                  : "bg-transparent text-white/75 group-hover:bg-white/10 group-hover:text-white"
+                  ? "bg-primary-soft text-primary"
+                  : "bg-transparent text-muted group-hover:bg-surface-hover group-hover:text-foreground"
               )}
             >
-              <Briefcase className="h-4 w-4" />
+              <Briefcase className="h-5 w-5" />
             </div>
             <span
               className={cn(
-                "text-[10px] leading-none mt-1 tracking-tight",
-                isManagementActive ? "font-bold text-accent" : "font-medium text-white/80"
+                "text-caption leading-none mt-1",
+                isManagementActive ? "font-semibold text-primary" : "font-medium text-muted"
               )}
             >
               Gestion
             </span>
             {isManagementActive && (
-              <span className="h-1 w-1 rounded-full bg-accent mt-0.5 animate-in zoom-in-50" />
+              <span className="h-1 w-1 rounded-full bg-primary mt-0.5" />
             )}
           </Link>
         </div>

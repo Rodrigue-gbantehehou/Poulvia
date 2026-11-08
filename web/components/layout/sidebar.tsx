@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -17,11 +17,11 @@ import {
   Users,
   X,
   Settings,
-  Lock,
   CreditCard,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { cn } from "@/lib/utils";
+import { useSidebar } from "@/components/ui/sidebar";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -30,7 +30,9 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const { user, hasPermission, hasModule, activePlan, isOwner } = useAuth();
+  const { hasPermission, hasModule, activePlan, isOwner } = useAuth();
+  const { state, isMobile } = useSidebar();
+  const isCollapsed = !isMobile && state === "collapsed";
 
   const navigation = [
     {
@@ -124,7 +126,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* Mobile Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs transition-opacity lg:hidden animate-in fade-in duration-200"
+          className="fixed inset-0 z-40 bg-black/40 transition-opacity lg:hidden"
           onClick={onClose}
         />
       )}
@@ -132,40 +134,55 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* Sidebar container */}
       <aside
         className={cn(
-          "fixed top-0 bottom-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col rounded-r-3xl border-r border-white/10 bg-gradient-to-b from-[#1b4331] via-[#163627] to-[#11291d] text-white shadow-2xl transition-transform duration-250 ease-out lg:static lg:w-64 lg:rounded-none lg:shadow-none lg:translate-x-0",
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed top-0 bottom-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col border-r border-border bg-surface text-foreground shadow-xl transition-[width,transform] duration-200 ease-out lg:static lg:shadow-none lg:translate-x-0 lg:overflow-x-hidden",
+          isOpen ? "translate-x-0" : "-translate-x-full",
+          isCollapsed ? "lg:w-[72px]" : "lg:w-64",
         )}
       >
         {/* Header / Brand */}
-        <div className="flex h-16 items-center justify-between px-6 border-b border-white/10">
+        <div className={cn(
+          "flex h-16 items-center border-b border-border",
+          isCollapsed ? "justify-center px-2" : "justify-between px-6",
+        )}>
           <Link
             href="/"
             onClick={onClose}
-            className="flex items-center gap-3 text-lg font-bold tracking-tight text-white group"
+            className="flex items-center gap-3 text-lg font-semibold tracking-tight text-foreground group"
+            aria-label="Poulvia, accueil"
+            title={isCollapsed ? "Poulvia — Accueil" : undefined}
           >
-            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/10 p-1 shadow-md border border-white/20 group-hover:scale-105 transition-transform backdrop-blur-xs">
+            <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-control bg-primary-soft p-1 border border-border">
               <Image src="/logo.png" alt="Poulvia" width={36} height={36} className="h-full w-full object-contain" priority />
             </div>
-            <div className="flex flex-col leading-tight">
+            <div className={cn("flex flex-col leading-tight", isCollapsed && "sr-only")}>
               <span className="text-base font-extrabold text-white tracking-tight">
                 Poulvia
               </span>
-
             </div>
           </Link>
 
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-white/70 hover:bg-white/10 hover:text-white lg:hidden cursor-pointer"
+            className="rounded-control p-1.5 text-muted hover:bg-surface-hover hover:text-foreground lg:hidden cursor-pointer"
+            aria-label="Fermer le menu"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Navigation links */}
-        <nav className="flex-1 space-y-1 overflow-y-auto px-3.5 py-4 scrollbar-thin">
-          <div className="px-3 pb-2 text-[10px] font-bold tracking-wider uppercase text-white/50">
+        <nav
+          className={cn(
+            "flex-1 space-y-1 overflow-y-auto py-4 scrollbar-thin",
+            isCollapsed ? "px-2" : "px-3.5",
+          )}
+          aria-label="Navigation principale"
+        >
+          <div className={cn(
+            "pb-2 text-caption font-medium tracking-wide uppercase text-muted",
+            isCollapsed ? "sr-only" : "px-3",
+          )}>
             Exploitation
           </div>
           {navigation.map((item) => {
@@ -187,28 +204,32 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 key={item.name}
                 href={item.href}
                 onClick={onClose}
+                aria-label={item.name}
+                aria-current={isActive ? "page" : undefined}
+                title={isCollapsed ? item.name : undefined}
                 className={cn(
-                  "group relative flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-xs font-semibold transition-all active:scale-[0.98]",
+                  "group relative flex min-h-11 items-center rounded-control py-2.5 text-label font-medium transition-colors",
+                  isCollapsed ? "justify-center px-0" : "gap-3 px-3.5",
                   isActive
-                    ? "bg-white/15 text-white shadow-xs ring-1 ring-white/20 font-bold"
-                    : "text-white/75 hover:bg-white/10 hover:text-white"
+                    ? "bg-primary-soft text-primary font-semibold"
+                    : "text-muted hover:bg-surface-hover hover:text-foreground"
                 )}
               >
                 {/* Indicateur vertical d'onglet actif */}
                 {isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-accent shadow-[0_0_8px_rgba(221,166,75,0.9)]" />
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-r-full bg-primary" />
                 )}
 
                 <Icon
                   className={cn(
-                    "h-4 w-4 shrink-0 transition-colors",
-                    isActive ? "text-accent" : "text-white/70 group-hover:text-white"
+                    "h-5 w-5 shrink-0 transition-colors",
+                    isActive ? "text-primary" : "text-muted group-hover:text-foreground"
                   )}
                 />
-                <span className="truncate">{item.name}</span>
+                <span className={cn("truncate", isCollapsed && "sr-only")}>{item.name}</span>
 
-                {isActive && (
-                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_6px_rgba(221,166,75,0.9)]" />
+                {isActive && !isCollapsed && (
+                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
                 )}
               </Link>
             );
@@ -217,28 +238,43 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         {/* Footer avec formule active (réservé au propriétaire) */}
         {isOwner && (
-          <div className="border-t border-white/10 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-            <Link
-              href="/settings/subscription"
-              onClick={onClose}
-              className="block rounded-2xl bg-white/10 border border-white/15 p-3.5 hover:bg-white/15 hover:border-accent/40 transition-all group shadow-2xs"
-            >
-              <div className="text-[10px] font-bold uppercase tracking-wider text-white/60 group-hover:text-accent transition-colors">
-                Formule de la ferme
-              </div>
-              <div className="mt-1 flex items-center justify-between">
-                <span className="text-xs font-bold text-white truncate">
-                  {activePlan?.planName || "Formule Starter"}
-                </span>
-                <span className="rounded-full bg-accent text-white px-2 py-0.5 text-[10px] font-bold shadow-2xs">
-                  {activePlan?.badge || activePlan?.plan || "Gratuit"}
-                </span>
-              </div>
-              <div className="mt-1.5 text-[10px] text-white/70 group-hover:text-accent transition-colors flex items-center gap-1 font-medium">
-                <CreditCard className="h-3 w-3 text-accent" />
-                Gérer mon abonnement →
-              </div>
-            </Link>
+          <div className={cn(
+            "border-t border-border pb-[max(1rem,env(safe-area-inset-bottom))]",
+            isCollapsed ? "p-2" : "p-4",
+          )}>
+            {isCollapsed ? (
+              <Link
+                href="/settings/subscription"
+                onClick={onClose}
+                aria-label={`Abonnement ${activePlan?.planName || "Formule Starter"}`}
+                title={`Abonnement : ${activePlan?.planName || "Formule Starter"}`}
+                className="flex h-11 w-11 items-center justify-center rounded-control bg-surface-muted text-primary hover:bg-surface-hover transition-colors"
+              >
+                <CreditCard className="h-5 w-5" aria-hidden="true" />
+              </Link>
+            ) : (
+              <Link
+                href="/settings/subscription"
+                onClick={onClose}
+                className="block rounded-control bg-surface-muted border border-border p-3.5 hover:bg-surface-hover transition-colors group"
+              >
+                <div className="text-caption font-medium uppercase tracking-wide text-muted group-hover:text-primary transition-colors">
+                  Formule de la ferme
+                </div>
+                <div className="mt-1 flex items-center justify-between">
+                  <span className="text-label font-semibold text-foreground truncate">
+                    {activePlan?.planName || "Formule Starter"}
+                  </span>
+                  <span className="rounded-control bg-primary-soft text-primary px-2 py-1 text-caption font-medium">
+                    {activePlan?.badge || activePlan?.plan || "Gratuit"}
+                  </span>
+                </div>
+                <div className="mt-1.5 text-caption text-muted group-hover:text-primary transition-colors flex items-center gap-1 font-medium">
+                  <CreditCard className="h-3.5 w-3.5 text-primary" />
+                  Gérer mon abonnement →
+                </div>
+              </Link>
+            )}
           </div>
         )}
       </aside>

@@ -305,9 +305,18 @@ export default function DashboardPage() {
           </div>
         </div>
       ) : (
-        <div className="space-y-3.5 sm:space-y-4">
+        <div className="space-y-6 sm:space-y-7">
+          <div className="flex items-end justify-between gap-4 border-b border-border pb-4">
+            <div>
+              <p className="text-caption font-medium text-muted">TABLEAU DE BORD</p>
+              <h1 className="mt-1 text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
+                Vue d’ensemble
+              </h1>
+            </div>
+            <p className="text-caption text-muted text-right">{formatDate(todayStr)}</p>
+          </div>
           {/* 1. Vitaux du jour (100% opérationnel, court & précis) */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {/* KPI 1 : Ponte ou Âge */}
             {canViewEgg ? (
               <StatCard

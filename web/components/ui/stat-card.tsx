@@ -46,7 +46,7 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "group relative flex flex-col justify-between overflow-hidden rounded-xl border border-border bg-surface p-3 sm:p-5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
+        "group relative flex flex-col justify-between overflow-hidden rounded-card border border-border bg-surface p-3.5 sm:p-5 shadow-card transition-colors hover:border-primary/30",
         hoverBorderStyles[accent],
         className
       )}
@@ -56,12 +56,12 @@ export function StatCard({
         <div className="min-w-0 flex-1">
           <p
             title={title}
-            className="text-[11px] sm:text-xs font-semibold leading-tight text-muted line-clamp-2 sm:line-clamp-1"
+            className="text-label font-medium leading-snug text-muted line-clamp-2 sm:line-clamp-1"
           >
             {title}
           </p>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-base sm:text-xl font-bold leading-tight tracking-tight text-foreground font-mono break-words">
+            <span className="text-lg sm:text-2xl font-semibold leading-tight tracking-tight text-foreground tabular-nums break-words">
               {value}
             </span>
           </div>
@@ -70,7 +70,7 @@ export function StatCard({
         {icon && (
           <div
             className={cn(
-              "flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg sm:rounded-xl transition-all duration-200 [&>svg]:h-4 [&>svg]:w-4",
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-control transition-colors [&>svg]:h-4 [&>svg]:w-4",
               iconContainerStyles[accent]
             )}
           >
@@ -81,9 +81,9 @@ export function StatCard({
 
       {/* Zone inférieure : Sous-titre et/ou Badge pilule de tendance */}
       {(subtitle || trend) && (
-        <div className="mt-2.5 sm:mt-3.5 pt-2 sm:pt-2.5 border-t border-border/50 flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 text-xs">
+        <div className="mt-3 pt-2.5 border-t border-border flex flex-wrap items-center justify-between gap-2 text-label">
           {subtitle && (
-            <p title={subtitle} className="min-w-0 flex-1 basis-full sm:basis-auto text-[11px] leading-snug text-muted line-clamp-2 sm:line-clamp-1">
+            <p title={subtitle} className="min-w-0 flex-1 basis-full sm:basis-auto text-caption leading-snug text-muted line-clamp-2 sm:line-clamp-1">
               {subtitle}
             </p>
           )}
@@ -91,7 +91,7 @@ export function StatCard({
           {trend && (
             <div
               className={cn(
-                "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold border shrink-0",
+                "inline-flex items-center gap-1 rounded-control px-2 py-1 text-caption font-medium border shrink-0",
                 trend.isPositive
                   ? "bg-success-soft text-success border-success/20"
                   : "bg-danger-soft text-danger border-danger/20"
@@ -104,7 +104,7 @@ export function StatCard({
               )}
               <span>{trend.value}</span>
               {trend.label && (
-                <span className="text-muted text-[10px] ml-0.5 font-normal">
+                <span className="text-muted text-caption ml-0.5 font-normal">
                   {trend.label}
                 </span>
               )}
