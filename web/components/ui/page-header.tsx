@@ -27,12 +27,12 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        "flex items-center justify-between gap-3 pb-4 sm:pb-5",
+        "flex flex-col items-stretch gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between sm:pb-5",
         className
       )}
     >
       {/* Gauche : Retour optionnel + Icône + Titre & Sous-titre */}
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex min-w-0 items-center gap-3">
         {backHref && (
           <Link
             href={backHref}
@@ -64,9 +64,9 @@ export function PageHeader({
         </div>
       </div>
 
-      {/* Droite : Actions mobiles compactes (pills tactiles arrondies) */}
+      {/* Les actions passent sur une ligne distincte sur petit écran. */}
       {actions && (
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:shrink-0">
           {actions}
         </div>
       )}

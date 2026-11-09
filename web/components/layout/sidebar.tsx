@@ -187,17 +187,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                           "group relative flex min-h-11 items-center rounded-control py-2.5 text-label font-medium transition-colors",
                           isCollapsed ? "justify-center px-0" : "gap-3 px-3.5",
                           childActive
-                            ? "bg-primary-soft text-primary font-semibold"
+                            ? "text-foreground font-semibold"
                             : "text-muted hover:bg-surface-hover hover:text-foreground",
                         )}
                       >
-                        {childActive && (
-                          <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r-full bg-primary" />
-                        )}
                         <ChildIcon
                           className={cn(
                             "h-5 w-5 shrink-0",
-                            childActive ? "text-primary" : "text-muted group-hover:text-foreground",
+                            childActive ? "text-foreground" : "text-muted group-hover:text-foreground",
                           )}
                           aria-hidden="true"
                         />
@@ -227,26 +224,17 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   "group relative flex min-h-11 items-center rounded-control py-2.5 text-label font-medium transition-colors",
                   isCollapsed ? "justify-center px-0" : "gap-3 px-3.5",
                   isActive
-                    ? "bg-primary-soft text-primary font-semibold"
+                    ? "text-foreground font-semibold"
                     : "text-muted hover:bg-surface-hover hover:text-foreground"
                 )}
               >
-                {/* Indicateur vertical d'onglet actif */}
-                {isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-r-full bg-primary" />
-                )}
-
                 <Icon
                   className={cn(
                     "h-5 w-5 shrink-0 transition-colors",
-                    isActive ? "text-primary" : "text-muted group-hover:text-foreground"
+                    isActive ? "text-foreground" : "text-muted group-hover:text-foreground"
                   )}
                 />
                 <span className={cn("truncate", isCollapsed && "sr-only")}>{item.name}</span>
-
-                {isActive && !isCollapsed && (
-                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
-                )}
               </Link>
             );
           })}
@@ -261,7 +249,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             className={cn(
               "flex min-h-11 items-center rounded-control py-2.5 text-label font-medium text-muted transition-colors hover:bg-surface-hover hover:text-foreground",
               isCollapsed ? "justify-center px-0" : "gap-3 px-3.5",
-              pathname.startsWith("/settings") && "bg-primary-soft text-primary",
+              pathname.startsWith("/settings") && "text-foreground font-semibold",
             )}
           >
             <Settings className="h-5 w-5 shrink-0" aria-hidden="true" />

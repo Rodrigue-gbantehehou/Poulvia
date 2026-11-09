@@ -48,6 +48,12 @@ export default function HealthPage() {
   const { activeFarm, hasModule, hasPermission, isOwner } = useAuth();
   const { toast } = useToast();
 
+  const canViewHealth = hasModule("health") &&
+    (hasPermission("health:view") || hasPermission("health:manage") || isOwner);
+  const canViewFlocks = hasModule("flocks") &&
+    (hasPermission("flock:read") || hasPermission("flock:view") || isOwner);
+  const canViewInventory = hasModule("inventory") &&
+    (hasPermission("inventory:read") || hasPermission("inventory:view") || isOwner);
   const canManageHealth = hasPermission("health:manage") || hasPermission("health:create") || isOwner;
   const canDeleteHealth = hasPermission("health:delete") || hasPermission("health:manage") || isOwner;
 
@@ -60,6 +66,7 @@ export default function HealthPage() {
     upcomingCount: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const showLoading = isLoading && Boolean(activeFarm?.id && hasModule("health"));
 
   // Filtres
@@ -152,22 +159,26 @@ export default function HealthPage() {
   ];
 
   useEffect(() => {
-    if (activeFarm?.id && hasModule("health")) {
+    if (activeFarm?.id && canViewHealth) {
       loadData();
     }
-  }, [activeFarm?.id, selectedFlockId, selectedStatus]);
+  }, [activeFarm?.id, selectedFlockId, selectedStatus, canViewHealth]);
 
   async function loadData() {
-    if (!activeFarm?.id) return;
+    if (!activeFarm?.id || !canViewHealth) return;
+    setIsLoading(true);
+    setLoadError(false);
     try {
-      const [treatmentsRes, flocksRes, itemsRes] = await Promise.all([
-        api.health.list(activeFarm.id, {
+      const treatmentsRes = await api.health.list(activeFarm.id, {
           flockId: selectedFlockId !== "ALL" ? selectedFlockId : undefined,
           status: selectedStatus !== "ALL" ? selectedStatus : undefined,
-        }),
-        api.flocks.list({ farmId: activeFarm.id }),
-        api.inventory.listItems({ farmId: activeFarm.id }),
+        });
+      const [flocksResult, itemsResult] = await Promise.allSettled([
+        canViewFlocks ? api.flocks.list({ farmId: activeFarm.id }) : Promise.resolve([]),
+        canViewInventory ? api.inventory.listItems({ farmId: activeFarm.id }) : Promise.resolve([]),
       ]);
+      const flocksRes = flocksResult.status === "fulfilled" ? flocksResult.value : [];
+      const itemsRes = itemsResult.status === "fulfilled" ? itemsResult.value : [];
 
       setTreatments(treatmentsRes.data || []);
       setMeta(treatmentsRes.meta || { totalItems: 0, overdueCount: 0, upcomingCount: 0 });
@@ -180,6 +191,7 @@ export default function HealthPage() {
       }
     } catch (err) {
       console.error("Erreur chargement données santé:", err);
+      setLoadError(true);
     } finally {
       setIsLoading(false);
     }
@@ -361,13 +373,24 @@ export default function HealthPage() {
     );
   }
 
+  if (!canViewHealth) {
+    return (
+      <Shell>
+        <div className="mx-auto max-w-lg py-16 text-center" role="alert">
+          <h1 className="text-xl font-semibold text-foreground">Accès non autorisé</h1>
+          <p className="mt-2 text-sm text-muted">Votre rôle ne permet pas de consulter le suivi sanitaire de cette exploitation.</p>
+        </div>
+      </Shell>
+    );
+  }
+
   return (
     <Shell>
       <div className="space-y-3.5 sm:space-y-4">
         {/* En-tête mobile natif */}
         <PageHeader
           title="Santé & Soins"
-          subtitle={`${meta.totalItems} soin(s) planifié(s)`}
+          subtitle={loadError ? "Données momentanément indisponibles" : `${meta.totalItems} soin(s) planifié(s)`}
           icon={<HeartPulse className="h-4 w-4 text-accent" />}
           actions={
             canManageHealth && (
@@ -384,7 +407,7 @@ export default function HealthPage() {
         />
 
         {/* Cartes KPI */}
-        <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
+        {!loadError && <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
           <StatCard
             title="Interventions"
             value={meta.totalItems}
@@ -411,10 +434,10 @@ export default function HealthPage() {
             icon={<Coins className="h-5 w-5" />}
             accent="amber"
           />
-        </div>
+        </div>}
 
         {/* Filtres Hors Tableau (Style Vraie App Mobile) */}
-        <div className="space-y-2">
+        {!loadError && <div className="space-y-2">
           {/* Rangée 1 : Statuts en pastilles tactiles défilantes */}
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 -mx-1 px-1 touch-pan-x">
             {[
@@ -485,7 +508,7 @@ export default function HealthPage() {
               );
             })}
           </div>
-        </div>
+        </div>}
 
         {/* Liste des interventions */}
         {showLoading ? (
@@ -494,6 +517,13 @@ export default function HealthPage() {
               <Clock className="h-5 w-5 animate-spin text-accent" />
               <span>Chargement du suivi sanitaire...</span>
             </div>
+          </div>
+        ) : loadError ? (
+          <div role="alert" className="flex flex-col gap-3 rounded-xl border border-danger/30 bg-danger/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-danger">Impossible de charger le suivi sanitaire. Aucune donnée n’a été remplacée par un état vide.</p>
+            <button type="button" onClick={() => void loadData()} disabled={isLoading} className="min-h-10 rounded-control border border-border bg-surface px-4 text-sm font-semibold text-foreground hover:bg-surface-hover disabled:opacity-60">
+              {isLoading ? "Chargement…" : "Réessayer"}
+            </button>
           </div>
         ) : filteredTreatments.length === 0 ? (
           <EmptyState

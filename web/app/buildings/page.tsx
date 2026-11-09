@@ -13,6 +13,7 @@ import {
   Users,
   CheckCircle2,
   Bird,
+  AlertCircle,
 } from "lucide-react";
 import { Shell } from "@/components/layout/shell";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -36,26 +37,32 @@ interface Building {
 }
 
 export default function BuildingsPage() {
-  const { activeFarm, hasPermission, hasModule } = useAuth();
+  const { activeFarm, hasPermission, hasModule, isOwner } = useAuth();
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editingBuilding, setEditingBuilding] = useState<Building | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const canViewBuildings = hasModule("buildings") &&
+    (hasPermission("building:manage") || hasPermission("farm:view") || isOwner);
 
   useEffect(() => {
-    if (activeFarm?.id && hasModule("buildings")) {
+    if (activeFarm?.id && canViewBuildings) {
       loadBuildings();
     }
-  }, [activeFarm?.id]);
+  }, [activeFarm?.id, canViewBuildings]);
 
   async function loadBuildings() {
-    if (!activeFarm?.id) return;
+    if (!activeFarm?.id || !canViewBuildings) return;
+    setIsLoading(true);
+    setLoadError(false);
     try {
       const data = await api.farms.listBuildings(activeFarm.id);
       setBuildings(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Erreur chargement bâtiments:", err);
+      setLoadError(true);
     } finally {
       setIsLoading(false);
     }
@@ -92,6 +99,17 @@ export default function BuildingsPage() {
           moduleName="Poulaillers & Bâtiments d'élevage"
           description="La gestion avancée des poulaillers, bâtiments et capacités d'accueil n'est pas incluse dans votre formule actuelle."
         />
+      </Shell>
+    );
+  }
+
+  if (!canViewBuildings) {
+    return (
+      <Shell>
+        <div className="mx-auto max-w-lg py-16 text-center" role="alert">
+          <h1 className="text-xl font-semibold text-foreground">Accès non autorisé</h1>
+          <p className="mt-2 text-sm text-muted">Votre rôle ne permet pas de consulter les bâtiments de cette exploitation.</p>
+        </div>
       </Shell>
     );
   }
@@ -136,8 +154,20 @@ export default function BuildingsPage() {
         }
       />
 
+      {loadError && (
+        <div role="alert" className="mt-4 flex flex-col gap-3 rounded-xl border border-danger/30 bg-danger/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-2 text-sm text-foreground">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-danger" aria-hidden="true" />
+            <p>Impossible de charger les bâtiments. Aucune donnée n’a été remplacée par un état vide.</p>
+          </div>
+          <button type="button" onClick={() => void loadBuildings()} disabled={isLoading} className="min-h-10 rounded-control border border-border bg-surface px-4 text-sm font-semibold text-foreground hover:bg-surface-hover disabled:opacity-60">
+            {isLoading ? "Chargement…" : "Réessayer"}
+          </button>
+        </div>
+      )}
+
       {/* KPI Stats */}
-      <div className="mt-4 sm:mt-6 grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+      {!loadError && <div className="mt-4 sm:mt-6 grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
         <StatCard
           title="Bâtiments"
           value={buildings.length}
@@ -159,10 +189,10 @@ export default function BuildingsPage() {
           accent="sky"
           icon={<CheckCircle2 className="h-5 w-5" />}
         />
-      </div>
+      </div>}
 
       {/* Buildings List */}
-      <div className="mt-8">
+      {!loadError && <div className="mt-8">
         {buildings.length === 0 ? (
           <EmptyState
             icon={<Warehouse className="h-10 w-10 text-primary" />}
@@ -252,7 +282,7 @@ export default function BuildingsPage() {
             ))}
           </div>
         )}
-      </div>
+      </div>}
 
       {/* Modales */}
       <CreateBuildingModal

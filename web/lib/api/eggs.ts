@@ -47,13 +47,12 @@ export const eggsApi = {
       const layerFlocks = flocks.filter((f) => f.type === "LAYER" || f.type === "MIXED");
       const allProds: EggProduction[] = [];
       for (const lf of layerFlocks) {
-        try {
-          const list = await apiRequest<EggProductionResponse[]>(`/flocks/${lf.id}/egg-productions`);
-          if (Array.isArray(list)) {
-            allProds.push(
-              ...list
-                .filter((p) => Boolean(p.productionDate || p.date))
-                .map((p) => ({
+        const list = await apiRequest<EggProductionResponse[]>(`/flocks/${lf.id}/egg-productions`);
+        if (Array.isArray(list)) {
+          allProds.push(
+            ...list
+              .filter((p) => Boolean(p.productionDate || p.date))
+              .map((p) => ({
                 id: p.id,
                 flockId: lf.id,
                 flockName: lf.name,
@@ -67,11 +66,8 @@ export const eggsApi = {
                 looseEggs: p.looseEggsCount !== undefined ? p.looseEggsCount : ((p.goodEggs || 0) % 30),
                 notes: p.notes,
                 createdAt: p.createdAt || p.productionDate || p.date!,
-                })),
-            );
-          }
-        } catch {
-          // continue
+              })),
+          );
         }
       }
       return allProds;
