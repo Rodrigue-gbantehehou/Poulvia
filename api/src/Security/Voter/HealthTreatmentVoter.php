@@ -10,6 +10,7 @@ use App\Entity\HealthTreatment;
 use App\Entity\User;
 use App\Repository\FarmMembershipRepository;
 use App\Security\ApiKeySecurityChecker;
+use App\Security\FarmPermissionChecker;
 use App\Security\Permission;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
@@ -24,16 +25,18 @@ class HealthTreatmentVoter extends Voter
     public const EDIT = 'HEALTH_TREATMENT_EDIT';
     public const DELETE = 'HEALTH_TREATMENT_DELETE';
     public const COMPLETE = 'HEALTH_TREATMENT_COMPLETE';
+    public const GENERATE_PROGRAM = 'HEALTH_TREATMENT_GENERATE_PROGRAM';
 
     public function __construct(
         private readonly FarmMembershipRepository $membershipRepository,
         private readonly ApiKeySecurityChecker $apiKeyChecker,
+        private readonly FarmPermissionChecker $permissionChecker,
     ) {
     }
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        if (!in_array($attribute, [self::VIEW, self::CREATE, self::EDIT, self::DELETE, self::COMPLETE], true)) {
+        if (!in_array($attribute, [self::VIEW, self::CREATE, self::EDIT, self::DELETE, self::COMPLETE, self::GENERATE_PROGRAM], true)) {
             return false;
         }
 
@@ -61,14 +64,21 @@ class HealthTreatmentVoter extends Voter
             return false;
         }
 
+        $requiredPermission = match ($attribute) {
+            self::VIEW => Permission::HEALTH_VIEW,
+            self::CREATE, self::EDIT, self::DELETE, self::COMPLETE, self::GENERATE_PROGRAM => Permission::HEALTH_MANAGE,
+            default => 'none',
+        };
+
+        if (!$this->permissionChecker->moduleAllows($farm, $requiredPermission)) {
+            return false;
+        }
+        if ($attribute === self::GENERATE_PROGRAM && !$this->permissionChecker->moduleKeyAllows($farm, 'prophylaxis_program')) {
+            return false;
+        }
+
         $apiKey = $this->apiKeyChecker->getApiKey();
         if ($apiKey !== null) {
-            $requiredPermission = match ($attribute) {
-                self::VIEW => Permission::HEALTH_VIEW,
-                self::CREATE, self::EDIT, self::DELETE, self::COMPLETE => Permission::HEALTH_MANAGE,
-                default => 'none',
-            };
-
             if (!$this->apiKeyChecker->isAccessAllowed($farm, $requiredPermission)) {
                 return false;
             }
@@ -95,8 +105,8 @@ class HealthTreatmentVoter extends Voter
         }
 
         return match ($attribute) {
-            self::VIEW => $membership->hasPermission(Permission::HEALTH_VIEW),
-            self::CREATE, self::EDIT, self::DELETE, self::COMPLETE => $membership->hasPermission(Permission::HEALTH_MANAGE),
+            self::VIEW => $this->permissionChecker->allows($membership, Permission::HEALTH_VIEW, false),
+            self::CREATE, self::EDIT, self::DELETE, self::COMPLETE, self::GENERATE_PROGRAM => $this->permissionChecker->allows($membership, Permission::HEALTH_MANAGE),
             default => false,
         };
     }

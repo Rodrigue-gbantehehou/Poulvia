@@ -48,7 +48,7 @@ class RoleController extends AbstractController
     }
 
     #[Route('/farms/{id}/roles', name: 'farm_roles_list', methods: ['GET'])]
-    #[IsGranted('FARM_VIEW', subject: 'farm')]
+    #[IsGranted(FarmVoter::VIEW_ROLES, subject: 'farm')]
     public function listFarmRoles(Farm $farm): JsonResponse
     {
         $roles = $this->roleService->getRolesForFarm($farm);
@@ -121,6 +121,8 @@ class RoleController extends AbstractController
         Farm $farm,
         string $roleId,
     ): JsonResponse {
+        $this->commercialPlanService->assertModuleAllowed($farm, 'custom_roles');
+
         $role = $this->roleRepository->find($roleId);
         if (!$role instanceof Role || $role->getFarm()->getId()->toRfc4122() !== $farm->getId()->toRfc4122()) {
             return $this->json([

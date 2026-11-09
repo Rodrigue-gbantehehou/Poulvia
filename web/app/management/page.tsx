@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Wallet,
@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   ArrowRight,
   TrendingUp,
+  AlertCircle,
   Boxes,
   UserCheck,
   Lock,
@@ -32,6 +33,7 @@ export default function ManagementPage() {
   const { activeFarm, hasPermission, hasModule, isOwner } = useAuth();
   const [summary, setSummary] = useState<ManagementSummary>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   // Permissions
   const canViewFinance =
@@ -44,66 +46,53 @@ export default function ManagementPage() {
     hasModule("contacts") &&
     (hasPermission("contact:read") || hasPermission("contact:view") || isOwner);
   const canManageMembers =
-    hasPermission("member:manage") || hasPermission("member:read") || isOwner;
+    hasModule("team") &&
+    (hasPermission("member:manage") || isOwner);
   const canManageRoles =
-    hasPermission("role:manage") || hasPermission("role:read") || isOwner;
+    hasModule("custom_roles") &&
+    (hasPermission("role:manage") || isOwner);
 
-  useEffect(() => {
-    async function loadQuickStats() {
-      if (!activeFarm?.id) return;
-      try {
-        setIsLoading(true);
-        // Chargement parallèle non bloquant des indicateurs clés
-        const promises: Promise<any>[] = [];
-
-        if (canViewFinance) {
-          promises.push(
-            api.finances.getSummary().catch(() => null)
-          );
-        } else {
-          promises.push(Promise.resolve(null));
-        }
-
-        if (canViewInventory) {
-          promises.push(
-            api.inventory.getItems().catch(() => null)
-          );
-        } else {
-          promises.push(Promise.resolve(null));
-        }
-
-        if (canViewContacts) {
-          promises.push(
-            api.contacts.getAll().catch(() => null)
-          );
-        } else {
-          promises.push(Promise.resolve(null));
-        }
-
-        const [finSummary, invItems, contactsList] = await Promise.all(promises);
-
-        setSummary({
-          cashBalance: finSummary?.data?.balance ?? finSummary?.balance ?? undefined,
-          stockCount: Array.isArray(invItems?.data)
-            ? invItems.data.length
-            : Array.isArray(invItems)
-            ? invItems.length
-            : undefined,
-          contactCount: Array.isArray(contactsList?.data)
-            ? contactsList.data.length
-            : Array.isArray(contactsList)
-            ? contactsList.length
-            : undefined,
-        });
-      } catch {
-        // Ignorer les erreurs d'indicateurs
-      } finally {
-        setIsLoading(false);
-      }
+  const loadQuickStats = useCallback(async () => {
+    if (!activeFarm?.id) {
+      setIsLoading(false);
+      return;
     }
 
-    loadQuickStats();
-  }, [activeFarm?.id, canViewFinance, canViewInventory, canViewContacts]);
+    setIsLoading(true);
+    setLoadError(false);
+
+    const [transactionsResult, inventoryResult, contactsResult] = await Promise.allSettled([
+      canViewFinance ? api.finance.listTransactions({ farmId: activeFarm.id }) : Promise.resolve(null),
+      canViewInventory ? api.inventory.listItems({ farmId: activeFarm.id }) : Promise.resolve(null),
+      canViewContacts ? api.contacts.list({ farmId: activeFarm.id }) : Promise.resolve(null),
+    ]);
+
+    const transactions = transactionsResult.status === "fulfilled" ? transactionsResult.value : null;
+    const inventoryItems = inventoryResult.status === "fulfilled" ? inventoryResult.value : null;
+    const contacts = contactsResult.status === "fulfilled" ? contactsResult.value : null;
+
+    setSummary({
+      cashBalance: canViewFinance && transactions
+        ? transactions.reduce(
+            (balance, transaction) =>
+              balance + (transaction.type === "INCOME" ? transaction.amountFcfa : -transaction.amountFcfa),
+            0,
+          )
+        : undefined,
+      stockCount: canViewInventory && inventoryItems ? inventoryItems.length : undefined,
+      contactCount: canViewContacts && contacts ? contacts.length : undefined,
+    });
+
+    setLoadError(
+      [transactionsResult, inventoryResult, contactsResult].some((result) => result.status === "rejected"),
+    );
+    setIsLoading(false);
+  }, [activeFarm, canViewFinance, canViewInventory, canViewContacts]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => void loadQuickStats(), 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [loadQuickStats]);
 
   const managementModules = [
     {
@@ -185,6 +174,26 @@ export default function ManagementPage() {
           title="Espace Gestion"
           subtitle="Pilotage financier, logistique, partenarial et humain de votre exploitation avicole."
         />
+
+        {loadError && (
+          <div
+            role="alert"
+            className="flex flex-col gap-3 rounded-xl border border-danger/30 bg-danger/5 p-4 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div className="flex items-start gap-2 text-sm text-foreground">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-danger" aria-hidden="true" />
+              <p>Certains indicateurs n’ont pas pu être chargés. Les valeurs indisponibles restent masquées.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void loadQuickStats()}
+              disabled={isLoading}
+              className="min-h-10 rounded-control border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isLoading ? "Chargement…" : "Réessayer"}
+            </button>
+          </div>
+        )}
 
         {/* Grille principale des modules de gestion */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

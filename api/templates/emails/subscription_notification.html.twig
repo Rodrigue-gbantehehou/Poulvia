@@ -1,0 +1,17 @@
+{% extends 'emails/base.html.twig' %}
+
+{% block title %}Mise à jour de votre abonnement Poulvia{% endblock %}
+{% block preheader %}Une mise à jour concerne l’abonnement de {{ farmName }}.{% endblock %}
+
+{% block content %}
+  <h1>Votre abonnement a été mis à jour</h1>
+  <p>Une mise à jour concerne l’abonnement de l’exploitation <strong>{{ farmName }}</strong>.</p>
+  {% if planName is defined and planName %}<p><strong>Offre :</strong> {{ planName }}</p>{% endif %}
+  {% if statusLabel is defined and statusLabel %}<p><strong>État :</strong> {{ statusLabel }}</p>{% endif %}
+  {% if billingCycleLabel is defined and billingCycleLabel %}<p><strong>Périodicité :</strong> {{ billingCycleLabel }}</p>{% endif %}
+  {% if effectiveAt is defined and effectiveAt %}<p><strong>Date d’effet :</strong> {{ effectiveAt|date('d/m/Y') }}</p>{% endif %}
+  {% if subscriptionUrl is defined and subscriptionUrl %}
+    <div class="button-wrap"><a class="button" href="{{ subscriptionUrl }}">Consulter l’abonnement</a></div>
+  {% endif %}
+  <p class="muted">Pour toute question sur cette mise à jour, contactez l’équipe Poulvia.</p>
+{% endblock %}

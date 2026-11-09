@@ -31,6 +31,9 @@ import { Modal } from "@/components/ui/modal";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, ColumnDef } from "@/components/ui/data-table";
 import { ModuleLockedState } from "@/components/ui/module-locked-state";
+
+// La valorisation avancée reste disponible dans le code, mais n'est pas présentée dans le parcours standard.
+const SHOW_ADVANCED_STOCK_VALUATION = false;
 import { PageHeader } from "@/components/ui/page-header";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
@@ -53,10 +56,10 @@ import {
   ALL_UNITS_LIST,
 } from "@/lib/units";
 
-const CATEGORY_LABELS: Record<InventoryCategory, { label: string; badge: "default" | "success" | "warning" | "info" | "neutral" }> = {
+const CATEGORY_LABELS: Record<InventoryCategory, { label: string; badge: "default" | "success" | "warning" | "info" | "neutral" | "danger" }> = {
   FEED: { label: "Aliment & Nutrition", badge: "default" },
   VACCINE: { label: "Vaccin biologique", badge: "warning" },
-  MEDICINE: { label: "Médicament & Soins", badge: "danger" as any },
+  MEDICINE: { label: "Médicament & Soins", badge: "danger" },
   EQUIPMENT: { label: "Matériel & Équipement", badge: "info" },
   OTHER: { label: "Autre intrant", badge: "neutral" },
 };
@@ -131,14 +134,10 @@ function InventoryItemDetailContent() {
   const [moveUnit, setMoveUnit] = useState<string>("KG");
   const [moveQty, setMoveQty] = useState<number | string>(15);
   const [moveUnitPrice, setMoveUnitPrice] = useState<number | string>("");
-  const [moveDate, setMoveDate] = useState("");
+  const [moveDate, setMoveDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [moveReason, setMoveReason] = useState("");
   const [moveFlockId, setMoveFlockId] = useState("");
   const [submittingMove, setSubmittingMove] = useState(false);
-
-  useEffect(() => {
-    setMoveDate(new Date().toISOString().split("T")[0]);
-  }, []);
 
   // Détection article aliment / provende & conditionnement en sacs
   const isFeed = Boolean(
@@ -262,8 +261,8 @@ function InventoryItemDetailContent() {
       setMoveModalOpen(false);
       toast.success("Mouvement de stock enregistré avec succès !");
       await loadItemData();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors de l'enregistrement du mouvement.";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de l'enregistrement du mouvement.";
       setMoveError(msg);
       toast.error(msg);
     } finally {
@@ -294,8 +293,8 @@ function InventoryItemDetailContent() {
       setEditModalOpen(false);
       toast.success("Article mis à jour avec succès !");
       await loadItemData();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors de la modification de l'article.";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de la modification de l'article.";
       setEditError(msg);
       toast.error(msg);
     } finally {
@@ -311,8 +310,8 @@ function InventoryItemDetailContent() {
       });
       toast.success(item.isActive ? "Article archivé avec succès." : "Article restauré avec succès.");
       await loadItemData();
-    } catch (err: any) {
-      toast.error(err?.message || "Erreur lors du changement de statut d'archivage.");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Erreur lors du changement de statut d'archivage.");
     }
   }
 
@@ -507,14 +506,14 @@ function InventoryItemDetailContent() {
           <AlertTriangle className="mx-auto h-12 w-12 text-warning mb-3" />
           <h2 className="text-base font-bold text-foreground">Article introuvable</h2>
           <p className="mt-1 text-xs text-muted">
-            L'article d'inventaire demandé n'existe pas ou a été supprimé.
+            L&apos;article d&apos;inventaire demandé n&apos;existe pas ou a été supprimé.
           </p>
           <Link
             href="/inventory"
             className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white hover:bg-primary-hover transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>Retour à l'inventaire</span>
+            <span>Retour à l&apos;inventaire</span>
           </Link>
         </div>
       </Shell>
@@ -668,12 +667,14 @@ function InventoryItemDetailContent() {
           icon={<Package className="h-5 w-5" />}
         />
 
-        <StatCard
-          title="Valeur en stock"
-          value={formatFcfa(totalStockValue)}
-          subtitle={`${formatFcfa(item.unitCostFcfa)} / ${unitShort}`}
-          icon={<Wallet className="h-5 w-5" />}
-        />
+        {SHOW_ADVANCED_STOCK_VALUATION && hasModule("inventory_valuation") && (
+          <StatCard
+            title="Valeur en stock"
+            value={formatFcfa(totalStockValue)}
+            subtitle={`${formatFcfa(item.unitCostFcfa)} / ${unitShort}`}
+            icon={<Wallet className="h-5 w-5" />}
+          />
+        )}
 
         <StatCard
           title="Total entrées"
@@ -814,7 +815,7 @@ function InventoryItemDetailContent() {
 
             <dl className="space-y-3.5 text-xs">
               <div className="flex justify-between py-1 border-b border-border/50">
-                <dt className="text-muted">Nom de l'article :</dt>
+                <dt className="text-muted">Nom de l&apos;article :</dt>
                 <dd className="font-bold text-foreground">{item.name}</dd>
               </div>
 
@@ -840,7 +841,7 @@ function InventoryItemDetailContent() {
               {isBagItem && (
                 <>
                   <div className="flex justify-between py-1 border-b border-border/50">
-                    <dt className="text-muted">Poids net d'un sac :</dt>
+                    <dt className="text-muted">Poids net d&apos;un sac :</dt>
                     <dd className="font-mono font-bold text-primary">{itemBagWeight} kg / sac</dd>
                   </div>
                   <div className="flex justify-between py-1 border-b border-border/50">
@@ -853,7 +854,7 @@ function InventoryItemDetailContent() {
               )}
 
               <div className="flex justify-between py-1 border-b border-border/50">
-                <dt className="text-muted">Seuil d'alerte sécurité :</dt>
+                <dt className="text-muted">Seuil d&apos;alerte sécurité :</dt>
                 <dd className="font-mono font-bold text-foreground">{formatNumber(item.minThreshold)} {unitShort}</dd>
               </div>
 
@@ -863,7 +864,7 @@ function InventoryItemDetailContent() {
               </div>
 
               <div className="flex justify-between py-1">
-                <dt className="text-muted">Statut d'activité :</dt>
+                <dt className="text-muted">Statut d&apos;activité :</dt>
                 <dd>
                   <Badge variant={item.isActive !== false ? "success" : "neutral"} size="sm">
                     {item.isActive !== false ? "Actif en exploitation" : "Archivé / Inactif"}
@@ -878,7 +879,7 @@ function InventoryItemDetailContent() {
             <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-xs">
               <h2 className="text-sm font-bold text-foreground flex items-center gap-2 mb-3 border-b border-border pb-3">
                 <Info className="h-4 w-4 text-primary" />
-                <span>Notes & Consignes d'utilisation</span>
+                <span>Notes & Consignes d&apos;utilisation</span>
               </h2>
               {item.notes ? (
                 <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap bg-surface-muted p-3.5 rounded-xl border border-border">
@@ -918,12 +919,12 @@ function InventoryItemDetailContent() {
                   {item.isActive !== false ? (
                     <>
                       <Archive className="h-3.5 w-3.5" />
-                      <span>Archiver l'article</span>
+                      <span>Archiver l&apos;article</span>
                     </>
                   ) : (
                     <>
                       <RotateCcw className="h-3.5 w-3.5" />
-                      <span>Restaurer l'article</span>
+                      <span>Restaurer l&apos;article</span>
                     </>
                   )}
                 </button>
@@ -1081,7 +1082,7 @@ function InventoryItemDetailContent() {
           {moveType === "IN" && (
             <div>
               <label className="block text-xs font-semibold text-foreground mb-1">
-                Prix unitaire d'achat (FCFA / {getUnitShortLabel(moveUnit)})
+                Prix unitaire d&apos;achat (FCFA / {getUnitShortLabel(moveUnit)})
               </label>
               <input
                 type="number"
@@ -1222,7 +1223,7 @@ function InventoryItemDetailContent() {
           {editCategory === "OTHER" && (
             <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
               <label className="block text-xs font-semibold text-foreground mb-1">
-                Précisez la catégorie / nature de l'intrant *
+                Précisez la catégorie / nature de l&apos;intrant *
               </label>
               <input
                 type="text"
@@ -1256,7 +1257,7 @@ function InventoryItemDetailContent() {
                 <span className="text-xs font-bold text-muted whitespace-nowrap">kg / sac</span>
               </div>
               <p className="text-[11px] text-muted">
-                Définit le poids exact d'un sac pour calculer fidèlement le poids total en magasin ({formatNumber(item.currentStock)} sacs = ~{formatNumber(item.currentStock * (Number(editPackageWeightKg) || 50))} kg) et convertir les pesées de machine.
+                Définit le poids exact d&apos;un sac pour calculer fidèlement le poids total en magasin ({formatNumber(item.currentStock)} sacs = ~{formatNumber(item.currentStock * (Number(editPackageWeightKg) || 50))} kg) et convertir les pesées de machine.
               </p>
             </div>
           )}
@@ -1264,7 +1265,7 @@ function InventoryItemDetailContent() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-foreground mb-1">
-                Seuil d'alerte de stock *
+                Seuil d&apos;alerte de stock *
               </label>
               <input
                 type="number"
@@ -1276,13 +1277,13 @@ function InventoryItemDetailContent() {
                 className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-xs font-mono text-foreground focus:border-primary focus:outline-hidden"
               />
               <span className="mt-1 block text-[10px] text-muted">
-                Déclenche l'alerte dès que le stock descend à ce niveau.
+                Déclenche l&apos;alerte dès que le stock descend à ce niveau.
               </span>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-foreground mb-1">
-                Prix unitaire d'achat moyen (FCFA)
+                Prix unitaire d&apos;achat moyen (FCFA)
               </label>
               <input
                 type="number"

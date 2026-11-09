@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useSyncExternalStore } from "react";
 
 type Theme = "light" | "dark";
 
@@ -11,23 +11,32 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+const THEME_CHANGE_EVENT = "poulvia:theme-change";
+
+function subscribeToTheme(callback: () => void) {
+  window.addEventListener("storage", callback);
+  window.addEventListener(THEME_CHANGE_EVENT, callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(THEME_CHANGE_EVENT, callback);
+  };
+}
+
+function getThemeSnapshot(): Theme {
+  return localStorage.getItem("Poulvia_theme") === "dark" ? "dark" : "light";
+}
+
+function getServerThemeSnapshot(): Theme {
+  return "light";
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  // STRICT RULE: Default theme is ALWAYS "light" (never black/dark by default)
-  const [theme, setTheme] = useState<Theme>("light");
-  const [mounted, setMounted] = useState(false);
+  // Default theme is always light; saved preferences update through the store subscription.
+  const theme = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerThemeSnapshot);
 
   useEffect(() => {
-    setMounted(true);
-    const stored = localStorage.getItem("Poulvia_theme") as Theme | null;
-    // Only apply dark mode if the user EXPLICITLY clicked toggleTheme and saved "dark"
-    if (stored === "dark") {
-      setTheme("dark");
-      applyTheme("dark");
-    } else {
-      setTheme("light");
-      applyTheme("light");
-    }
-  }, []);
+    applyTheme(theme);
+  }, [theme]);
 
   function applyTheme(newTheme: Theme) {
     if (newTheme === "dark") {
@@ -39,9 +48,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   function toggleTheme() {
     const nextTheme = theme === "light" ? "dark" : "light";
-    setTheme(nextTheme);
     localStorage.setItem("Poulvia_theme", nextTheme);
     applyTheme(nextTheme);
+    window.dispatchEvent(new Event(THEME_CHANGE_EVENT));
   }
 
   return (

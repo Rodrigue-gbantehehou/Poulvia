@@ -4,24 +4,15 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   CreditCard,
-  ChevronRight,
   CheckCircle2,
   AlertTriangle,
   Loader2,
   Sparkles,
-  Users,
-  Building2,
-  Bird,
-  BarChart3,
-  HeartPulse,
-  Package,
-  Wallet,
   MessageSquare,
   ArrowUpRight,
   Star,
   X,
   Check,
-  Zap,
   Shield,
 } from "lucide-react";
 import { Shell } from "@/components/layout/shell";
@@ -34,29 +25,31 @@ import { cn } from "@/lib/utils";
 
 /* ─── Constantes ─── */
 
-const MODULE_LABELS: Record<string, string> = {
-  flocks: "Lots & Volailles",
-  eggs: "Ramassage des œufs",
-  health: "Soins & Vaccins",
-  health_alerts: "Alertes de Mortalité",
-  prophylaxis_program: "Programmes Vaccinaux",
-  inventory: "Stocks & Aliments",
-  inventory_valuation: "Valorisation du Stock",
-  feed_rationing: "Rationnement & IC",
-  finance: "Caisse & Ventes",
-  finance_margin: "Marges & Bénéfices",
-  credit_debt: "Créances & Dettes",
-  sales_receipts: "Reçus & Factures",
-  reports_accounting: "Exports SYSCOHADA",
-  contacts: "Clients & Fournisseurs",
-  buildings: "Bâtiments d'élevage",
-  performance_benchmark: "Comparatifs Inter-Bâtiments",
-  team: "Équipe & Collaborateurs",
-  custom_roles: "Rôles Sur-Mesure",
-  dashboard_advanced: "Analyses Avancées",
-  api_iot: "API & Capteurs IoT",
-  priority_support: "Support Prioritaire WhatsApp",
-};
+// Les fonctions avancées ne sont pas présentées dans le catalogue standard au client.
+const ADVANCED_PLAN_MODULES = new Set([
+  "health_alerts",
+  "prophylaxis_program",
+  "inventory_valuation",
+  "feed_rationing",
+  "finance_margin",
+  "credit_debt",
+  "reports_accounting",
+  "performance_benchmark",
+  "dashboard_advanced",
+  "api_iot",
+]);
+
+const STANDARD_OFFER_FEATURES = [
+  "Bandes, effectifs, mortalités et bâtiments",
+  "Production adaptée au type d’exploitation",
+  "Suivi sanitaire et traitements",
+  "Stocks, dépenses, recettes et ventes",
+  "Contacts, membres et rôles personnalisés",
+];
+
+function getStandardModules(modules: string[]) {
+  return modules.filter((module) => !ADVANCED_PLAN_MODULES.has(module));
+}
 
 const PLAN_ACCENT: Record<string, { tier: string; ring: string; cta: string }> = {
   FREE: {
@@ -80,8 +73,6 @@ function getAccent(sku: string) {
   return PLAN_ACCENT[sku] ?? PLAN_ACCENT.FREE;
 }
 
-const PLAN_ORDER = ["FREE", "STANDARD", "PRO", "ENTERPRISE"];
-
 /* ─── Sous-composant PlanCard ─── */
 
 interface PlanCardProps {
@@ -94,13 +85,13 @@ interface PlanCardProps {
 function PlanCard({ plan, currentSku, billingCycle, onSelect }: PlanCardProps) {
   const accent = getAccent(plan.sku);
   const isCurrent = plan.sku === currentSku;
-  const isUp = PLAN_ORDER.indexOf(plan.sku) > PLAN_ORDER.indexOf(currentSku);
 
-  const price =
-    billingCycle === "ANNUALLY" && plan.allowedBillingCycles.includes("ANNUALLY")
-      ? plan.priceAnnually
-      : plan.priceMonthly;
-  const priceLabel = billingCycle === "ANNUALLY" ? "/ an" : "/ mois";
+  const useAnnualPrice =
+    billingCycle === "ANNUALLY" &&
+    plan.allowedBillingCycles.includes("ANNUALLY") &&
+    plan.priceAnnually > 0;
+  const price = useAnnualPrice ? plan.priceAnnually : plan.priceMonthly;
+  const priceLabel = useAnnualPrice ? "/ an" : "/ mois";
 
   return (
     <div
@@ -132,7 +123,7 @@ function PlanCard({ plan, currentSku, billingCycle, onSelect }: PlanCardProps) {
       <div className="mb-4 space-y-1">
         <div className="flex items-center justify-between">
           <span className={cn("text-[10px] font-bold uppercase tracking-wider", accent.tier)}>
-            {plan.tier}
+            {isCurrent ? "Offre actuelle" : "Offre Poulvia"}
           </span>
           {plan.badge && (
             <Badge variant="neutral" className="text-[10px] font-bold">
@@ -140,7 +131,9 @@ function PlanCard({ plan, currentSku, billingCycle, onSelect }: PlanCardProps) {
             </Badge>
           )}
         </div>
-        <h3 className="text-sm font-bold text-foreground">{plan.name}</h3>
+        <h3 className="text-sm font-bold text-foreground">
+          {plan.sku === "STANDARD" ? "Poulvia" : plan.name}
+        </h3>
         {plan.description && (
           <p className="text-xs text-muted leading-relaxed line-clamp-2">{plan.description}</p>
         )}
@@ -161,24 +154,19 @@ function PlanCard({ plan, currentSku, billingCycle, onSelect }: PlanCardProps) {
         {plan.trialDays > 0 && !isCurrent && (
           <p className="text-[11px] text-success mt-1 font-medium flex items-center gap-1">
             <Check className="h-3 w-3" />
-            {plan.trialDays} jours d'essai gratuit
+            {plan.trialDays} jours d&apos;essai gratuit
           </p>
         )}
       </div>
 
       {/* Modules inclus */}
       <div className="flex-1 space-y-1.5 mb-4">
-        {plan.modules.slice(0, 6).map((mod) => (
-          <div key={mod} className="flex items-center gap-2 text-xs">
+        {STANDARD_OFFER_FEATURES.map((feature) => (
+          <div key={feature} className="flex items-center gap-2 text-xs">
             <Check className="h-3.5 w-3.5 shrink-0 text-success" />
-            <span className="text-muted truncate">{MODULE_LABELS[mod] ?? mod}</span>
+            <span className="text-muted truncate">{feature}</span>
           </div>
         ))}
-        {plan.modules.length > 6 && (
-          <p className="text-[11px] text-muted pl-5">
-            + {plan.modules.length - 6} modules supplémentaires
-          </p>
-        )}
       </div>
 
       {/* Quotas */}
@@ -197,29 +185,16 @@ function PlanCard({ plan, currentSku, billingCycle, onSelect }: PlanCardProps) {
       </div>
 
       {/* CTA */}
-      {isCurrent ? (
-        <div className="flex items-center justify-center gap-2 rounded-xl border border-success/30 bg-success/5 py-2.5 text-xs font-bold text-success">
-          <CheckCircle2 className="h-4 w-4" />
-          Offre active
-        </div>
-      ) : (
-        <button
-          onClick={() => onSelect(plan)}
-          className={cn(
-            "flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition-all cursor-pointer",
-            accent.cta
-          )}
-        >
-          {isUp ? (
-            <>
-              Passer à cette offre
-              <ArrowUpRight className="h-3.5 w-3.5" />
-            </>
-          ) : (
-            "Rétrograder vers cette offre"
-          )}
-        </button>
-      )}
+      <button
+        onClick={() => onSelect(plan)}
+        className={cn(
+          "flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-bold transition-all cursor-pointer",
+          accent.cta
+        )}
+      >
+        {isCurrent ? "Choisir cette périodicité" : "Choisir l’offre Poulvia"}
+        <ArrowUpRight className="h-3.5 w-3.5" />
+      </button>
     </div>
   );
 }
@@ -227,12 +202,15 @@ function PlanCard({ plan, currentSku, billingCycle, onSelect }: PlanCardProps) {
 /* ─── Page principale ─── */
 
 export default function SubscriptionPage() {
-  const { activeFarm, activePlan, isOwner, isLoading: authLoading } = useAuth();
+  const { activeFarm, activePlan, isSubscriptionOwner, isLoading: authLoading } = useAuth();
 
   const [publicPlans, setPublicPlans] = useState<PublicPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const showLoading = isLoading && isSubscriptionOwner;
   const [error, setError] = useState<string | null>(null);
-  const [billingCycle, setBillingCycle] = useState<"MONTHLY" | "ANNUALLY">("MONTHLY");
+  const [billingCycle, setBillingCycle] = useState<"MONTHLY" | "ANNUALLY">(() =>
+    activeFarm?.subscription?.billingCycle === "ANNUALLY" ? "ANNUALLY" : "MONTHLY"
+  );
 
   const [upgradeTarget, setUpgradeTarget] = useState<PublicPlan | null>(null);
   const [upgradeMessage, setUpgradeMessage] = useState("");
@@ -241,19 +219,26 @@ export default function SubscriptionPage() {
   const [upgradeError, setUpgradeError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isOwner) {
+    if (isSubscriptionOwner) {
       fetchPlans();
-    } else {
-      setIsLoading(false);
     }
-  }, [isOwner]);
+  }, [isSubscriptionOwner, activeFarm?.id, activeFarm?.subscription?.billingCycle]);
 
   async function fetchPlans() {
     try {
-      setIsLoading(true);
-      setError(null);
       const result = await api.subscriptions.getPlans();
+      setError(null);
       setPublicPlans(result.publicPlans);
+      if (activeFarm?.id) {
+        try {
+          const farmSubscription = await api.subscriptions.getFarmPlan(activeFarm.id);
+          if (farmSubscription.billingCycle === "MONTHLY" || farmSubscription.billingCycle === "ANNUALLY") {
+            setBillingCycle(farmSubscription.billingCycle);
+          }
+        } catch {
+          // Le catalogue reste utilisable si les détails du cycle courant ne sont pas disponibles.
+        }
+      }
     } catch (err: unknown) {
       setError((err as Error).message || "Impossible de charger les offres.");
     } finally {
@@ -270,9 +255,10 @@ export default function SubscriptionPage() {
       const res = await api.subscriptions.requestUpgrade({
         farmId: activeFarm.id,
         targetPlan: upgradeTarget.sku,
+        billingCycle,
         message: upgradeMessage.trim(),
       });
-      setSuccessMsg(res.message || `Demande envoyée pour l'offre ${upgradeTarget.name}.`);
+      setSuccessMsg(res.message || `Demande envoyée pour l’offre Poulvia (${billingCycle === "ANNUALLY" ? "annuelle" : "mensuelle"}).`);
       setUpgradeTarget(null);
       setUpgradeMessage("");
     } catch (err: unknown) {
@@ -282,7 +268,32 @@ export default function SubscriptionPage() {
     }
   }
 
-  const currentSku = activePlan?.plan?.toUpperCase() ?? "FREE";
+  const currentSku = activePlan?.plan?.toUpperCase() ?? "";
+  const currentStatus = activePlan?.status?.toUpperCase() ?? "ACTIVE";
+  const trialEndsAt = activeFarm?.subscription?.trialEndsAt;
+  const trialExpired =
+    (currentStatus === "TRIAL" || currentStatus === "SUSPENDED") &&
+    !!trialEndsAt &&
+    new Date(trialEndsAt).getTime() <= Date.now();
+  const singlePaidOffer = publicPlans.filter((plan) => plan.sku === "STANDARD");
+  const standardPlan = singlePaidOffer[0];
+  const annualAllowed = !!standardPlan &&
+    standardPlan.allowedBillingCycles.includes("ANNUALLY") &&
+    standardPlan.priceAnnually > 0;
+  const annualDiscount = standardPlan && standardPlan.priceMonthly > 0 && standardPlan.priceAnnually > 0
+    ? Math.round((1 - standardPlan.priceAnnually / (standardPlan.priceMonthly * 12)) * 100)
+    : 0;
+  const currentPlanName = currentSku === "STANDARD"
+    ? "Poulvia"
+    : activePlan?.planName || "Offre Poulvia";
+  const displayedModulesCount = getStandardModules(activePlan?.modules ?? []).length;
+  const statusLabel = trialExpired
+    ? "Essai terminé"
+    : currentStatus === "TRIAL"
+      ? "Essai en cours"
+      : currentStatus === "SUSPENDED"
+        ? "Suspendu"
+        : "Actif";
 
   function openUpgrade(plan: PublicPlan) {
     setUpgradeTarget(plan);
@@ -291,7 +302,7 @@ export default function SubscriptionPage() {
     setSuccessMsg(null);
   }
 
-  if (!authLoading && !isOwner) {
+  if (!authLoading && !isSubscriptionOwner) {
     return (
       <Shell>
         <div className="max-w-md mx-auto mt-12 sm:mt-16 rounded-3xl border border-border bg-surface p-8 text-center space-y-4 shadow-sm">
@@ -300,7 +311,7 @@ export default function SubscriptionPage() {
           </div>
           <h2 className="text-lg font-bold text-foreground">Accès réservé</h2>
           <p className="text-xs text-muted leading-relaxed">
-            Seul le propriétaire de l'exploitation avicole est autorisé à consulter et gérer l'abonnement de la ferme.
+            Seul le propriétaire de l&apos;exploitation avicole est autorisé à consulter et gérer l&apos;abonnement de la ferme.
           </p>
           <div className="pt-2">
             <Link
@@ -321,10 +332,27 @@ export default function SubscriptionPage() {
 
         <PageHeader
           title="Mon abonnement"
-          subtitle={`Formule ${activePlan?.planName || "Starter"}`}
+          subtitle={`Offre ${currentPlanName}`}
           icon={<CreditCard className="h-4 w-4" />}
           backHref="/settings/farm"
         />
+
+        {trialExpired && (
+          <div className="rounded-xl border border-warning/30 bg-warning/5 p-4 text-sm text-foreground">
+            <p className="font-semibold">Votre période d’essai est terminée.</p>
+            <p className="mt-1 text-xs text-muted">
+              Vos données restent consultables. Choisissez une périodicité pour demander l’activation de l’offre Poulvia.
+            </p>
+          </div>
+        )}
+
+        {currentSku !== "" && currentSku !== "STANDARD" && (
+          <div className="rounded-xl border border-border bg-surface-muted p-4 text-xs text-muted">
+            {currentSku === "FREE"
+              ? "Votre formule actuelle est une offre historique gratuite. Elle n’est plus proposée aux nouvelles souscriptions."
+              : `Votre formule actuelle (${activePlan?.planName ?? currentSku}) est une offre historique. Elle reste consultable ici, mais n’est plus proposée aux nouvelles souscriptions.`}
+          </div>
+        )}
 
         {/* Alerte succès */}
         {successMsg && (
@@ -347,21 +375,21 @@ export default function SubscriptionPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
           <StatCard
             title="Formule"
-            value={activePlan?.planName || "Starter"}
+            value={currentPlanName}
             accent="primary"
             icon={<CreditCard className="h-5 w-5" />}
             className="col-span-2 sm:col-span-1"
           />
           <StatCard
             title="Modules inclus"
-            value={activePlan?.modules?.length ?? 0}
+            value={displayedModulesCount}
             accent="amber"
             icon={<Sparkles className="h-5 w-5" />}
           />
           <StatCard
             title="Statut"
-            value="Actif"
-            accent="primary"
+            value={statusLabel}
+            accent={trialExpired || currentStatus === "SUSPENDED" ? "amber" : "primary"}
             icon={<CheckCircle2 className="h-5 w-5" />}
           />
         </div>
@@ -369,7 +397,7 @@ export default function SubscriptionPage() {
         {/* Toggle facturation + Titre du catalogue */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-base font-bold text-foreground">Catalogue des offres</h2>
+            <h2 className="text-base font-bold text-foreground">Offre unique Poulvia</h2>
           </div>
           <div className="flex items-center gap-1 rounded-xl border border-border bg-surface-muted p-1 self-start sm:self-auto">
             <button
@@ -384,24 +412,27 @@ export default function SubscriptionPage() {
               Mensuel
             </button>
             <button
+              disabled={!annualAllowed}
               onClick={() => setBillingCycle("ANNUALLY")}
               className={cn(
                 "flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer",
                 billingCycle === "ANNUALLY"
                   ? "bg-surface text-foreground shadow-xs border border-border"
-                  : "text-muted hover:text-foreground"
+                  : annualAllowed ? "text-muted hover:text-foreground" : "text-muted/50 cursor-not-allowed"
               )}
             >
               Annuel
-              <span className="rounded bg-success/15 px-1 py-0.5 text-[10px] font-bold text-success">
-                −17%
-              </span>
+              {annualDiscount > 0 && (
+                <span className="rounded bg-success/15 px-1 py-0.5 text-[10px] font-bold text-success">
+                  −{annualDiscount}%
+                </span>
+              )}
             </button>
           </div>
         </div>
 
         {/* Grille du catalogue */}
-        {isLoading ? (
+        {showLoading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
@@ -416,9 +447,9 @@ export default function SubscriptionPage() {
               Réessayer
             </button>
           </div>
-        ) : publicPlans.length > 0 ? (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {publicPlans.map((plan) => (
+        ) : singlePaidOffer.length > 0 ? (
+          <div className="mx-auto grid w-full max-w-xl grid-cols-1 gap-6">
+            {singlePaidOffer.map((plan) => (
               <PlanCard
                 key={plan.sku}
                 plan={plan}
@@ -452,10 +483,10 @@ export default function SubscriptionPage() {
             </div>
             <div>
               <p className="text-sm font-semibold text-foreground">
-                Comment fonctionne le changement d'offre ?
+                Comment fonctionne le changement d&apos;offre ?
               </p>
               <p className="text-xs text-muted mt-1 leading-relaxed">
-                Lorsque vous demandez un changement de formule, une notification est envoyée à l'équipe
+                Lorsque vous demandez un changement de formule, une notification est envoyée à l&apos;équipe
                 administratrice de Poulvia. Votre abonnement sera activé sans interruption de vos activités.
               </p>
             </div>
@@ -474,11 +505,11 @@ export default function SubscriptionPage() {
                   Changement de formule
                 </p>
                 <h3 className="text-base font-bold text-foreground">
-                  Passer à l'offre{" "}
-                  <span className="text-primary">{upgradeTarget.name}</span>
+                  Choisir l&apos;offre{" "}
+                  <span className="text-primary">Poulvia</span>
                 </h3>
                 <p className="text-xs text-muted mt-0.5">
-                  Pour l'exploitation : <strong>{activeFarm?.name}</strong>
+                  Pour l&apos;exploitation : <strong>{activeFarm?.name}</strong>
                 </p>
               </div>
               <button
@@ -500,7 +531,7 @@ export default function SubscriptionPage() {
               <div className="rounded-xl border border-border bg-surface-muted p-3.5 space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted">Formule demandée</span>
-                  <span className="font-bold text-foreground">{upgradeTarget.name}</span>
+                  <span className="font-bold text-foreground">Poulvia</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted">Tarif ({billingCycle === "ANNUALLY" ? "Annuel" : "Mensuel"})</span>
@@ -517,7 +548,7 @@ export default function SubscriptionPage() {
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted">Modules inclus</span>
                   <span className="font-semibold text-primary">
-                    {upgradeTarget.modules.length} modules
+                    Socle standard et gestion des rôles personnalisés
                   </span>
                 </div>
               </div>
@@ -525,7 +556,7 @@ export default function SubscriptionPage() {
               {/* Message facultatif */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-foreground">
-                  Message pour l'administrateur (facultatif)
+                  Message pour l&apos;administrateur (facultatif)
                 </label>
                 <textarea
                   value={upgradeMessage}

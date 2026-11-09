@@ -1,6 +1,28 @@
 import { apiRequest } from "./client";
 import { Farm, User } from "../types";
 
+interface AuthFarmSummary {
+  id: string;
+  name: string;
+  code?: string | null;
+  productionType?: Farm["productionType"];
+  locationCity?: string | null;
+  locationCountry?: string | null;
+  currency?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  ifu?: string | null;
+  rccm?: string | null;
+  description?: string | null;
+  surfaceAreaM2?: number | null;
+  createdAt?: string;
+  role?: string | null;
+  roleName?: string | null;
+  permissions?: string[];
+  subscription?: Farm["subscription"];
+}
+
 export const authApi = {
   login: (credentials: { email: string; password: string }) =>
     apiRequest<{ token: string }>("/auth/login", {
@@ -42,7 +64,7 @@ export const authApi = {
       lastName: string;
       fullName: string;
       roles: string[];
-      farms: any[];
+      farms: AuthFarmSummary[];
     }>("/auth/me"),
 
   forgotPassword: (data: { identifier: string; channel?: "email" | "sms" }) =>
@@ -56,6 +78,12 @@ export const authApi = {
 
   resetPassword: (data: { identifier: string; code: string; newPassword: string }) =>
     apiRequest<{ message: string }>("/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  acceptMemberInvitation: (data: { token: string; password: string }) =>
+    apiRequest<{ data: { message: string } }>("/auth/accept-member-invitation", {
       method: "POST",
       body: JSON.stringify(data),
     }),

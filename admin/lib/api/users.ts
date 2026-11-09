@@ -35,7 +35,7 @@ export const usersApi = {
   /**
    * Activer ou désactiver un compte utilisateur
    */
-  setActive: async (id: string, isActive: boolean): Promise<any> => {
+  setActive: async (id: string, isActive: boolean): Promise<void> => {
     return apiRequest(`/api/admin/users/${id}/active`, {
       method: "PUT",
       body: JSON.stringify({ isActive }),

@@ -38,6 +38,7 @@ import { useToast } from "@/context/toast-context";
 import { api } from "@/lib/api-client";
 import {
   Flock,
+  Building,
   FlockMovement,
   StockMovement,
   InventoryItem,
@@ -85,7 +86,7 @@ function FlockDetailContent() {
     currency: string;
   }>({ totalIncome: 0, totalExpense: 0, grossMargin: 0, currency: "XOF" });
 
-  const [buildings, setBuildings] = useState<any[]>([]);
+  const [buildings, setBuildings] = useState<Building[]>([]);
   const [activeTab, setActiveTab] = useState<"movements" | "feeding" | "eggs" | "health" | "finance" | "details">("movements");
   const [feedingMovements, setFeedingMovements] = useState<StockMovement[]>([]);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
@@ -97,14 +98,14 @@ function FlockDetailContent() {
   const [moveError, setMoveError] = useState<string | null>(null);
   const [moveType, setMoveType] = useState<MovementType>("MORTALITY");
   const [moveQty, setMoveQty] = useState<number | string>(1);
-  const [moveDate, setMoveDate] = useState("");
+  const [moveDate, setMoveDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [moveReason, setMoveReason] = useState("");
   const [submittingMove, setSubmittingMove] = useState(false);
 
   // Modale Collecte Œufs
   const [eggModalOpen, setEggModalOpen] = useState(false);
   const [eggError, setEggError] = useState<string | null>(null);
-  const [eggDate, setEggDate] = useState("");
+  const [eggDate, setEggDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [eggSession, setEggSession] = useState<EggSession>("MORNING");
   const [goodEggs, setGoodEggs] = useState<number | string>(0);
   const [brokenEggs, setBrokenEggs] = useState<number | string>(0);
@@ -126,11 +127,6 @@ function FlockDetailContent() {
   const [reportModalOpen, setReportModalOpen] = useState(false);
 
   useEffect(() => {
-    setMoveDate(new Date().toISOString().split("T")[0]);
-    setEggDate(new Date().toISOString().split("T")[0]);
-  }, []);
-
-  useEffect(() => {
     if (flockId) {
       loadAllFlockData();
     }
@@ -148,7 +144,7 @@ function FlockDetailContent() {
       setBuildings(buildingsData || []);
 
       // Données complémentaires
-      const promises: Promise<any>[] = [];
+      const promises: Promise<unknown>[] = [];
 
       // Œufs si pondeuse ou mixte et module eggs inclus dans l'abonnement
       if ((flockData.type === "LAYER" || flockData.type === "MIXED") && hasModule("eggs")) {
@@ -167,12 +163,12 @@ function FlockDetailContent() {
       // Alimentation & Consommations si module inventaire
       if (activeFarm?.id && hasModule("inventory")) {
         promises.push(
-          api.inventory.listFarmMovements(activeFarm.id, { flockId }).then((res: any) => {
+          api.inventory.listFarmMovements(activeFarm.id, { flockId }).then((res) => {
             setFeedingMovements(res || []);
           }).catch(() => {})
         );
         promises.push(
-          api.inventory.listItems({ farmId: activeFarm.id }).then((items: any) => {
+          api.inventory.listItems({ farmId: activeFarm.id }).then((items) => {
             setInventoryItems(items || []);
           }).catch(() => {})
         );
@@ -218,8 +214,8 @@ function FlockDetailContent() {
           : "Mouvement de bande enregistré avec succès."
       );
       await loadAllFlockData();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors de l'enregistrement du mouvement";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de l'enregistrement du mouvement";
       setMoveError(msg);
       toast.error(msg);
     } finally {
@@ -250,8 +246,8 @@ function FlockDetailContent() {
       setEggNotes("");
       toast.success("Collecte d'œufs enregistrée avec succès !");
       await loadAllFlockData();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors de l'enregistrement de la collecte";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de l'enregistrement de la collecte";
       setEggError(msg);
       toast.error(msg);
     } finally {
@@ -266,7 +262,7 @@ function FlockDetailContent() {
     setEditName(flock.name);
     setEditBuildingId(flock.buildingId || "");
     setEditEstimatedEndDate(flock.expectedEndDate || "");
-    setEditStatus(flock.status as any);
+    setEditStatus(flock.status);
     setEditNotes(flock.notes || "");
     setEditModalOpen(true);
   }
@@ -287,8 +283,8 @@ function FlockDetailContent() {
       setEditModalOpen(false);
       toast.success("Bande mise à jour avec succès !");
       await loadAllFlockData();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors de la mise à jour de la bande";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de la mise à jour de la bande";
       setEditError(msg);
       toast.error(msg);
     } finally {
@@ -427,8 +423,14 @@ function FlockDetailContent() {
       key: "session",
       header: "Séance",
       cell: (p) => {
-        const map = { MORNING: "Matin", NOON: "Midi", AFTERNOON: "Midi", EVENING: "Soir", ALL_DAY: "Journée" };
-        return <span className="text-xs text-muted">{(map as any)[p.session] || p.session}</span>;
+        const sessionLabels: Record<string, string> = {
+          MORNING: "Matin",
+          NOON: "Midi",
+          AFTERNOON: "Midi",
+          EVENING: "Soir",
+          ALL_DAY: "Journée",
+        };
+        return <span className="text-xs text-muted">{sessionLabels[p.session] || p.session}</span>;
       },
     },
     {
@@ -759,7 +761,7 @@ function FlockDetailContent() {
                 }`}
               >
                 <Bird className="h-4 w-4" />
-                Mouvements d'effectif ({movements.length})
+                Mouvements d&apos;effectif ({movements.length})
               </button>
 
               {hasModule("inventory") && (
@@ -937,7 +939,7 @@ function FlockDetailContent() {
                 <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-xs">
                   <h2 className="text-sm font-bold text-foreground flex items-center gap-2 mb-4 border-b border-border pb-3">
                     <Bird className="h-4 w-4 text-primary" />
-                    <span>Fiche d'identification & Paramètres du lot</span>
+                    <span>Fiche d&apos;identification & Paramètres du lot</span>
                   </h2>
 
                   <dl className="space-y-3.5 text-xs">
@@ -947,7 +949,7 @@ function FlockDetailContent() {
                     </div>
 
                     <div className="flex justify-between py-1 border-b border-border/50">
-                      <dt className="text-muted">Code d'identification :</dt>
+                      <dt className="text-muted">Code d&apos;identification :</dt>
                       <dd className="font-mono font-bold text-foreground">{flock.code || "—"}</dd>
                     </div>
 
@@ -983,7 +985,7 @@ function FlockDetailContent() {
                     </div>
 
                     <div className="flex justify-between py-1 border-b border-border/50">
-                      <dt className="text-muted">Date d'arrivée :</dt>
+                      <dt className="text-muted">Date d&apos;arrivée :</dt>
                       <dd className="font-mono font-bold text-foreground flex items-center gap-1.5">
                         <Calendar className="h-3.5 w-3.5 text-muted" />
                         {formatDate(flock.startDate)}
@@ -1002,7 +1004,7 @@ function FlockDetailContent() {
 
                     {flock.initialAgeDays !== undefined && flock.initialAgeDays > 0 && (
                       <div className="flex justify-between py-1 border-b border-border/50">
-                        <dt className="text-muted">Âge à l'introduction :</dt>
+                        <dt className="text-muted">Âge à l&apos;introduction :</dt>
                         <dd className="font-mono font-bold text-foreground">{flock.initialAgeDays} jours</dd>
                       </div>
                     )}
@@ -1045,7 +1047,7 @@ function FlockDetailContent() {
                   <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-xs">
                     <h2 className="text-sm font-bold text-foreground flex items-center gap-2 mb-3 border-b border-border pb-3">
                       <Info className="h-4 w-4 text-primary" />
-                      <span>Observations & Notes d'élevage</span>
+                      <span>Observations & Notes d&apos;élevage</span>
                     </h2>
                     {flock.notes ? (
                       <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap bg-surface-muted p-3.5 rounded-xl border border-border">
@@ -1064,7 +1066,7 @@ function FlockDetailContent() {
                       <span>Actions & Administration</span>
                     </h2>
                     <p className="text-xs text-muted mb-4">
-                      Opérations de gestion, d'édition des paramètres et génération de rapports pour ce lot.
+                      Opérations de gestion, d&apos;édition des paramètres et génération de rapports pour ce lot.
                     </p>
                     <div className="flex flex-wrap gap-3">
                       <button
@@ -1390,7 +1392,12 @@ function FlockDetailContent() {
                 </label>
                 <select
                   value={editStatus}
-                  onChange={(e) => setEditStatus(e.target.value as any)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "ACTIVE" || value === "SOLD" || value === "DEPLETED") {
+                      setEditStatus(value);
+                    }
+                  }}
                   className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 >
                   <option value="ACTIVE">Active</option>

@@ -16,6 +16,9 @@ import { InventoryItem, InventoryCategory, StockMovement, StockMovementType } fr
 import { formatFcfa, formatNumber } from "@/lib/utils";
 import { exportInventoryToCsv } from "@/lib/export";
 import { ModuleLockedState } from "@/components/ui/module-locked-state";
+
+// La valorisation avancée reste disponible dans le code, mais n'est pas présentée dans le parcours standard.
+const SHOW_ADVANCED_STOCK_VALUATION = false;
 import {
   formatInventoryUnit,
   getUnitLabel,
@@ -36,6 +39,7 @@ export default function InventoryPage() {
   const [filterCategory, setFilterCategory] = useState<string>("ALL");
   const [movementTypeFilter, setMovementTypeFilter] = useState<string>("ALL");
   const [isLoading, setIsLoading] = useState(true);
+  const showLoading = isLoading && Boolean(activeFarm?.id && hasModule("inventory"));
 
   // Create Item Modal
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -77,14 +81,11 @@ export default function InventoryPage() {
   useEffect(() => {
     if (activeFarm?.id && hasModule("inventory")) {
       loadInventory();
-    } else {
-      setIsLoading(false);
     }
   }, [activeFarm?.id]);
 
   async function loadInventory() {
     if (!activeFarm?.id) return;
-    setIsLoading(true);
     try {
       const [itemsData, movementsData] = await Promise.all([
         api.inventory.listItems({ farmId: activeFarm.id }),
@@ -125,8 +126,8 @@ export default function InventoryPage() {
       setCustomCategory("");
       toast.success("Article créé avec succès !");
       await loadInventory();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors de la création de l'article";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de la création de l'article";
       setCreateError(msg);
       toast.error(msg);
     } finally {
@@ -157,8 +158,8 @@ export default function InventoryPage() {
           : "Sortie de stock enregistrée avec succès !"
       );
       await loadInventory();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors du mouvement de stock";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors du mouvement de stock";
       setMoveError(msg);
       toast.error(msg);
     } finally {
@@ -487,12 +488,14 @@ export default function InventoryPage() {
 
       {/* KPI Cards */}
       <div className="mt-2 sm:mt-3.5 grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4">
-        <StatCard
-          title="Valeur du stock"
-          value={formatFcfa(totalStockValue)}
-          accent="primary"
-          icon={<Package className="h-5 w-5" />}
-        />
+        {SHOW_ADVANCED_STOCK_VALUATION && hasModule("inventory_valuation") && (
+          <StatCard
+            title="Valeur du stock"
+            value={formatFcfa(totalStockValue)}
+            accent="primary"
+            icon={<Package className="h-5 w-5" />}
+          />
+        )}
         <StatCard
           title="Références"
           value={items.length}
@@ -549,7 +552,7 @@ export default function InventoryPage() {
             searchAccessor={(item) => `${item.name} ${item.sku} ${item.category}`}
             pageSize={15}
             initialSort={{ key: "name", direction: "asc" }}
-            isLoading={isLoading}
+            isLoading={showLoading}
             secondaryFilter={
               <div className="flex items-center gap-1.5 shrink-0">
                 {[
@@ -676,7 +679,7 @@ export default function InventoryPage() {
             searchAccessor={(m) => `${m.itemName} ${m.reason || ""} ${m.flock?.name || ""} ${m.type}`}
             pageSize={20}
             initialSort={{ key: "date", direction: "desc" }}
-            isLoading={isLoading}
+            isLoading={showLoading}
             renderMobileCard={(m) => {
               const isInc = m.type === "INCOMING" || (m.type as string) === "IN";
               const isFeed = m.type === "FEEDING" || (m.type as string) === "OUT";
@@ -849,7 +852,7 @@ export default function InventoryPage() {
           {category === "OTHER" && (
             <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
               <label className="block text-xs font-semibold text-foreground mb-1">
-                Précisez la catégorie / nature de l'intrant *
+                Précisez la catégorie / nature de l&apos;intrant *
               </label>
               <input
                 type="text"

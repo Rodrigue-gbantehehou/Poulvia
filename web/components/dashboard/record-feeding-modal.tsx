@@ -48,25 +48,6 @@ export function RecordFeedingModal({
 }: RecordFeedingModalProps) {
   const { toast } = useToast();
 
-  const [feedFlockId, setFeedFlockId] = useState(defaultFlockId || (flocks[0]?.id ?? ""));
-  const [feedSession, setFeedSession] = useState<"MORNING" | "NOON" | "EVENING">("MORNING");
-  const [feedDate, setFeedDate] = useState("");
-  const [feedItemId, setFeedItemId] = useState("");
-  const [feedWeightKg, setFeedWeightKg] = useState<number | string>(25);
-  const [feedNotes, setFeedNotes] = useState("");
-
-  const [waterMode, setWaterMode] = useState<"CLEAR" | "TREATED">("CLEAR");
-  const [waterVolumeLiters, setWaterVolumeLiters] = useState<number | string>(50);
-  const [waterProducts, setWaterProducts] = useState<WaterProductItem[]>([]);
-
-  // Soins & Vaccins planifiés
-  const [scheduledTreatments, setScheduledTreatments] = useState<HealthTreatment[]>([]);
-  const [selectedTreatmentId, setSelectedTreatmentId] = useState<string | null>(null);
-  const [isLoadingTreatments, setIsLoadingTreatments] = useState(false);
-
-  const [submittingFeeding, setSubmittingFeeding] = useState(false);
-  const [feedingError, setFeedingError] = useState<string | null>(null);
-
   const availableFeeds = inventoryItems.filter(
     (i) =>
       i.category === "FEED" ||
@@ -76,6 +57,27 @@ export function RecordFeedingModal({
       i.name.toLowerCase().includes("farine")
   );
 
+  const [feedFlockId, setFeedFlockId] = useState(defaultFlockId || (flocks[0]?.id ?? ""));
+  const [feedSession, setFeedSession] = useState<"MORNING" | "NOON" | "EVENING">("MORNING");
+  const [feedDate, setFeedDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [feedItemId, setFeedItemId] = useState(availableFeeds[0]?.id ?? "");
+  const [feedWeightKg, setFeedWeightKg] = useState<number | string>(25);
+  const [feedNotes, setFeedNotes] = useState("");
+
+  const [waterMode, setWaterMode] = useState<"CLEAR" | "TREATED">("CLEAR");
+  const [waterVolumeLiters, setWaterVolumeLiters] = useState<number | string>(50);
+  const [waterProducts, setWaterProducts] = useState<WaterProductItem[]>([]);
+
+  // Soins & Vaccins planifiés
+  const [treatmentResult, setTreatmentResult] = useState<{
+    key: string;
+    treatments: HealthTreatment[];
+  } | null>(null);
+  const [selectedTreatmentId, setSelectedTreatmentId] = useState<string | null>(null);
+
+  const [submittingFeeding, setSubmittingFeeding] = useState(false);
+  const [feedingError, setFeedingError] = useState<string | null>(null);
+
   const availableHealthProducts = inventoryItems.filter(
     (i) =>
       i.category === "MEDICINE" ||
@@ -84,49 +86,31 @@ export function RecordFeedingModal({
       ["ML", "LITER", "G", "SACHET", "DOSE", "VIAL"].includes(i.unit)
   );
 
-  useEffect(() => {
-    if (isOpen) {
-      setFeedingError(null);
-      setFeedDate(new Date().toISOString().split("T")[0]);
-      const targetId = defaultFlockId || (flocks.length > 0 ? flocks[0].id : "");
-      setFeedFlockId(targetId);
-      if (availableFeeds.length > 0) {
-        setFeedItemId(availableFeeds[0].id);
-      }
-      setFeedWeightKg(25);
-      setFeedNotes("");
-      setWaterMode("CLEAR");
-      setWaterVolumeLiters(50);
-      setWaterProducts([]);
-      setSelectedTreatmentId(null);
-    }
-  }, [isOpen, defaultFlockId, flocks]);
-
   // Charger les soins programmés pour la bande ciblée
   useEffect(() => {
-    if (isOpen && activeFarmId && feedFlockId) {
-      setIsLoadingTreatments(true);
-      api.health
+    if (!isOpen || !activeFarmId || !feedFlockId) return;
+    let cancelled = false;
+    const key = `${activeFarmId}:${feedFlockId}`;
+    api.health
         .list(activeFarmId, {
           flockId: feedFlockId,
           status: "SCHEDULED",
         })
         .then((res) => {
-          setScheduledTreatments(res.data || []);
+          if (!cancelled) setTreatmentResult({ key, treatments: res.data || [] });
         })
         .catch((err) => {
           console.warn("Erreur chargement soins programmés:", err);
-          setScheduledTreatments([]);
-        })
-        .finally(() => {
-          setIsLoadingTreatments(false);
+          if (!cancelled) setTreatmentResult({ key, treatments: [] });
         });
-    } else {
-      setScheduledTreatments([]);
-      setSelectedTreatmentId(null);
-    }
+    return () => {
+      cancelled = true;
+    };
   }, [isOpen, activeFarmId, feedFlockId]);
 
+  const treatmentKey = activeFarmId && feedFlockId ? `${activeFarmId}:${feedFlockId}` : "";
+  const scheduledTreatments = treatmentResult?.key === treatmentKey ? treatmentResult.treatments : [];
+  const isLoadingTreatments = Boolean(isOpen && treatmentKey && treatmentResult?.key !== treatmentKey);
   const targetDate = feedDate || new Date().toISOString().split("T")[0];
   const todayTreatments = scheduledTreatments.filter((t) => {
     return t.scheduledDate === targetDate || t.isOverdue;
@@ -422,7 +406,7 @@ export function RecordFeedingModal({
         <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 space-y-3">
           <div className="flex items-center gap-2 text-xs font-bold text-amber-700 dark:text-amber-400">
             <Utensils className="h-4 w-4" />
-            <span>1. Distribution d'aliment (Provende)</span>
+            <span>1. Distribution d&apos;aliment (Provende)</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
@@ -574,7 +558,7 @@ export function RecordFeedingModal({
                         Vaccin lié : « {selectedTreatment.title} »
                       </span>
                       <p className="text-[11px] text-muted">
-                        Ce soin sera automatiquement validé et archivé dans le carnet de santé de la bande lors de l'enregistrement.
+                        Ce soin sera automatiquement validé et archivé dans le carnet de santé de la bande lors de l&apos;enregistrement.
                       </p>
                     </div>
                   </div>
@@ -592,7 +576,7 @@ export function RecordFeedingModal({
                     <Sparkles className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
                     <div>
                       <p className="text-xs font-bold text-foreground">
-                        Vaccin prévu aujourd'hui :{" "}
+                        Vaccin prévu aujourd&apos;hui :{" "}
                         <span className="text-amber-700 dark:text-amber-400 font-extrabold">
                           {primarySuggestedTreatment.title}
                         </span>
@@ -612,7 +596,7 @@ export function RecordFeedingModal({
                     className="inline-flex items-center gap-1.5 rounded-xl bg-amber-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-amber-700 transition-colors shrink-0 whitespace-nowrap"
                   >
                     <Check className="h-3.5 w-3.5" />
-                    <span>Valider le vaccin prévu aujourd'hui : « {primarySuggestedTreatment.title} »</span>
+                    <span>Valider le vaccin prévu aujourd&apos;hui : « {primarySuggestedTreatment.title} »</span>
                   </button>
                 </div>
               ) : null}
@@ -620,7 +604,7 @@ export function RecordFeedingModal({
               {/* Volume d'eau préparé */}
               <div>
                 <label className="block text-xs font-semibold text-foreground mb-1">
-                  Volume d'eau préparé dans les abreuvoirs (Litres)
+                  Volume d&apos;eau préparé dans les abreuvoirs (Litres)
                 </label>
                 <div className="relative w-48">
                   <input
@@ -740,7 +724,7 @@ export function RecordFeedingModal({
                   className="flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary-hover hover:underline transition-colors pt-1"
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  <span>+ Ajouter un autre médicament / vitamine dans l'eau</span>
+                  <span>+ Ajouter un autre médicament / vitamine dans l&apos;eau</span>
                 </button>
               </div>
             </div>

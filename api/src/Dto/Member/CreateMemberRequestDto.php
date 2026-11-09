@@ -34,9 +34,9 @@ class CreateMemberRequestDto
     public ?string $role = null;
 
     /**
-     * Mot de passe initial pour le compte (si nouvel utilisateur).
+     * @deprecated Kept temporarily for API compatibility. New member accounts set their password through the invitation link.
      */
-    #[Assert\Length(min: 6, minMessage: 'Le mot de passe doit comporter au moins 6 caractères.')]
+    #[Assert\Length(max: 255, maxMessage: 'Le mot de passe ne doit pas dépasser 255 caractères.')]
     public ?string $password = null;
 
     /**

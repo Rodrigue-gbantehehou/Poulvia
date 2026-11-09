@@ -48,6 +48,12 @@ export default function HealthPage() {
   const { activeFarm, hasModule, hasPermission, isOwner } = useAuth();
   const { toast } = useToast();
 
+  const canViewHealth = hasModule("health") &&
+    (hasPermission("health:view") || hasPermission("health:manage") || isOwner);
+  const canViewFlocks = hasModule("flocks") &&
+    (hasPermission("flock:read") || hasPermission("flock:view") || isOwner);
+  const canViewInventory = hasModule("inventory") &&
+    (hasPermission("inventory:read") || hasPermission("inventory:view") || isOwner);
   const canManageHealth = hasPermission("health:manage") || hasPermission("health:create") || isOwner;
   const canDeleteHealth = hasPermission("health:delete") || hasPermission("health:manage") || isOwner;
 
@@ -60,6 +66,8 @@ export default function HealthPage() {
     upcomingCount: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const showLoading = isLoading && Boolean(activeFarm?.id && hasModule("health"));
 
   // Filtres
   const [selectedFlockId, setSelectedFlockId] = useState<string>("ALL");
@@ -151,25 +159,26 @@ export default function HealthPage() {
   ];
 
   useEffect(() => {
-    if (activeFarm?.id && hasModule("health")) {
+    if (activeFarm?.id && canViewHealth) {
       loadData();
-    } else {
-      setIsLoading(false);
     }
-  }, [activeFarm?.id, selectedFlockId, selectedStatus]);
+  }, [activeFarm?.id, selectedFlockId, selectedStatus, canViewHealth]);
 
   async function loadData() {
-    if (!activeFarm?.id) return;
+    if (!activeFarm?.id || !canViewHealth) return;
     setIsLoading(true);
+    setLoadError(false);
     try {
-      const [treatmentsRes, flocksRes, itemsRes] = await Promise.all([
-        api.health.list(activeFarm.id, {
+      const treatmentsRes = await api.health.list(activeFarm.id, {
           flockId: selectedFlockId !== "ALL" ? selectedFlockId : undefined,
           status: selectedStatus !== "ALL" ? selectedStatus : undefined,
-        }),
-        api.flocks.list({ farmId: activeFarm.id }),
-        api.inventory.listItems({ farmId: activeFarm.id }),
+        });
+      const [flocksResult, itemsResult] = await Promise.allSettled([
+        canViewFlocks ? api.flocks.list({ farmId: activeFarm.id }) : Promise.resolve([]),
+        canViewInventory ? api.inventory.listItems({ farmId: activeFarm.id }) : Promise.resolve([]),
       ]);
+      const flocksRes = flocksResult.status === "fulfilled" ? flocksResult.value : [];
+      const itemsRes = itemsResult.status === "fulfilled" ? itemsResult.value : [];
 
       setTreatments(treatmentsRes.data || []);
       setMeta(treatmentsRes.meta || { totalItems: 0, overdueCount: 0, upcomingCount: 0 });
@@ -182,6 +191,7 @@ export default function HealthPage() {
       }
     } catch (err) {
       console.error("Erreur chargement données santé:", err);
+      setLoadError(true);
     } finally {
       setIsLoading(false);
     }
@@ -253,8 +263,8 @@ export default function HealthPage() {
       setCreateCustomMethod("");
       toast.success("Soin planifié avec succès !");
       await loadData();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors de la planification du soin.";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de la planification du soin.";
       setCreateError(msg);
       toast.error(msg);
     } finally {
@@ -282,8 +292,8 @@ export default function HealthPage() {
       toast.success(`${res.length} interventions programmées avec succès pour cette bande !`);
       setProgramModalOpen(false);
       await loadData();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors de la génération du programme.";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de la génération du programme.";
       setProgramError(msg);
       toast.error(msg);
     } finally {
@@ -322,8 +332,8 @@ export default function HealthPage() {
       setCompleteModalOpen(false);
       toast.success("Administration du soin validée avec succès !");
       await loadData();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors de la validation du soin.";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de la validation du soin.";
       setCompleteError(msg);
       toast.error(msg);
     } finally {
@@ -337,8 +347,8 @@ export default function HealthPage() {
       await api.health.delete(id);
       toast.success("Intervention supprimée avec succès.");
       await loadData();
-    } catch (err: any) {
-      toast.error(err?.message || "Erreur lors de la suppression.");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Erreur lors de la suppression.");
     }
   }
 
@@ -357,8 +367,19 @@ export default function HealthPage() {
       <Shell>
         <ModuleLockedState
           moduleName="Santé & Vaccins"
-          description="Le registre sanitaire, le calendrier vaccinal et la prophylaxie ne sont pas inclus dans votre formule actuelle."
+          description="Le suivi des soins et interventions sanitaires n'est pas inclus dans votre formule actuelle."
         />
+      </Shell>
+    );
+  }
+
+  if (!canViewHealth) {
+    return (
+      <Shell>
+        <div className="mx-auto max-w-lg py-16 text-center" role="alert">
+          <h1 className="text-xl font-semibold text-foreground">Accès non autorisé</h1>
+          <p className="mt-2 text-sm text-muted">Votre rôle ne permet pas de consulter le suivi sanitaire de cette exploitation.</p>
+        </div>
       </Shell>
     );
   }
@@ -369,44 +390,24 @@ export default function HealthPage() {
         {/* En-tête mobile natif */}
         <PageHeader
           title="Santé & Soins"
-          subtitle={`${meta.totalItems} soin(s) planifié(s)`}
+          subtitle={loadError ? "Données momentanément indisponibles" : `${meta.totalItems} soin(s) planifié(s)`}
           icon={<HeartPulse className="h-4 w-4 text-accent" />}
           actions={
             canManageHealth && (
-              <>
-                {hasModule("prophylaxis_program") && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (flocks.length === 0) {
-                        toast.warning("Veuillez d'abord créer une bande de volailles.");
-                        return;
-                      }
-                      setProgramError(null);
-                      setProgramModalOpen(true);
-                    }}
-                    className="inline-flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent/20 transition-colors shadow-2xs active:scale-95 cursor-pointer"
-                  >
-                    <Zap className="h-3.5 w-3.5" />
-                    <span className="hidden xs:inline">1-Clic</span>
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  onClick={handleOpenCreateModal}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 sm:px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-primary-hover active:scale-95 transition-all cursor-pointer"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>Nouveau soin</span>
-                </button>
-              </>
+              <button
+                type="button"
+                onClick={handleOpenCreateModal}
+                className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 sm:px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-primary-hover active:scale-95 transition-all cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Nouveau soin</span>
+              </button>
             )
           }
         />
 
         {/* Cartes KPI */}
-        <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
+        {!loadError && <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
           <StatCard
             title="Interventions"
             value={meta.totalItems}
@@ -433,10 +434,10 @@ export default function HealthPage() {
             icon={<Coins className="h-5 w-5" />}
             accent="amber"
           />
-        </div>
+        </div>}
 
         {/* Filtres Hors Tableau (Style Vraie App Mobile) */}
-        <div className="space-y-2">
+        {!loadError && <div className="space-y-2">
           {/* Rangée 1 : Statuts en pastilles tactiles défilantes */}
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 -mx-1 px-1 touch-pan-x">
             {[
@@ -507,22 +508,29 @@ export default function HealthPage() {
               );
             })}
           </div>
-        </div>
+        </div>}
 
         {/* Liste des interventions */}
-        {isLoading ? (
+        {showLoading ? (
           <div className="flex h-64 items-center justify-center rounded-xl border border-border bg-surface">
             <div className="flex items-center gap-3 text-muted">
               <Clock className="h-5 w-5 animate-spin text-accent" />
-              <span>Chargement du calendrier prophylactique...</span>
+              <span>Chargement du suivi sanitaire...</span>
             </div>
+          </div>
+        ) : loadError ? (
+          <div role="alert" className="flex flex-col gap-3 rounded-xl border border-danger/30 bg-danger/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-danger">Impossible de charger le suivi sanitaire. Aucune donnée n’a été remplacée par un état vide.</p>
+            <button type="button" onClick={() => void loadData()} disabled={isLoading} className="min-h-10 rounded-control border border-border bg-surface px-4 text-sm font-semibold text-foreground hover:bg-surface-hover disabled:opacity-60">
+              {isLoading ? "Chargement…" : "Réessayer"}
+            </button>
           </div>
         ) : filteredTreatments.length === 0 ? (
           <EmptyState
             title="Aucune intervention sanitaire trouvée"
-            description="Créez une intervention ou utilisez la génération de programme en 1-clic pour planifier automatiquement les vaccins de votre bande."
-            actionLabel="Générer le programme vaccinal"
-            onAction={() => setProgramModalOpen(true)}
+            description="Enregistrez un soin ou une intervention pour commencer le suivi sanitaire de votre ferme."
+            actionLabel={canManageHealth ? "Créer une intervention" : undefined}
+            onAction={handleOpenCreateModal}
           />
         ) : (
           <div className="space-y-3">
@@ -624,7 +632,7 @@ export default function HealthPage() {
 
                       {t.notes && (
                         <p className="mt-1 text-xs text-muted/90 italic">
-                          "{t.notes}"
+                          &quot;{t.notes}&quot;
                         </p>
                       )}
                     </div>
@@ -772,7 +780,7 @@ export default function HealthPage() {
 
             <div>
               <label className="text-xs font-semibold text-foreground block mb-1">
-                Mode d'administration *
+                Mode d&apos;administration *
               </label>
               <select
                 value={createMethod}
@@ -783,7 +791,7 @@ export default function HealthPage() {
                 <option value="INJECTION">Injection sous-cutanée / musculaire</option>
                 <option value="OCULAR_NASAL">Goutte oculaire ou nasale</option>
                 <option value="SPRAY">Nébulisation / Spray</option>
-                <option value="FEED">Mélange dans l'aliment</option>
+                <option value="FEED">Mélange dans l&apos;aliment</option>
                 <option value="TOPICAL">Application alaire / cutanée</option>
                 <option value="OTHER">Autre méthode</option>
               </select>
@@ -928,7 +936,8 @@ export default function HealthPage() {
         </form>
       </Modal>
 
-      {/* MODALE 2 : GÉNÉRATION DU PROGRAMME STANDARD 1-CLIC */}
+      {/* Générateur avancé conservé pour activation sur demande, absent du parcours standard. */}
+      {hasModule("prophylaxis_program") && (
       <Modal
         isOpen={programModalOpen}
         onClose={() => setProgramModalOpen(false)}
@@ -1002,6 +1011,7 @@ export default function HealthPage() {
           </div>
         </form>
       </Modal>
+      )}
 
       {/* MODALE 3 : VALIDER L'ADMINISTRATION D'UN SOIN */}
       <Modal

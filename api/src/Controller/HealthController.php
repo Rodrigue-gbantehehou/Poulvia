@@ -147,7 +147,7 @@ class HealthController extends AbstractController
     }
 
     #[Route('/api/farms/{id}/health-treatments/generate-program', name: 'api_farms_health_generate_program', methods: ['POST'])]
-    #[IsGranted(HealthTreatmentVoter::CREATE, subject: 'farm')]
+    #[IsGranted(HealthTreatmentVoter::GENERATE_PROGRAM, subject: 'farm')]
     public function generateProgram(
         Farm $farm,
         #[MapRequestPayload] GenerateProphylaxisProgramRequestDto $dto,

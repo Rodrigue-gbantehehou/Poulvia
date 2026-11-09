@@ -65,7 +65,8 @@ export default function AdminUsersPage() {
   };
 
   useEffect(() => {
-    fetchUsers();
+    const task = window.setTimeout(() => void fetchUsers(), 0);
+    return () => window.clearTimeout(task);
   }, [activeFilter]);
 
   const handleToggleActive = async (user: UserItem) => {

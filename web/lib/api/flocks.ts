@@ -1,13 +1,92 @@
-import { apiRequest } from "./client";
+import { apiRequest, apiRequestFull } from "./client";
 import { Flock, FlockMovement, Transaction } from "../types";
+
+interface FlockResponse {
+  id: string;
+  farmId?: string;
+  code?: string | null;
+  name: string;
+  poultryType?: Flock["type"];
+  type?: Flock["type"];
+  strain?: string | null;
+  breed?: string | null;
+  initialQuantity?: number;
+  currentQuantity?: number;
+  initialAgeDays?: number;
+  ageInDays?: number;
+  ageInWeeks?: number;
+  mortalityRate?: number;
+  startDate: string;
+  estimatedEndDate?: string | null;
+  expectedEndDate?: string | null;
+  actualEndDate?: string | null;
+  status?: Flock["status"];
+  notes?: string | null;
+  building?: { id: string; name: string } | null;
+  movements?: FlockMovementResponse[];
+}
+
+interface FlockMovementResponse {
+  id: string;
+  type: FlockMovement["type"];
+  quantity: number;
+  movementDate?: string;
+  date?: string;
+  reason?: string | null;
+  recordedBy?: { name: string } | null;
+  createdAt: string;
+}
+
+interface TransactionResponse {
+  id: string;
+  farmId: string;
+  type: Transaction["type"];
+  category: string;
+  amount?: number;
+  amountFcfa?: number;
+  paymentMethod: Transaction["paymentMethod"];
+  reference?: string | null;
+  transactionDate?: string;
+  date?: string;
+  description?: string | null;
+  notes?: string | null;
+  contact?: Transaction["contact"];
+  createdAt: string;
+}
+
+interface FlockCreateInput {
+  farmId: string;
+  name: string;
+  initialQuantity: number;
+  currentQuantity?: number;
+  startDate: string;
+  poultryType?: Flock["type"];
+  type?: Flock["type"];
+  status?: Flock["status"];
+  strain?: string;
+  breed?: string;
+  initialAgeDays?: number;
+  buildingId?: string;
+  estimatedEndDate?: string;
+  notes?: string;
+  code?: string;
+}
+
+interface FlockMovementInput {
+  type: FlockMovement["type"] | "CULLING";
+  quantity: number;
+  movementDate?: string;
+  date?: string;
+  reason?: string;
+}
 
 export const flocksApi = {
   list: async (params?: { farmId?: string; type?: string; status?: string }) => {
     if (!params?.farmId) return [];
     const q = new URLSearchParams();
     if (params?.status) q.append("status", params.status);
-    const res = await apiRequest<any[]>(`/farms/${params.farmId}/flocks?${q.toString()}`);
-    return (res || []).map((f: any) => ({
+    const res = await apiRequest<FlockResponse[]>(`/farms/${params.farmId}/flocks?${q.toString()}`);
+    return (res || []).map((f) => ({
       id: f.id,
       farmId: params.farmId!,
       code: f.code,
@@ -16,7 +95,7 @@ export const flocksApi = {
       breed: f.strain || f.breed || "Standard",
       strain: f.strain || f.breed,
       initialQuantity: f.initialQuantity || 0,
-      currentQuantity: f.currentQuantity !== undefined ? f.currentQuantity : f.initialQuantity,
+      currentQuantity: f.currentQuantity !== undefined ? f.currentQuantity : (f.initialQuantity || 0),
       startDate: f.startDate,
       expectedEndDate: f.estimatedEndDate || f.expectedEndDate,
       status: f.status || "ACTIVE",
@@ -26,7 +105,7 @@ export const flocksApi = {
     }));
   },
 
-  create: async (data: any) => {
+  create: async (data: FlockCreateInput) => {
     const cleanCode =
       data.code ||
       `LOT-${(data.name || "BAN")
@@ -54,18 +133,17 @@ export const flocksApi = {
   },
 
   get: async (id: string): Promise<Flock> => {
-    const res = await apiRequest<any>(`/flocks/${id}`);
-    const f = res?.data || res;
+    const f = await apiRequest<FlockResponse>(`/flocks/${id}`);
     return {
       id: f.id,
-      farmId: f.farmId,
+      farmId: f.farmId || "",
       code: f.code,
       name: f.name,
       type: f.poultryType || f.type || "LAYER",
       breed: f.strain || f.breed || "Standard",
       strain: f.strain || f.breed,
       initialQuantity: f.initialQuantity || 0,
-      currentQuantity: f.currentQuantity !== undefined ? f.currentQuantity : f.initialQuantity,
+      currentQuantity: f.currentQuantity !== undefined ? f.currentQuantity : (f.initialQuantity || 0),
       initialAgeDays: f.initialAgeDays || 1,
       ageInDays: f.ageInDays,
       ageInWeeks: f.ageInWeeks,
@@ -77,12 +155,12 @@ export const flocksApi = {
       notes: f.notes,
       buildingId: f.building?.id || null,
       buildingName: f.building?.name || null,
-      movements: (f.movements || []).map((m: any) => ({
+      movements: (f.movements || []).filter((m) => Boolean(m.movementDate || m.date)).map((m) => ({
         id: m.id,
         flockId: f.id,
         type: m.type,
         quantity: m.quantity,
-        date: m.movementDate || m.date,
+        date: m.movementDate || m.date!,
         reason: m.reason,
         recordedBy: m.recordedBy?.name,
         createdAt: m.createdAt,
@@ -101,11 +179,11 @@ export const flocksApi = {
       notes?: string | null;
     }
   ): Promise<Flock> => {
-    const res = await apiRequest<any>(`/flocks/${id}`, {
+    const res = await apiRequest<Flock>(`/flocks/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
     });
-    return res?.data || res;
+    return res;
   },
 
   getTransactions: async (
@@ -114,11 +192,11 @@ export const flocksApi = {
     transactions: Transaction[];
     summary: { totalIncome: number; totalExpense: number; grossMargin: number; currency: string };
   }> => {
-    const res = await apiRequest<any>(`/flocks/${flockId}/transactions`);
-    const rawList = res?.data || [];
-    const summary = res?.meta?.summary || { totalIncome: 0, totalExpense: 0, netBalance: 0, grossMargin: 0, currency: "XOF" };
+    const res = await apiRequestFull<{ data?: TransactionResponse[]; meta?: { summary?: { totalIncome?: number; totalExpense?: number; netBalance?: number; grossMargin?: number; currency?: string } } }>(`/flocks/${flockId}/transactions`);
+    const rawList = res.data || [];
+    const summary = res.meta?.summary || { totalIncome: 0, totalExpense: 0, netBalance: 0, grossMargin: 0, currency: "XOF" };
     return {
-      transactions: rawList.map((t: any) => ({
+      transactions: rawList.filter((t) => Boolean(t.transactionDate || t.date)).map((t) => ({
         id: t.id,
         farmId: t.farmId,
         flockId: flockId,
@@ -127,7 +205,7 @@ export const flocksApi = {
         amountFcfa: Number(t.amount !== undefined ? t.amount : (t.amountFcfa || 0)),
         paymentMethod: t.paymentMethod,
         reference: t.reference,
-        date: t.transactionDate || t.date,
+        date: t.transactionDate || t.date!,
         notes: t.description || t.notes,
         contact: t.contact,
         createdAt: t.createdAt,
@@ -142,21 +220,21 @@ export const flocksApi = {
   },
 
   listMovements: async (flockId: string): Promise<FlockMovement[]> => {
-    const res = await apiRequest<any>(`/flocks/${flockId}/movements`);
+    const res = await apiRequest<FlockMovementResponse[] | { data?: FlockMovementResponse[] }>(`/flocks/${flockId}/movements`);
     const rawList = Array.isArray(res) ? res : (res?.data || []);
-    return rawList.map((m: any) => ({
+    return rawList.filter((m) => Boolean(m.movementDate || m.date)).map((m) => ({
       id: m.id,
       flockId: flockId,
       type: m.type,
       quantity: m.quantity,
-      date: m.movementDate || m.date,
+      date: m.movementDate || m.date!,
       reason: m.reason,
       recordedBy: m.recordedBy?.name,
       createdAt: m.createdAt,
     }));
   },
 
-  addMovement: async (flockId: string, movement: any) => {
+  addMovement: async (flockId: string, movement: FlockMovementInput) => {
     const normalizedType = movement.type === "CULL" ? "CULLING" : movement.type;
     const payload = {
       type: normalizedType,

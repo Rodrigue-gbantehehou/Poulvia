@@ -46,8 +46,8 @@ export function PrintableModal({
       setIsDownloading(true);
       setDownloadError(null);
       await downloadApiFile(downloadEndpoint, defaultFilename);
-    } catch (err: any) {
-      setDownloadError(err?.message || "Erreur lors du téléchargement du PDF.");
+    } catch (err: unknown) {
+      setDownloadError(err instanceof Error ? err.message : "Erreur lors du téléchargement du PDF.");
     } finally {
       setIsDownloading(false);
     }

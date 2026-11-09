@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Save, Warehouse, Building2, Box, Archive, RotateCcw, Trash2, AlertTriangle, Sparkles } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { api } from "@/lib/api-client";
@@ -31,27 +31,15 @@ export function EditBuildingModal({
 }: EditBuildingModalProps) {
   const { activeFarm } = useAuth();
 
-  const [name, setName] = useState("");
-  const [type, setType] = useState<"POULTRY_HOUSE" | "BROODER" | "STORAGE" | "OTHER">("POULTRY_HOUSE");
-  const [capacity, setCapacity] = useState<number | string>(1000);
-  const [surfaceArea, setSurfaceArea] = useState("");
-  const [isActive, setIsActive] = useState(true);
+  const [name, setName] = useState(building?.name ?? "");
+  const [type, setType] = useState<"POULTRY_HOUSE" | "BROODER" | "STORAGE" | "OTHER">(building?.type ?? "POULTRY_HOUSE");
+  const [capacity, setCapacity] = useState<number | string>(building?.capacity ?? 1000);
+  const [surfaceArea, setSurfaceArea] = useState(building?.surfaceArea == null ? "" : String(building.surfaceArea));
+  const [isActive, setIsActive] = useState(building?.isActive ?? true);
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (building && isOpen) {
-      setName(building.name || "");
-      setType(building.type || "POULTRY_HOUSE");
-      setCapacity(building.capacity || 0);
-      setSurfaceArea(building.surfaceArea !== null && building.surfaceArea !== undefined ? String(building.surfaceArea) : "");
-      setIsActive(building.isActive !== undefined ? building.isActive : true);
-      setConfirmDelete(false);
-      setError(null);
-    }
-  }, [building, isOpen]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -77,8 +65,8 @@ export function EditBuildingModal({
 
       onSuccess?.();
       onClose();
-    } catch (err: any) {
-      setError(err?.message || "Erreur lors de la mise à jour du bâtiment.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erreur lors de la mise à jour du bâtiment.");
     } finally {
       setSubmitting(false);
     }
@@ -95,8 +83,8 @@ export function EditBuildingModal({
       setIsActive(!isActive);
       onSuccess?.();
       onClose();
-    } catch (err: any) {
-      setError(err?.message || "Erreur lors du changement de statut d'archivage.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erreur lors du changement de statut d'archivage.");
     } finally {
       setSubmitting(false);
     }
@@ -110,8 +98,8 @@ export function EditBuildingModal({
       await api.farms.deleteBuilding(activeFarm.id, building.id);
       onSuccess?.();
       onClose();
-    } catch (err: any) {
-      setError(err?.message || "Impossible de supprimer ce bâtiment (des bandes ou stocks peuvent y être rattachés). Vous pouvez l'archiver à la place.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Impossible de supprimer ce bâtiment (des bandes ou stocks peuvent y être rattachés). Vous pouvez l'archiver à la place.");
       setConfirmDelete(false);
     } finally {
       setDeleting(false);

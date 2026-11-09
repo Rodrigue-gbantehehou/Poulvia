@@ -9,6 +9,7 @@ use App\Entity\FarmMembership;
 use App\Entity\User;
 use App\Repository\FarmMembershipRepository;
 use App\Security\ApiKeySecurityChecker;
+use App\Security\FarmPermissionChecker;
 use App\Security\Permission;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
@@ -22,17 +23,20 @@ class FarmVoter extends Voter
     public const EDIT = 'FARM_EDIT';
     public const MANAGE_MEMBERS = 'FARM_MANAGE_MEMBERS';
     public const MANAGE_ROLES = 'FARM_MANAGE_ROLES';
+    public const VIEW_MEMBERS = 'FARM_VIEW_MEMBERS';
+    public const VIEW_ROLES = 'FARM_VIEW_ROLES';
     public const DELETE = 'FARM_DELETE';
 
     public function __construct(
         private readonly FarmMembershipRepository $membershipRepository,
         private readonly ApiKeySecurityChecker $apiKeyChecker,
+        private readonly FarmPermissionChecker $permissionChecker,
     ) {
     }
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        if (!in_array($attribute, [self::VIEW, self::EDIT, self::MANAGE_MEMBERS, self::MANAGE_ROLES, self::DELETE], true)) {
+        if (!in_array($attribute, [self::VIEW, self::EDIT, self::MANAGE_MEMBERS, self::MANAGE_ROLES, self::VIEW_MEMBERS, self::VIEW_ROLES, self::DELETE], true)) {
             return false;
         }
 
@@ -52,7 +56,7 @@ class FarmVoter extends Voter
         $apiKey = $this->apiKeyChecker->getApiKey();
         if ($apiKey !== null) {
             // Une clé API ne peut jamais supprimer une exploitation ni gérer les membres ou rôles
-            if (in_array($attribute, [self::DELETE, self::MANAGE_MEMBERS, self::MANAGE_ROLES], true)) {
+            if (in_array($attribute, [self::DELETE, self::MANAGE_MEMBERS, self::MANAGE_ROLES, self::VIEW_MEMBERS, self::VIEW_ROLES], true)) {
                 return false;
             }
 
@@ -81,10 +85,12 @@ class FarmVoter extends Voter
 
         return match ($attribute) {
             self::VIEW => true, // Tout membre actif d'une ferme a le droit de base de la consulter
-            self::EDIT => $membership->hasPermission(Permission::FARM_EDIT),
-            self::MANAGE_MEMBERS => $membership->hasPermission(Permission::MEMBER_MANAGE),
-            self::MANAGE_ROLES => $membership->hasPermission(Permission::ROLE_MANAGE),
-            self::DELETE => $membership->hasPermission(Permission::FARM_DELETE),
+            self::EDIT => $this->permissionChecker->allows($membership, Permission::FARM_EDIT),
+            self::MANAGE_MEMBERS => $this->permissionChecker->allows($membership, Permission::MEMBER_MANAGE),
+            self::MANAGE_ROLES => $this->permissionChecker->allows($membership, Permission::ROLE_MANAGE),
+            self::VIEW_MEMBERS => $this->permissionChecker->allows($membership, Permission::MEMBER_MANAGE, false),
+            self::VIEW_ROLES => $this->permissionChecker->allows($membership, Permission::ROLE_MANAGE, false),
+            self::DELETE => $this->permissionChecker->allows($membership, Permission::FARM_DELETE),
             default => false,
         };
     }

@@ -7,308 +7,272 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Bird,
+  Warehouse,
   Egg,
   HeartPulse,
-  Briefcase,
   X,
   Settings,
-  CreditCard,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { cn } from "@/lib/utils";
-import {
-  Sidebar as SidebarContainer,
-  SidebarHeader,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarTrigger,
-  useSidebar,
-} from "@/components/ui/sidebar";
+import { useSidebar } from "@/components/ui/sidebar";
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const { hasPermission, hasModule, activePlan, activeFarm, isOwner } = useAuth();
-  const { state, isMobile, setOpenMobile } = useSidebar();
-  const isCollapsed = state === "collapsed" && !isMobile;
+  const { hasPermission, hasModule, activeFarm, isOwner } = useAuth();
+  const { state, isMobile, toggleSidebar } = useSidebar();
+  const isCollapsed = !isMobile && state === "collapsed";
 
-  const closeMobile = () => {
-    if (isMobile) {
-      setOpenMobile(false);
-    }
-  };
+  const canViewFlocks =
+    hasModule("flocks") &&
+    (hasPermission("flock:read") || hasPermission("flock:view") || isOwner);
+  const canViewBuildings =
+    hasModule("buildings") &&
+    (hasPermission("building:manage") || hasPermission("farm:view") || isOwner);
+  const canViewProduction =
+    activeFarm?.productionType !== "BROILER" &&
+    hasModule("eggs") &&
+    (hasPermission("egg:read") || hasPermission("egg:view") || isOwner);
+  const canViewHealth =
+    hasModule("health") &&
+    (hasPermission("health:view") || hasPermission("health:manage") || isOwner);
+  const canViewFinance =
+    hasModule("finance") &&
+    (hasPermission("finance:read") || hasPermission("finance:view") || isOwner);
+  const canViewInventory =
+    hasModule("inventory") &&
+    (hasPermission("inventory:read") || hasPermission("inventory:view") || isOwner);
+  const canViewContacts =
+    hasModule("contacts") &&
+    (hasPermission("contact:read") || hasPermission("contact:view") || isOwner);
+  const canViewMembers =
+    hasModule("team") &&
+    (hasPermission("member:manage") || isOwner);
+  const canViewRoles =
+    hasModule("custom_roles") &&
+    (hasPermission("role:manage") || isOwner);
+  const canViewManagement =
+    canViewFinance || canViewInventory || canViewContacts || canViewMembers || canViewRoles;
 
-  const isBroiler = activeFarm?.productionType === "BROILER";
-
-  // ─── 5 ESPACES PRINCIPAUX STANDARDISÉS ───
-  const mainNavigation = [
+  const navigation = [
     {
       name: "Accueil",
       href: "/",
       icon: LayoutDashboard,
-      isActive: pathname === "/",
       show: true,
     },
     {
       name: "Élevage",
-      href: "/flocks",
+      href: canViewFlocks ? "/flocks" : "/buildings",
       icon: Bird,
-      isActive: pathname.startsWith("/flocks") || pathname.startsWith("/buildings"),
-      show:
-        hasPermission("flock:read") ||
-        hasPermission("flock:view") ||
-        hasPermission("building:manage") ||
-        isOwner,
+      show: canViewFlocks || canViewBuildings,
+      children: [
+        ...(canViewFlocks ? [{ name: "Bandes", href: "/flocks", icon: Bird }] : []),
+        ...(canViewBuildings ? [{ name: "Bâtiments", href: "/buildings", icon: Warehouse }] : []),
+      ],
     },
     {
       name: "Production",
       href: "/eggs",
       icon: Egg,
-      isActive: pathname.startsWith("/eggs"),
-      // Si la ferme est strictement BROILER (chair), la ponte peut être masquée ou désactivée
-      show:
-        !isBroiler &&
-        hasModule("eggs") &&
-        (hasPermission("egg:read") || hasPermission("egg:view") || isOwner),
+      show: canViewProduction,
     },
     {
       name: "Santé",
       href: "/health",
       icon: HeartPulse,
-      isActive: pathname.startsWith("/health"),
-      show:
-        hasModule("health") &&
-        (hasPermission("health:view") || hasPermission("health:manage") || isOwner),
+      show: canViewHealth,
     },
-    {
-      name: "Gestion",
-      href: "/management",
-      icon: Briefcase,
-      isActive:
-        pathname.startsWith("/management") ||
-        pathname.startsWith("/finances") ||
-        pathname.startsWith("/inventory") ||
-        pathname.startsWith("/contacts") ||
-        pathname.startsWith("/settings/members") ||
-        pathname.startsWith("/settings/roles"),
-      show: true,
-    },
-  ];
-
-  // ─── NAVIGATION SECONDAIRE (PARAMÈTRES FERME) ───
-  const secondaryNavigation = [
-    {
-      name: "Paramètres de la ferme",
-      href: "/settings/farm",
-      icon: Settings,
-      isActive: pathname.startsWith("/settings/farm"),
-      show: isOwner || hasPermission("farm:edit"),
-    },
+    { name: "Gestion", href: "/management", icon: Settings, show: canViewManagement },
   ];
 
   return (
-    <SidebarContainer collapsible="icon">
-      {/* ─── En-tête / Brand ─── */}
-      <SidebarHeader
+    <>
+      {/* Mobile Backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 transition-opacity lg:hidden"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Sidebar container */}
+      <aside
         className={cn(
-          "flex-row items-center transition-all duration-300 h-16 p-0",
-          isCollapsed ? "justify-center px-2" : "justify-between px-5"
+          "fixed top-0 bottom-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col border-r border-[#e6e4dd] bg-[#f8f7f3] text-[#242820] shadow-xl transition-[width,transform] duration-200 ease-out lg:static lg:shadow-none lg:translate-x-0 lg:overflow-x-hidden",
+          isOpen ? "translate-x-0" : "-translate-x-full",
+          isCollapsed ? "lg:w-[72px]" : "lg:w-64",
         )}
       >
-        <Link
-          href="/"
-          onClick={closeMobile}
-          className="flex items-center gap-3 text-lg font-bold tracking-tight text-white group min-w-0"
-          title="Poulvia"
-        >
-          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/10 p-1 shadow-md border border-white/20 group-hover:scale-105 transition-transform backdrop-blur-xs">
-            <Image
-              src="/logo.png"
-              alt="Poulvia"
-              width={36}
-              height={36}
-              className="h-full w-full object-contain"
-              priority
-            />
-          </div>
-
-          {!isCollapsed && (
-            <div className="flex flex-col leading-tight min-w-0 transition-opacity duration-200">
-              <span className="text-base font-extrabold text-white tracking-tight truncate">
+        {/* Header / Brand */}
+        <div className={cn(
+          "flex h-16 items-center border-b border-[#e6e4dd]",
+          isCollapsed ? "justify-between gap-1 px-1.5" : "justify-between px-5",
+        )}>
+          <Link
+            href="/"
+            onClick={onClose}
+            className={cn("flex min-w-0 items-center gap-3 text-lg font-semibold tracking-tight text-[#242820] group", isCollapsed && "gap-0")}
+            aria-label="Poulvia, accueil"
+            title={isCollapsed ? "Poulvia — Accueil" : undefined}
+          >
+            <div className={cn("relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-control bg-white p-1 border border-[#e6e4dd]", isCollapsed && "h-8 w-8")}>
+              <Image src="/logo.png" alt="Poulvia" width={36} height={36} className="h-full w-full object-contain" priority />
+            </div>
+            <div className={cn("flex flex-col leading-tight", isCollapsed && "sr-only")}>
+              <span className="text-base font-extrabold text-[#242820] tracking-tight">
                 Poulvia
               </span>
-              <span className="text-[10px] font-semibold tracking-wider uppercase text-white/60 truncate">
-                Bénin &amp; Ouest-Afrik
-              </span>
             </div>
-          )}
-        </Link>
+          </Link>
 
-        {/* Fermeture sur mobile */}
-        {isMobile && (
           <button
             type="button"
-            onClick={closeMobile}
-            className="rounded-lg p-1.5 text-white/70 hover:bg-white/10 hover:text-white cursor-pointer"
+            onClick={toggleSidebar}
+            className={cn(
+              "hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#686b64] transition-colors hover:bg-[#eeede8] hover:text-[#242820] lg:inline-flex",
+              isCollapsed && "h-7 w-7",
+            )}
+            aria-label={isCollapsed ? "Déplier le menu" : "Replier le menu"}
+            title={isCollapsed ? "Déplier le menu" : "Replier le menu"}
+          >
+            {isCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+          </button>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-control p-1.5 text-[#686b64] hover:bg-[#eeede8] hover:text-[#242820] lg:hidden cursor-pointer"
             aria-label="Fermer le menu"
           >
             <X className="h-5 w-5" />
           </button>
-        )}
-
-        {/* Bouton de repli shadcn (desktop) */}
-        {!isCollapsed && !isMobile && (
-          <SidebarTrigger />
-        )}
-      </SidebarHeader>
-
-      {/* ─── 5 Espaces Principaux ─── */}
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {mainNavigation.map((item) => {
-                if (!item.show) return null;
-                const Icon = item.icon;
-
-                return (
-                  <SidebarMenuItem key={item.name}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={item.isActive}
-                      tooltip={item.name}
-                      onClick={closeMobile}
-                    >
-                      <Link
-                        href={item.href}
-                        className="flex w-full items-center gap-3"
-                      >
-                        <Icon
-                          className={cn(
-                            "shrink-0 transition-colors",
-                            isCollapsed ? "h-5 w-5" : "h-4 w-4",
-                            item.isActive
-                              ? "text-accent"
-                              : "text-white/70 group-hover:text-white"
-                          )}
-                        />
-                        {!isCollapsed && (
-                          <span className="truncate">{item.name}</span>
-                        )}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* ─── Section Paramètres Secondaire ─── */}
-        <SidebarGroup className="mt-auto pt-3">
-          <SidebarGroupLabel>Configuration</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {secondaryNavigation.map((item) => {
-                if (!item.show) return null;
-                const Icon = item.icon;
-
-                return (
-                  <SidebarMenuItem key={item.name}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={item.isActive}
-                      tooltip={item.name}
-                      onClick={closeMobile}
-                    >
-                      <Link
-                        href={item.href}
-                        className="flex w-full items-center gap-3"
-                      >
-                        <Icon
-                          className={cn(
-                            "shrink-0 transition-colors",
-                            isCollapsed ? "h-5 w-5" : "h-4 w-4",
-                            item.isActive
-                              ? "text-accent"
-                              : "text-white/70 group-hover:text-white"
-                          )}
-                        />
-                        {!isCollapsed && (
-                          <span className="truncate">{item.name}</span>
-                        )}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-
-      {/* ─── Bouton de repli/dépli bas de page (desktop) ─── */}
-      {!isMobile && (
-        <div className="border-t border-white/10 p-2">
-          <SidebarTrigger
-            className={cn(
-              "w-full h-10 gap-3 text-xs font-semibold text-white/70 hover:bg-white/10 hover:text-white transition-all",
-              isCollapsed && "justify-center p-0"
-            )}
-          />
         </div>
-      )}
 
-      {/* ─── Footer Abonnement ─── */}
-      {isOwner && (
-        <SidebarFooter
+        {/* Navigation links */}
+        <nav
           className={cn(
-            "transition-all duration-300",
-            isCollapsed ? "p-2" : "p-4"
+            "flex-1 space-y-1 overflow-y-auto py-4 scrollbar-thin",
+            isCollapsed ? "px-2" : "px-3.5",
           )}
+          aria-label="Navigation principale"
         >
-          {!isCollapsed ? (
-            <Link
-              href="/settings/subscription"
-              onClick={closeMobile}
-              className="block rounded-2xl bg-white/10 border border-white/15 p-3.5 hover:bg-white/15 hover:border-accent/40 transition-all group shadow-2xs"
-            >
-              <div className="text-[10px] font-bold uppercase tracking-wider text-white/60 group-hover:text-accent transition-colors">
-                Formule de la ferme
-              </div>
-              <div className="mt-1 flex items-center justify-between">
-                <span className="text-xs font-bold text-white truncate">
-                  {activePlan?.planName || "Formule Starter"}
-                </span>
-                <span className="rounded-full bg-accent text-white px-2 py-0.5 text-[10px] font-bold shadow-2xs">
-                  {activePlan?.badge || activePlan?.plan || "Gratuit"}
-                </span>
-              </div>
-              <div className="mt-1.5 text-[10px] text-white/70 group-hover:text-accent transition-colors flex items-center gap-1 font-medium">
-                <CreditCard className="h-3 w-3 text-accent" />
-                Gérer mon abonnement →
-              </div>
-            </Link>
-          ) : (
-            <div className="flex justify-center">
+          <div className={cn(
+            "pb-2 text-caption font-semibold tracking-wide uppercase text-[#777970]",
+            isCollapsed ? "sr-only" : "px-3",
+          )}>
+            Exploitation
+          </div>
+          {navigation.map((item) => {
+            if (!item.show) {
+              return null;
+            }
+
+            if ("children" in item && item.children) {
+              return (
+                <div key={item.name} className="space-y-1">
+                  <div
+                    className={cn(
+                      "pb-1 text-caption font-semibold text-[#777970]",
+                      isCollapsed ? "sr-only" : "px-3.5 pt-2",
+                    )}
+                  >
+                    {item.name}
+                  </div>
+                  {item.children.map((child) => {
+                    const childActive = pathname.startsWith(child.href);
+                    const ChildIcon = child.icon;
+
+                    return (
+                      <Link
+                        key={child.href}
+                        href={child.href}
+                        onClick={onClose}
+                        aria-label={`${item.name} — ${child.name}`}
+                        aria-current={childActive ? "page" : undefined}
+                        title={isCollapsed ? child.name : undefined}
+                        className={cn(
+                          "group relative flex min-h-11 items-center rounded-control py-2.5 text-label font-medium transition-colors",
+                          isCollapsed ? "justify-center px-0" : "gap-3 px-3.5",
+                          childActive
+                            ? "text-[#242820] font-semibold before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-full before:bg-[#a9aaa3]"
+                            : "text-[#686b64] hover:bg-[#eeede8] hover:text-[#242820]",
+                        )}
+                      >
+                        <ChildIcon
+                          className={cn(
+                            "h-5 w-5 shrink-0",
+                            childActive ? "text-[#242820]" : "text-[#777970] group-hover:text-[#242820]",
+                          )}
+                          aria-hidden="true"
+                        />
+                        <span className={cn("truncate", isCollapsed && "sr-only")}>{child.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              );
+            }
+
+            const isActive =
+              item.href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(item.href);
+            const Icon = item.icon;
+
+            return (
               <Link
-                href="/settings/subscription"
-                onClick={closeMobile}
-                title={`Formule: ${activePlan?.planName || "Starter"}`}
-                className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-accent transition-all cursor-pointer"
+                key={item.name}
+                href={item.href}
+                onClick={onClose}
+                aria-label={item.name}
+                aria-current={isActive ? "page" : undefined}
+                title={isCollapsed ? item.name : undefined}
+                className={cn(
+                  "group relative flex min-h-11 items-center rounded-control py-2.5 text-label font-medium transition-colors",
+                  isCollapsed ? "justify-center px-0" : "gap-3 px-3.5",
+                  isActive
+                    ? "text-[#242820] font-semibold before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-full before:bg-[#a9aaa3]"
+                    : "text-[#686b64] hover:bg-[#eeede8] hover:text-[#242820]"
+                )}
               >
-                <CreditCard className="h-5 w-5" />
+                <Icon
+                  className={cn(
+                    "h-5 w-5 shrink-0 transition-colors",
+                    isActive ? "text-[#242820]" : "text-[#777970] group-hover:text-[#242820]"
+                  )}
+                />
+                <span className={cn("truncate", isCollapsed && "sr-only")}>{item.name}</span>
               </Link>
-            </div>
-          )}
-        </SidebarFooter>
-      )}
-    </SidebarContainer>
+            );
+          })}
+        </nav>
+
+        <div className="border-t border-[#e6e4dd] p-3">
+          <Link
+            href="/settings"
+            onClick={onClose}
+            aria-label="Paramètres"
+            title={isCollapsed ? "Paramètres" : undefined}
+            className={cn(
+              "group relative flex min-h-11 items-center rounded-control py-2.5 text-label font-medium text-[#686b64] transition-colors hover:bg-[#eeede8] hover:text-[#242820]",
+              isCollapsed ? "justify-center px-0" : "gap-3 px-3.5",
+              pathname.startsWith("/settings") && "text-[#242820] font-semibold before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-full before:bg-[#a9aaa3]",
+            )}
+          >
+            <Settings className="h-5 w-5 shrink-0" aria-hidden="true" />
+            <span className={cn(isCollapsed && "sr-only")}>Paramètres</span>
+          </Link>
+        </div>
+
+      </aside>
+    </>
   );
 }

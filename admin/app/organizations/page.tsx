@@ -61,7 +61,8 @@ export default function AdminOrganizationsPage() {
   };
 
   useEffect(() => {
-    fetchOrganizations();
+    const task = window.setTimeout(() => void fetchOrganizations(), 0);
+    return () => window.clearTimeout(task);
   }, [statusFilter]);
 
   const handleToggleStatus = async (org: OrganizationItem) => {

@@ -14,6 +14,7 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   isOwner: boolean;
+  isSubscriptionOwner: boolean;
   login: (credentials: { email: string; password: string }) => Promise<void>;
   register: (data: {
     email: string;
@@ -42,13 +43,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize from localStorage on client-side
   useEffect(() => {
-    const storedToken = localStorage.getItem("Poulvia_token");
-    if (storedToken) {
-      setToken(storedToken);
-      loadCurrentUser();
-    } else {
-      setIsLoading(false);
+    async function initializeSession() {
+      const storedToken = localStorage.getItem("Poulvia_token");
+      if (storedToken) {
+        setToken(storedToken);
+        await loadCurrentUser();
+      } else {
+        setIsLoading(false);
+      }
     }
+
+    void initializeSession();
   }, []);
 
   async function loadCurrentUser() {
@@ -64,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
       setUser(mappedUser);
 
-      const mappedFarms: any[] = (res.farms || []).map((f: any) => ({
+      const mappedFarms: Farm[] = (res.farms || []).map((f) => ({
         id: f.id,
         name: f.name,
         code: f.code,
@@ -201,12 +206,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await loadCurrentUser();
   }
 
-  const isOwner = Boolean(
+  const isSubscriptionOwner = Boolean(
     activeFarm?.userRole?.toUpperCase() === "OWNER" ||
     role?.name?.toUpperCase() === "OWNER" ||
     user?.roles?.includes("ROLE_ADMIN") ||
     user?.roles?.includes("ROLE_SUPER_ADMIN")
   );
+  const trialExpired = activeFarm?.subscription?.trialExpired === true;
+  const isOwner = isSubscriptionOwner;
 
   function hasModule(moduleKey: string): boolean {
     if (!activeFarm) return false;
@@ -217,6 +224,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   function hasPermission(permissionKey: string): boolean {
     if (!activeFarm) return false;
+
+    // L'essai expiré conserve la consultation, mais aucune permission d'écriture.
+    const readOnlyAdministrativePermission = new Set([
+      "member:manage",
+      "role:manage",
+      "building:manage",
+    ]).has(permissionKey);
+    const writePermission = /:(create|edit|update|delete|movement|manage)$/.test(permissionKey);
+    if (trialExpired && writePermission && !readOnlyAdministrativePermission) return false;
 
     // Le propriétaire de l'exploitation ou administrateur dispose de toutes les permissions opérationnelles
     if (isOwner) return true;
@@ -247,6 +263,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         token,
         isLoading,
         isOwner,
+        isSubscriptionOwner,
         login,
         register,
         logout,

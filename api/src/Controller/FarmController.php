@@ -12,6 +12,7 @@ use App\Entity\Farm;
 use App\Entity\User;
 use App\Repository\FarmMembershipRepository;
 use App\Security\Voter\FarmVoter;
+use App\Security\BuildingAccessChecker;
 use App\Service\FarmService;
 use App\Service\IdempotencyService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -30,6 +31,7 @@ class FarmController extends AbstractController
         private readonly FarmService $farmService,
         private readonly FarmMembershipRepository $membershipRepository,
         private readonly IdempotencyService $idempotencyService,
+        private readonly BuildingAccessChecker $buildingAccessChecker,
     ) {
     }
 
@@ -104,6 +106,8 @@ class FarmController extends AbstractController
         Farm $farm,
         Request $request,
     ): JsonResponse {
+        $this->buildingAccessChecker->assertModuleAllowed($farm);
+
         $onlyActive = $request->query->has('onlyActive')
             ? $request->query->getBoolean('onlyActive')
             : false;
@@ -112,7 +116,7 @@ class FarmController extends AbstractController
 
         $currentUser = $this->getUser();
         if ($currentUser instanceof User) {
-            $membership = $this->membershipRepository->findOneBy(['farm' => $farm, 'user' => $currentUser]);
+            $membership = $this->membershipRepository->findOneBy(['farm' => $farm, 'user' => $currentUser, 'isActive' => true]);
             if ($membership !== null && $membership->hasBuildingRestrictions()) {
                 $allowedIds = array_map(
                     fn ($ab) => $ab->getId()?->toBase32(),
@@ -138,6 +142,8 @@ class FarmController extends AbstractController
         #[CurrentUser] User $user,
         Request $request,
     ): JsonResponse {
+        $this->buildingAccessChecker->assertModuleAllowed($farm);
+
         $idempotencyKey = IdempotencyService::requireKey($request, 'créer un bâtiment');
 
         return $this->idempotencyService->process(
@@ -162,7 +168,12 @@ class FarmController extends AbstractController
         string $buildingId,
         #[MapRequestPayload] UpdateBuildingRequestDto $dto,
     ): JsonResponse {
+        $this->buildingAccessChecker->assertModuleAllowed($farm);
         $building = $this->farmService->getBuildingInFarm($farm, $buildingId);
+        $currentUser = $this->getUser();
+        if ($currentUser instanceof User) {
+            $this->buildingAccessChecker->assertBuildingAssigned($currentUser, $farm, $building);
+        }
         $updated = $this->farmService->updateBuilding($building, $dto);
 
         return $this->json([
@@ -176,7 +187,12 @@ class FarmController extends AbstractController
         Farm $farm,
         string $buildingId,
     ): JsonResponse {
+        $this->buildingAccessChecker->assertModuleAllowed($farm);
         $building = $this->farmService->getBuildingInFarm($farm, $buildingId);
+        $currentUser = $this->getUser();
+        if ($currentUser instanceof User) {
+            $this->buildingAccessChecker->assertBuildingAssigned($currentUser, $farm, $building);
+        }
         $this->farmService->deleteBuilding($building);
 
         return $this->json(null, Response::HTTP_NO_CONTENT);

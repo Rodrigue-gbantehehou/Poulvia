@@ -4,6 +4,8 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_provider.dart';
 import '../../core/models/flock.dart';
 import '../../core/widgets/brand_loader.dart';
+import '../../core/widgets/egg_trend_chart.dart';
+import '../dashboard/dashboard_provider.dart';
 import 'egg_provider.dart';
 import 'record_egg_modal.dart';
 import '../auth/auth_provider.dart';
@@ -50,6 +52,7 @@ class _EggsScreenState extends ConsumerState<EggsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final eggState = ref.watch(eggProvider);
     final summary = eggState.summary;
+    final dashboardState = ref.watch(dashboardProvider);
     final farm = ref.watch(authProvider).activeFarm;
     final canCreateFinance = farm == null || farm.canCreateFinance;
 
@@ -301,6 +304,16 @@ class _EggsScreenState extends ConsumerState<EggsScreen> {
                       ),
                       const SizedBox(height: 14),
                     ],
+
+                    EggTrendChart(
+                      points: dashboardState.kpi.eggTrend,
+                      cachedAt: dashboardState.kpi.chartCachedAt,
+                      isLoading: dashboardState.isLoading,
+                      error: dashboardState.error,
+                      startDate: dashboardState.kpi.chartStartDate,
+                      endDate: dashboardState.kpi.chartEndDate,
+                    ),
+                    const SizedBox(height: 16),
 
                     // Titre liste
                     Row(

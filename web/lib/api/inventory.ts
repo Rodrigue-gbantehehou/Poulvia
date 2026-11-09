@@ -1,5 +1,86 @@
 import { apiRequest } from "./client";
-import { InventoryItem, StockMovement } from "../types";
+import { InventoryCategory, InventoryItem, StockMovement } from "../types";
+
+function normalizeCategory(value: string): InventoryCategory {
+  const category = value === "MEDICATION" ? "MEDICINE" : value;
+  return (["FEED", "VACCINE", "MEDICINE", "EQUIPMENT", "OTHER"] as const).includes(category as InventoryCategory)
+    ? (category as InventoryCategory)
+    : "OTHER";
+}
+
+interface InventoryResponse {
+  id: string;
+  farmId?: string;
+  name: string;
+  code?: string | null;
+  sku?: string | null;
+  category: string;
+  customCategory?: string | null;
+  unit: string;
+  unitLabel?: string;
+  unitShortLabel?: string;
+  packageWeightKg?: number | null;
+  alertThreshold?: number;
+  minThreshold?: number;
+  currentStock?: number;
+  unitPrice?: number;
+  unitCostFcfa?: number;
+  estimatedTotalValue?: number;
+  notes?: string | null;
+  isActive?: boolean;
+  isLowStock?: boolean;
+  movements?: InventoryMovementResponse[];
+}
+
+interface InventoryMovementResponse {
+  id: string;
+  itemId?: string;
+  itemName?: string;
+  itemCategory?: string;
+  type: StockMovement["type"];
+  quantity: number;
+  unit?: string;
+  unitLabel?: string;
+  unitShortLabel?: string;
+  unitPrice?: number;
+  unitPriceFcfa?: number;
+  totalCost?: number;
+  movementDate?: string;
+  date?: string;
+  reason?: string | null;
+  flock?: StockMovement["flock"];
+  recordedBy?: StockMovement["recordedBy"];
+  createdAt: string;
+}
+
+interface CreateInventoryInput {
+  farmId: string;
+  name: string;
+  sku?: string;
+  category?: string;
+  customCategory?: string;
+  unit?: string;
+  packageWeightKg?: number;
+  initialStock?: number;
+  currentStock?: number;
+  alertThreshold?: number;
+  minThreshold?: number;
+  unitPrice?: number;
+  unitCostFcfa?: number;
+  notes?: string;
+}
+
+interface InventoryMovementInput {
+  type?: string;
+  quantity: number;
+  unit?: string;
+  movementDate?: string;
+  date?: string;
+  unitPrice?: number;
+  unitPriceFcfa?: number;
+  flockId?: string;
+  reason?: string;
+}
 
 export const inventoryApi = {
   listItems: async (params?: { farmId?: string; category?: string; lowStockOnly?: boolean }) => {
@@ -7,13 +88,13 @@ export const inventoryApi = {
     const q = new URLSearchParams();
     if (params?.category && params.category !== "ALL") q.append("category", params.category);
     if (params?.lowStockOnly) q.append("lowStock", "true");
-    const res = await apiRequest<any[]>(`/farms/${params.farmId}/inventory?${q.toString()}`);
-    return (res || []).map((i: any) => ({
+    const res = await apiRequest<InventoryResponse[]>(`/farms/${params.farmId}/inventory?${q.toString()}`);
+    return (res || []).map((i) => ({
       id: i.id,
       farmId: params.farmId!,
       name: i.name,
       sku: i.code || i.sku || (i.name ? i.name.slice(0, 4).toUpperCase() : "ART"),
-      category: i.category === "MEDICATION" ? "MEDICINE" : i.category,
+      category: normalizeCategory(i.category),
       customCategory: i.customCategory || undefined,
       unit: i.unit,
       packageWeightKg: i.packageWeightKg ? Number(i.packageWeightKg) : undefined,
@@ -25,7 +106,7 @@ export const inventoryApi = {
     }));
   },
 
-  createItem: async (data: any) => {
+  createItem: async (data: CreateInventoryInput) => {
     let category = data.category || "FEED";
     if (category === "MEDICINE") category = "MEDICATION";
 
@@ -50,8 +131,9 @@ export const inventoryApi = {
       unit = "UNIT";
     }
 
-    const payload: any = {
+    const payload = {
       name: data.name,
+      code: data.sku || undefined,
       category,
       customCategory: data.customCategory || undefined,
       unit,
@@ -68,7 +150,7 @@ export const inventoryApi = {
     });
   },
 
-  addMovement: async (itemId: string, movement: any) => {
+  addMovement: async (itemId: string, movement: InventoryMovementInput) => {
     let unit = movement.unit;
     if (
       !unit ||
@@ -101,14 +183,13 @@ export const inventoryApi = {
   },
 
   get: async (id: string): Promise<InventoryItem & { movements?: StockMovement[] }> => {
-    const res = await apiRequest<any>(`/inventory/${id}`);
-    const i = res?.data || res;
+    const i = await apiRequest<InventoryResponse>(`/inventory/${id}`);
     return {
       id: i.id,
-      farmId: i.farmId,
       name: i.name,
       sku: i.code || i.sku || (i.name ? i.name.slice(0, 4).toUpperCase() : "ART"),
-      category: i.category === "MEDICATION" ? "MEDICINE" : i.category,
+      farmId: i.farmId || "",
+      category: normalizeCategory(i.category),
       customCategory: i.customCategory || undefined,
       unit: i.unit,
       unitLabel: i.unitLabel,
@@ -121,7 +202,7 @@ export const inventoryApi = {
       notes: i.notes,
       isActive: i.isActive !== undefined ? i.isActive : true,
       isLowStock: i.isLowStock,
-      movements: (i.movements || []).map((m: any) => ({
+      movements: (i.movements || []).filter((m) => Boolean(m.movementDate || m.date)).map((m) => ({
         id: m.id,
         itemId: i.id,
         itemName: i.name,
@@ -133,7 +214,7 @@ export const inventoryApi = {
         unitPriceFcfa: Number(m.unitPrice || 0),
         totalCostFcfa: Number(m.totalCost || 0),
         reason: m.reason,
-        date: m.movementDate || m.date,
+        date: m.movementDate || m.date!,
         flock: m.flock,
         recordedBy: m.recordedBy,
         createdAt: m.createdAt,
@@ -157,7 +238,18 @@ export const inventoryApi = {
       isActive?: boolean;
     }
   ): Promise<InventoryItem> => {
-    const payload: any = {};
+    const payload: {
+      name?: string;
+      category?: string;
+      customCategory?: string | null;
+      unit?: string;
+      packageWeightKg?: number;
+      clearPackageWeight?: boolean;
+      alertThreshold?: number;
+      unitPrice?: number;
+      notes?: string | null;
+      isActive?: boolean;
+    } = {};
     if (data.name !== undefined) payload.name = data.name;
     if (data.category !== undefined) payload.category = data.category === "MEDICINE" ? "MEDICATION" : data.category;
     if (data.customCategory !== undefined) payload.customCategory = data.customCategory;
@@ -177,17 +269,17 @@ export const inventoryApi = {
     if (data.notes !== undefined) payload.notes = data.notes;
     if (data.isActive !== undefined) payload.isActive = data.isActive;
 
-    const res = await apiRequest<any>(`/inventory/${id}`, {
+    const res = await apiRequest<InventoryItem>(`/inventory/${id}`, {
       method: "PUT",
       body: JSON.stringify(payload),
     });
-    return res?.data || res;
+    return res;
   },
 
   listMovements: async (itemId: string): Promise<StockMovement[]> => {
-    const res = await apiRequest<any>(`/inventory/${itemId}/movements`);
+    const res = await apiRequest<InventoryMovementResponse[] | { data?: InventoryMovementResponse[] }>(`/inventory/${itemId}/movements`);
     const rawList = Array.isArray(res) ? res : res?.data || [];
-    return rawList.map((m: any) => ({
+    return rawList.filter((m) => Boolean(m.movementDate || m.date)).map((m) => ({
       id: m.id,
       itemId,
       type: m.type,
@@ -198,7 +290,7 @@ export const inventoryApi = {
       unitPriceFcfa: Number(m.unitPrice || 0),
       totalCostFcfa: Number(m.totalCost || 0),
       reason: m.reason,
-      date: m.movementDate || m.date,
+      date: m.movementDate || m.date!,
       flock: m.flock,
       recordedBy: m.recordedBy,
       createdAt: m.createdAt,
@@ -216,11 +308,11 @@ export const inventoryApi = {
     if (params?.sort) q.append("sort", params.sort);
     if (params?.limit) q.append("limit", String(params.limit));
 
-    const res = await apiRequest<any>(`/farms/${farmId}/inventory/movements?${q.toString()}`);
+    const res = await apiRequest<InventoryMovementResponse[] | { data?: InventoryMovementResponse[] }>(`/farms/${farmId}/inventory/movements?${q.toString()}`);
     const rawList = Array.isArray(res) ? res : res?.data || [];
-    return rawList.map((m: any) => ({
+    return rawList.filter((m) => Boolean(m.movementDate || m.date)).map((m) => ({
       id: m.id,
-      itemId: m.itemId,
+      itemId: m.itemId || "",
       itemName: m.itemName || "Article",
       itemCategory: m.itemCategory || "FEED",
       type: m.type,
@@ -231,7 +323,7 @@ export const inventoryApi = {
       unitPriceFcfa: Number(m.unitPrice || 0),
       totalCostFcfa: Number(m.totalCost || 0),
       reason: m.reason,
-      date: m.movementDate || m.date,
+      date: m.movementDate || m.date!,
       flock: m.flock,
       recordedBy: m.recordedBy,
       createdAt: m.createdAt,

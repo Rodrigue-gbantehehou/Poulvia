@@ -12,6 +12,7 @@ use App\Entity\User;
 use App\Repository\FarmMembershipRepository;
 use App\Security\Voter\FarmVoter;
 use App\Service\IdempotencyService;
+use App\Service\MemberInvitationService;
 use App\Service\MemberService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -29,11 +30,12 @@ class MemberController extends AbstractController
         private readonly MemberService $memberService,
         private readonly FarmMembershipRepository $membershipRepository,
         private readonly IdempotencyService $idempotencyService,
+        private readonly MemberInvitationService $memberInvitationService,
     ) {
     }
 
     #[Route('', name: 'list', methods: ['GET'])]
-    #[IsGranted(FarmVoter::VIEW, subject: 'farm')]
+    #[IsGranted(FarmVoter::VIEW_MEMBERS, subject: 'farm')]
     public function list(Farm $farm): JsonResponse
     {
         $members = $this->memberService->getMembersForFarm($farm);
@@ -61,14 +63,44 @@ class MemberController extends AbstractController
             $farm,
             function () use ($farm, $dto): JsonResponse {
                 $membership = $this->memberService->addMember($farm, $dto);
+                $message = $membership->getUser()->isActive()
+                    ? 'Collaborateur ajouté à l’exploitation. Une notification lui a été envoyée.'
+                    : 'Invitation envoyée. Le collaborateur devra activer son compte pour rejoindre l’exploitation.';
 
                 return $this->json([
                     'status' => 'success',
-                    'message' => 'Collaborateur ajouté avec succès à l\'exploitation.',
+                    'message' => $message,
                     'data' => $this->memberService->serializeMember($membership),
                 ], Response::HTTP_CREATED);
             }
         );
+    }
+
+    #[Route('/{membershipId}/resend-invitation', name: 'resend_invitation', methods: ['POST'])]
+    #[IsGranted(FarmVoter::MANAGE_MEMBERS, subject: 'farm')]
+    public function resendInvitation(Farm $farm, string $membershipId): JsonResponse
+    {
+        $membership = $this->membershipRepository->find($membershipId);
+        if (!$membership instanceof FarmMembership || $membership->getFarm()->getId()?->toRfc4122() !== $farm->getId()?->toRfc4122()) {
+            return $this->json([
+                'status' => 'error',
+                'message' => 'Collaborateur introuvable pour cette exploitation.',
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        try {
+            $this->memberInvitationService->resend($membership);
+        } catch (\InvalidArgumentException $exception) {
+            return $this->json([
+                'status' => 'error',
+                'message' => $exception->getMessage(),
+            ], Response::HTTP_CONFLICT);
+        }
+
+        return $this->json([
+            'status' => 'success',
+            'message' => 'L’invitation a été renvoyée par e-mail.',
+        ]);
     }
 
     #[Route('/{membershipId}', name: 'update', methods: ['PUT'])]

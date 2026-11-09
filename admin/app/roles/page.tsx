@@ -72,7 +72,8 @@ export default function AdminRolesPage() {
   };
 
   useEffect(() => {
-    fetchRolesAndPermissions();
+    const task = window.setTimeout(() => void fetchRolesAndPermissions(), 0);
+    return () => window.clearTimeout(task);
   }, []);
 
   // Regrouper les permissions par module

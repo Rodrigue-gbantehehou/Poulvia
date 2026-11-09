@@ -20,6 +20,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Psr\Log\LoggerInterface;
 
 class AuthService
 {
@@ -32,6 +34,11 @@ class AuthService
         private readonly SluggerInterface $slugger,
         private readonly AdminAuditService $adminAuditService,
         private readonly CommercialPlanService $commercialPlanService,
+        private readonly SubscriptionTrialService $subscriptionTrialService,
+        private readonly EmailSender $emailSender,
+        private readonly LoggerInterface $logger,
+        #[Autowire('%kernel.environment%')]
+        private readonly string $environment,
     ) {
     }
 
@@ -46,7 +53,7 @@ class AuthService
             throw new EmailAlreadyExistsException($normalizedEmail);
         }
 
-        return $this->entityManager->wrapInTransaction(function () use ($dto, $normalizedEmail): array {
+        $registration = $this->entityManager->wrapInTransaction(function () use ($dto, $normalizedEmail): array {
             // 1. Création de l'utilisateur
             $user = new User($normalizedEmail, $dto->firstName, $dto->lastName);
             $user->setPhone($dto->phone);
@@ -71,6 +78,7 @@ class AuthService
                 }
 
                 $organization = new Organization($orgName, $uniqueSlug);
+                $this->subscriptionTrialService->startFor($organization);
                 $this->entityManager->persist($organization);
 
                 $farm = new Farm($organization, $dto->farmName, $dto->productionType ?? \App\Enum\ProductionType::MIXED);
@@ -92,6 +100,22 @@ class AuthService
                 'farm' => $farm,
             ];
         });
+
+        try {
+            $this->emailSender->sendTemplate(
+                $normalizedEmail,
+                'Bienvenue sur Poulvia',
+                'emails/welcome.html.twig',
+                ['firstName' => $registration['user']->getFirstName()],
+            );
+        } catch (\Throwable $exception) {
+            // La livraison d'un message ne doit pas annuler une inscription déjà créée.
+            $this->logger->warning('Échec de livraison du courriel de bienvenue.', [
+                'exceptionClass' => $exception::class,
+            ]);
+        }
+
+        return $registration;
     }
 
     /**
@@ -158,7 +182,10 @@ class AuthService
                             'maxBuildings' => 2,
                             'retentionMonths' => 3,
                         ],
-                        'status' => $plan['status'] ?? 'ACTIVE',
+                        'status' => $org->getStatus()->value,
+                        'trialEndsAt' => $org->getSubscriptionTrialEndsAt()?->format(\DateTimeInterface::ATOM),
+                        'trialExpired' => $this->subscriptionTrialService->isExpired($org),
+                        'billingCycle' => $org->getSubscriptionBillingCycle(),
                     ],
                 ];
             }
@@ -204,16 +231,37 @@ class AuthService
         }
 
         $code = sprintf('%06d', random_int(100000, 999999));
-        $user->setPasswordResetToken($code);
+        $user->setPasswordResetToken(password_hash($code, PASSWORD_BCRYPT));
         $user->setPasswordResetExpiresAt(new \DateTimeImmutable('+15 minutes'));
 
         $this->entityManager->flush();
 
-        return [
+        if ($channel === 'email' && strtolower($clean) === strtolower($user->getEmail())) {
+            try {
+                $this->emailSender->sendTemplate(
+                    $user->getEmail(),
+                    'Code de réinitialisation de votre mot de passe Poulvia',
+                    'emails/password_reset.html.twig',
+                    ['resetCode' => $code, 'expiresInMinutes' => 15],
+                );
+            } catch (\Throwable $exception) {
+                // Ne révèle pas l’existence du compte et ne consigne jamais le code.
+                $this->logger->warning('Échec de livraison du courriel de réinitialisation.', [
+                    'exceptionClass' => $exception::class,
+                ]);
+            }
+        }
+
+        $response = [
             'message' => 'Si un compte est associé à ces coordonnées, des instructions de réinitialisation ont été envoyées.',
-            'devCode' => $code,
             'channel' => $channel,
         ];
+
+        if ($this->environment === 'dev') {
+            $response['devCode'] = $code;
+        }
+
+        return $response;
     }
 
     /**

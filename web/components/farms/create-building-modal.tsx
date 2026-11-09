@@ -1,15 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Plus, Warehouse, Sparkles, Building2, Box } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { api } from "@/lib/api-client";
+import { Building } from "@/lib/types";
 import { useAuth } from "@/context/auth-context";
 
 interface CreateBuildingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: (createdBuilding: any) => void;
+  onSuccess?: (createdBuilding: Building) => void;
   defaultCapacity?: number;
   suggestedName?: string;
 }
@@ -29,19 +30,6 @@ export function CreateBuildingModal({
   const [surfaceArea, setSurfaceArea] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Sync suggestion when modal opens or suggestedName changes
-  useEffect(() => {
-    if (isOpen) {
-      if (suggestedName) {
-        setName(suggestedName);
-      }
-      if (defaultCapacity) {
-        setCapacity(defaultCapacity);
-      }
-      setError(null);
-    }
-  }, [isOpen, suggestedName, defaultCapacity]);
 
   const quickNameSuggestions = [
     "Poulailler 1",
@@ -75,8 +63,8 @@ export function CreateBuildingModal({
 
       onSuccess?.(created);
       onClose();
-    } catch (err: any) {
-      setError(err?.message || "Erreur lors de la création du bâtiment.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erreur lors de la création du bâtiment.");
     } finally {
       setSubmitting(false);
     }
@@ -144,7 +132,7 @@ export function CreateBuildingModal({
         {/* Type de bâtiment */}
         <div>
           <label className="block text-xs font-semibold text-foreground mb-1">
-            Type d'installation
+            Type d&apos;installation
           </label>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <button
@@ -203,7 +191,7 @@ export function CreateBuildingModal({
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="block text-xs font-semibold text-foreground">
-                Capacité d'accueil (poules) *
+                Capacité d&apos;accueil (poules) *
               </label>
             </div>
             <input

@@ -10,6 +10,7 @@ use App\Entity\FarmMembership;
 use App\Entity\User;
 use App\Repository\FarmMembershipRepository;
 use App\Security\ApiKeySecurityChecker;
+use App\Security\FarmPermissionChecker;
 use App\Security\Permission;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
@@ -24,6 +25,7 @@ class ApiKeyVoter extends Voter
     public function __construct(
         private readonly FarmMembershipRepository $membershipRepository,
         private readonly ApiKeySecurityChecker $apiKeyChecker,
+        private readonly FarmPermissionChecker $permissionChecker,
     ) {
     }
 
@@ -64,6 +66,7 @@ class ApiKeyVoter extends Voter
             return false;
         }
 
-        return $membership->hasPermission(Permission::API_KEY_MANAGE);
+        return !$this->permissionChecker->isTrialExpired($farm->getOrganization())
+            && $membership->hasPermission(Permission::API_KEY_MANAGE);
     }
 }

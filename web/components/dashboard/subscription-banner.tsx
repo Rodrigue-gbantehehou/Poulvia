@@ -81,7 +81,7 @@ export function SubscriptionBanner({
               )}
             </div>
             <p className="text-[11px] text-muted">
-              Quotas d'utilisation et modules actifs sur votre ferme.
+              Quotas d&apos;utilisation et modules actifs sur votre ferme.
             </p>
           </div>
         </div>
@@ -130,7 +130,7 @@ export function SubscriptionBanner({
         {/* Bâtiments */}
         <div className="rounded-xl border border-border/80 bg-surface-muted/60 p-3 space-y-1.5">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-semibold text-foreground">Bâtiments d'élevage</span>
+            <span className="font-semibold text-foreground">Bâtiments d&apos;élevage</span>
             <span className="font-mono font-bold text-foreground">
               {buildingQuota.current} / {buildingQuota.isUnlimited ? "Illimité" : buildingQuota.max}
             </span>

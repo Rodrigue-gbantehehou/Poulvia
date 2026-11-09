@@ -97,7 +97,7 @@ export function FlockSummaryReportModal({
             <span className="font-bold text-zinc-900">{flock.buildingName || "Non assigné"}</span>
           </div>
           <div>
-            <span className="text-[10px] font-bold text-zinc-500 uppercase block">Date d'arrivée :</span>
+            <span className="text-[10px] font-bold text-zinc-500 uppercase block">Date d&apos;arrivée :</span>
             <span className="font-mono text-zinc-800">{formatDate(flock.startDate)}</span>
           </div>
           <div>
@@ -169,7 +169,7 @@ export function FlockSummaryReportModal({
             <div className="mt-3 rounded-xl border border-zinc-200 bg-zinc-50/70 p-3.5 text-xs flex items-center justify-between">
               <div>
                 <span className="font-bold text-zinc-900 block">
-                  Production Cumulée d'Œufs de table :
+                  Production Cumulée d&apos;Œufs de table :
                 </span>
                 <span className="text-[11px] text-zinc-500">
                   Standards ouest-africains (alvéoles de 30 œufs).
@@ -190,7 +190,7 @@ export function FlockSummaryReportModal({
         {/* Section 3 : Compte d'Exploitation & Marge */}
         <div>
           <h3 className="text-xs font-extrabold uppercase text-emerald-800 tracking-wider mb-2.5 pb-1 border-b border-zinc-200">
-            2. Compte d'Exploitation & Marge Nette du Lot
+            2. Compte d&apos;Exploitation & Marge Nette du Lot
           </h3>
           <div className="rounded-xl border border-zinc-200 overflow-hidden">
             <table className="w-full text-xs">
@@ -205,7 +205,7 @@ export function FlockSummaryReportModal({
                 <tr>
                   <td className="py-2.5 px-3 font-semibold text-emerald-800 flex items-center gap-1.5">
                     <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
-                    <span>Recettes Totales (Ventes d'œufs & volailles)</span>
+                    <span>Recettes Totales (Ventes d&apos;œufs & volailles)</span>
                   </td>
                   <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-800">
                     {formatFcfa(totalIncome)}

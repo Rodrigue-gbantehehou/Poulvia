@@ -48,14 +48,20 @@ export interface FarmSubscription {
     retentionMonths?: number;
   };
   status?: string;
+  trialEndsAt?: string | null;
+  trialExpired?: boolean;
+  billingCycle?: "MONTHLY" | "ANNUALLY" | null;
 }
 
 export interface Building {
   id: string;
-  farmId: string;
+  farmId?: string;
   name: string;
-  type: string;
-  capacityBirds: number;
+  type: "POULTRY_HOUSE" | "BROODER" | "STORAGE" | "OTHER";
+  capacityBirds?: number;
+  capacity?: number;
+  isActive?: boolean;
+  createdAt?: string;
   lengthM?: number | null;
   widthM?: number | null;
   notes?: string | null;
@@ -96,6 +102,7 @@ export interface FarmMember {
   roleDefinition?: FarmRole | null;
   permissions: string[];
   isActive: boolean;
+  invitationPending?: boolean;
   isOwner: boolean;
   createdAt: string;
 }
@@ -148,7 +155,7 @@ export interface FlockMovement {
 /**
  * Egg Production
  */
-export type EggSession = "MORNING" | "NOON" | "EVENING";
+export type EggSession = "MORNING" | "NOON" | "EVENING" | "ALL_DAY";
 
 export interface EggProduction {
   id: string;
@@ -339,6 +346,10 @@ export interface DashboardKPI {
   hasFinanceAccess?: boolean;
   subscription?: DashboardSubscription;
   health?: DashboardHealthOverview;
+  eggProductionChart?: Array<{ date: string; goodEggs: number }>;
+  dashboardError?: string;
+  eggChartStartDate?: string;
+  eggChartEndDate?: string;
 }
 
 /**

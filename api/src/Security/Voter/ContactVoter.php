@@ -10,6 +10,7 @@ use App\Entity\FarmMembership;
 use App\Entity\User;
 use App\Repository\FarmMembershipRepository;
 use App\Security\ApiKeySecurityChecker;
+use App\Security\FarmPermissionChecker;
 use App\Security\Permission;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
@@ -26,6 +27,7 @@ class ContactVoter extends Voter
     public function __construct(
         private readonly FarmMembershipRepository $membershipRepository,
         private readonly ApiKeySecurityChecker $apiKeyChecker,
+        private readonly FarmPermissionChecker $permissionChecker,
     ) {
     }
 
@@ -55,14 +57,18 @@ class ContactVoter extends Voter
             return false;
         }
 
+        $requiredPermission = match ($attribute) {
+            self::VIEW => Permission::CONTACT_VIEW,
+            self::MANAGE, self::DELETE => Permission::CONTACT_CREATE,
+            default => 'none',
+        };
+
+        if (!$this->permissionChecker->moduleAllows($farm, $requiredPermission)) {
+            return false;
+        }
+
         $apiKey = $this->apiKeyChecker->getApiKey();
         if ($apiKey !== null) {
-            $requiredPermission = match ($attribute) {
-                self::VIEW => Permission::CONTACT_VIEW,
-                self::MANAGE, self::DELETE => Permission::CONTACT_CREATE,
-                default => 'none',
-            };
-
             if (!$this->apiKeyChecker->isAccessAllowed($farm, $requiredPermission)) {
                 return false;
             }
@@ -81,8 +87,8 @@ class ContactVoter extends Voter
         }
 
         return match ($attribute) {
-            self::VIEW => $membership->hasPermission(Permission::CONTACT_VIEW),
-            self::MANAGE, self::DELETE => $membership->hasPermission(Permission::CONTACT_CREATE),
+            self::VIEW => $this->permissionChecker->allows($membership, Permission::CONTACT_VIEW, false),
+            self::MANAGE, self::DELETE => $this->permissionChecker->allows($membership, Permission::CONTACT_CREATE),
             default => false,
         };
     }

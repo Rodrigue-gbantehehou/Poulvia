@@ -7,7 +7,6 @@ import '../contacts/contacts_screen.dart';
 import '../finances/finances_screen.dart';
 import '../inventory/inventory_screen.dart';
 import '../members/members_screen.dart';
-import '../reports/reports_screen.dart';
 
 class ManagementScreen extends ConsumerWidget {
   final VoidCallback? onOpenMenu;
@@ -31,7 +30,6 @@ class ManagementScreen extends ConsumerWidget {
     final canInventory = farm == null || farm.canViewInventory;
     final canContacts = farm == null || farm.canViewContacts;
     final canMembers = farm == null || farm.canManageMembers;
-    final canReports = farm == null || farm.canViewReports;
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
@@ -102,7 +100,7 @@ class ManagementScreen extends ConsumerWidget {
                       ),
                       SizedBox(height: 2),
                       Text(
-                        "Caisse, stocks, contacts, équipe et synthèses.",
+                        "Dépenses, ventes, stocks, contacts et équipe.",
                         style: TextStyle(
                           color: Colors.white70,
                           fontSize: 12,
@@ -154,16 +152,6 @@ class ManagementScreen extends ConsumerWidget {
               title: "Équipe & Rôles",
               subtitle: "Employés de ferme et habilitations d'accès",
               onTap: () => _navigate(context, const MembersScreen()),
-            ),
-
-          // 5. Rapports & Synthèses (WhatsApp/PDF)
-          if (canReports)
-            _ManagementCard(
-              icon: Icons.bar_chart_rounded,
-              iconColor: const Color(0xFF0284C7),
-              title: "Rapports & Synthèses",
-              subtitle: "Fiches de lots, bilans et partages WhatsApp",
-              onTap: () => _navigate(context, const ReportsScreen()),
             ),
 
           const SizedBox(height: 24),

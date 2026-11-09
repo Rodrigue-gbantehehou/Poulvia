@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { AlertCircle, Bird } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/context/toast-context";
@@ -31,20 +31,6 @@ export function RecordMovementModal({
   const [moveReason, setMoveReason] = useState("");
   const [submittingMove, setSubmittingMove] = useState(false);
   const [moveError, setMoveError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (isOpen) {
-      setMoveError(null);
-      setMoveQuantity(1);
-      setMoveReason("");
-      setMoveType("MORTALITY");
-      if (defaultFlockId) {
-        setMoveFlockId(defaultFlockId);
-      } else if (flocks.length > 0) {
-        setMoveFlockId(flocks[0].id);
-      }
-    }
-  }, [isOpen, defaultFlockId, flocks]);
 
   async function handleMoveSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -124,7 +110,7 @@ export function RecordMovementModal({
 
         <div>
           <label className="block text-xs font-semibold text-foreground mb-1">
-            Type d'opération
+            Type d&apos;opération
           </label>
           <div className="grid grid-cols-3 gap-2">
             <button

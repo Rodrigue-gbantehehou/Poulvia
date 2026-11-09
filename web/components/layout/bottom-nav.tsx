@@ -16,6 +16,7 @@ import {
   HeartPulse,
   Sparkles,
   X,
+  type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { cn } from "@/lib/utils";
@@ -56,9 +57,30 @@ export function BottomNav({ onOpenMenu }: BottomNavProps) {
   const canCreateFinance = hasModule("finance") && (hasPermission("finance:create") || isOwner);
   const canManageHealth = hasModule("health") && (hasPermission("health:manage") || hasPermission("health:create") || isOwner);
 
+  const canViewFlocks =
+    hasModule("flocks") &&
+    (hasPermission("flock:read") || hasPermission("flock:view") || isOwner);
+  const canViewBuildings =
+    hasModule("buildings") &&
+    (hasPermission("building:manage") || hasPermission("farm:view") || isOwner);
+  const canViewProduction =
+    !isBroiler &&
+    hasModule("eggs") &&
+    (hasPermission("egg:read") || hasPermission("egg:view") || isOwner);
+  const canViewHealth =
+    hasModule("health") &&
+    (hasPermission("health:view") || hasPermission("health:manage") || isOwner);
+  const canViewManagement =
+    (hasModule("finance") && (hasPermission("finance:read") || hasPermission("finance:view") || isOwner)) ||
+    (hasModule("inventory") && (hasPermission("inventory:read") || hasPermission("inventory:view") || isOwner)) ||
+    (hasModule("contacts") && (hasPermission("contact:read") || hasPermission("contact:view") || isOwner)) ||
+    (hasModule("team") && (hasPermission("member:manage") || isOwner)) ||
+    (hasModule("custom_roles") && (hasPermission("role:manage") || isOwner));
+
   const isHomeActive = pathname === "/";
   const isFlocksActive = pathname.startsWith("/flocks") || pathname.startsWith("/buildings");
   const isEggsActive = pathname.startsWith("/eggs");
+  const isHealthActive = pathname.startsWith("/health");
   const isManagementActive =
     pathname.startsWith("/management") ||
     pathname.startsWith("/finances") ||
@@ -79,167 +101,47 @@ export function BottomNav({ onOpenMenu }: BottomNavProps) {
       >
         <div className="h-6 w-full bg-gradient-to-t from-background via-background/80 to-transparent" />
         <div
-          className="w-full bg-surface border-t border-border/70"
+          className="w-full bg-[#f8f7f3] border-t border-[#e6e4dd]"
           style={{ height: "calc(4.75rem + env(safe-area-inset-bottom, 0px))" }}
         />
       </div>
 
-      {/* ─── BARRE INFÉRIEURE STABLE À 5 ÉLÉMENTS (Accueil, Élevage, (+), Production, Gestion) ─── */}
+      {/* Navigation compacte à cinq espaces, filtrée selon l'exploitation et le profil. */}
       <nav
         aria-label="Navigation mobile"
-        className="fixed bottom-2.5 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-[450px] z-40 lg:hidden pointer-events-none"
+        className="fixed bottom-2.5 left-1.5 right-1.5 sm:left-1/2 sm:-translate-x-1/2 sm:w-[450px] z-40 lg:hidden pointer-events-none"
         style={{ marginBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
-        <div className="pointer-events-auto flex h-16 items-center justify-between px-2.5 rounded-[26px] bg-gradient-to-r from-[#1d4d38] via-primary to-[#184431] dark:from-[#1b4331] dark:via-primary dark:to-[#143627] backdrop-blur-2xl border border-white/20 text-white shadow-xl">
-          {/* 1. Accueil */}
-          <Link
-            href="/"
-            className={cn(
-              "group relative flex flex-1 flex-col items-center justify-center py-1.5 transition-all duration-200 active:scale-90",
-              isHomeActive ? "text-white" : "text-white/70 hover:text-white"
-            )}
-          >
-            <div
-              className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-2xl transition-all duration-200",
-                isHomeActive
-                  ? "bg-white/20 text-accent scale-110"
-                  : "bg-transparent text-white/75 group-hover:bg-white/10 group-hover:text-white"
-              )}
-            >
-              <LayoutDashboard className="h-4 w-4" />
-            </div>
-            <span
-              className={cn(
-                "text-[10px] leading-none mt-1 tracking-tight",
-                isHomeActive ? "font-bold text-accent" : "font-medium text-white/80"
-              )}
-            >
-              Accueil
-            </span>
-            {isHomeActive && (
-              <span className="h-1 w-1 rounded-full bg-accent mt-0.5 animate-in zoom-in-50" />
-            )}
-          </Link>
-
-          {/* 2. Élevage */}
-          <Link
-            href="/flocks"
-            className={cn(
-              "group relative flex flex-1 flex-col items-center justify-center py-1.5 transition-all duration-200 active:scale-90",
-              isFlocksActive ? "text-white" : "text-white/70 hover:text-white"
-            )}
-          >
-            <div
-              className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-2xl transition-all duration-200",
-                isFlocksActive
-                  ? "bg-white/20 text-accent scale-110"
-                  : "bg-transparent text-white/75 group-hover:bg-white/10 group-hover:text-white"
-              )}
-            >
-              <Bird className="h-4 w-4" />
-            </div>
-            <span
-              className={cn(
-                "text-[10px] leading-none mt-1 tracking-tight",
-                isFlocksActive ? "font-bold text-accent" : "font-medium text-white/80"
-              )}
-            >
-              Élevage
-            </span>
-            {isFlocksActive && (
-              <span className="h-1 w-1 rounded-full bg-accent mt-0.5 animate-in zoom-in-50" />
-            )}
-          </Link>
-
-          {/* 3. Bouton Central Joyau (+) avec micro-rotation */}
-          <div className="relative flex flex-1 items-center justify-center">
-            <button
-              type="button"
-              onClick={() => setSheetOpen(!sheetOpen)}
-              aria-label="Enregistrer une opération"
-              className="relative -mt-6 flex flex-col items-center justify-center group active:scale-90 transition-transform cursor-pointer focus:outline-none"
-            >
-              <div
-                className={cn(
-                  "flex h-13 w-13 items-center justify-center rounded-full text-white border-[3.5px] border-[#1d4d38] ring-2 ring-white/20 transition-all duration-300 shadow-lg",
-                  sheetOpen
-                    ? "rotate-45 bg-danger"
-                    : "bg-accent group-hover:scale-105 group-hover:bg-accent-hover"
-                )}
-              >
-                <Plus className="h-6 w-6 stroke-[2.5]" />
-              </div>
-              <span className="text-[9px] font-extrabold text-white mt-0.5 uppercase tracking-wider">
-                Action
-              </span>
-            </button>
-          </div>
-
-          {/* 4. Production */}
-          <Link
-            href="/eggs"
-            className={cn(
-              "group relative flex flex-1 flex-col items-center justify-center py-1.5 transition-all duration-200 active:scale-90",
-              isEggsActive ? "text-white" : "text-white/70 hover:text-white"
-            )}
-          >
-            <div
-              className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-2xl transition-all duration-200",
-                isEggsActive
-                  ? "bg-white/20 text-accent scale-110"
-                  : "bg-transparent text-white/75 group-hover:bg-white/10 group-hover:text-white"
-              )}
-            >
-              <Egg className="h-4 w-4" />
-            </div>
-            <span
-              className={cn(
-                "text-[10px] leading-none mt-1 tracking-tight",
-                isEggsActive ? "font-bold text-accent" : "font-medium text-white/80"
-              )}
-            >
-              Production
-            </span>
-            {isEggsActive && (
-              <span className="h-1 w-1 rounded-full bg-accent mt-0.5 animate-in zoom-in-50" />
-            )}
-          </Link>
-
-          {/* 5. Gestion */}
-          <Link
-            href="/management"
-            className={cn(
-              "group relative flex flex-1 flex-col items-center justify-center py-1.5 transition-all duration-200 active:scale-90",
-              isManagementActive ? "text-white" : "text-white/70 hover:text-white"
-            )}
-          >
-            <div
-              className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-2xl transition-all duration-200",
-                isManagementActive
-                  ? "bg-white/20 text-accent scale-110"
-                  : "bg-transparent text-white/75 group-hover:bg-white/10 group-hover:text-white"
-              )}
-            >
-              <Briefcase className="h-4 w-4" />
-            </div>
-            <span
-              className={cn(
-                "text-[10px] leading-none mt-1 tracking-tight",
-                isManagementActive ? "font-bold text-accent" : "font-medium text-white/80"
-              )}
-            >
-              Gestion
-            </span>
-            {isManagementActive && (
-              <span className="h-1 w-1 rounded-full bg-accent mt-0.5 animate-in zoom-in-50" />
-            )}
-          </Link>
+        <div className="pointer-events-auto flex h-16 items-center justify-between px-1 rounded-card bg-[#f8f7f3] border border-[#e6e4dd] text-[#242820] shadow-card">
+          <MobileNavItem href="/" label="Accueil" icon={LayoutDashboard} active={isHomeActive} />
+          {(canViewFlocks || canViewBuildings) && (
+            <MobileNavItem href={canViewFlocks ? "/flocks" : "/buildings"} label="Élevage" icon={Bird} active={isFlocksActive} />
+          )}
+          {canViewProduction && (
+            <MobileNavItem href="/eggs" label="Production" icon={Egg} active={isEggsActive} />
+          )}
+          {canViewHealth && (
+            <MobileNavItem href="/health" label="Santé" icon={HeartPulse} active={isHealthActive} />
+          )}
+          {canViewManagement && (
+            <MobileNavItem href="/management" label="Gestion" icon={Briefcase} active={isManagementActive} />
+          )}
         </div>
       </nav>
+
+      {/* Action quotidienne gardée à portée de pouce, hors des destinations. */}
+      <button
+        type="button"
+        onClick={() => setSheetOpen(!sheetOpen)}
+        aria-label={sheetOpen ? "Fermer les actions" : "Enregistrer une opération"}
+        aria-expanded={sheetOpen}
+        className={cn(
+          "fixed right-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom,0px))] z-40 flex h-12 w-12 items-center justify-center rounded-full text-white border-2 border-surface ring-1 ring-border shadow-card transition-colors lg:hidden",
+          sheetOpen ? "rotate-45 bg-danger" : "bg-accent hover:bg-accent-hover",
+        )}
+      >
+        <Plus className="h-6 w-6 stroke-[2.5]" />
+      </button>
 
       {/* ─── ACTION SHEET MOBILE NATIVE TACTILE ─── */}
       {sheetOpen && (
@@ -288,7 +190,7 @@ export function BottomNav({ onOpenMenu }: BottomNavProps) {
                       <Egg className="h-5 w-5" />
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-foreground">Ponte d'œufs</div>
+                      <div className="text-xs font-bold text-foreground">Ponte d&apos;œufs</div>
                       <div className="text-[10px] text-muted">Ramassage du lot</div>
                     </div>
                   </button>
@@ -384,5 +286,47 @@ export function BottomNav({ onOpenMenu }: BottomNavProps) {
         </div>
       )}
     </>
+  );
+}
+
+function MobileNavItem({
+  href,
+  label,
+  icon: Icon,
+  active,
+}: {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  active: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "group relative flex min-w-0 flex-1 flex-col items-center justify-center py-1.5 transition-colors",
+        active ? "text-[#242820]" : "text-[#777970] hover:text-[#242820]",
+      )}
+    >
+      <span
+        className={cn(
+          "flex h-8 w-8 items-center justify-center rounded-control transition-colors",
+          active
+            ? "bg-transparent text-[#242820]"
+            : "bg-transparent text-[#777970] group-hover:text-[#242820]",
+        )}
+      >
+        <Icon className="h-5 w-5" aria-hidden="true" />
+      </span>
+      <span
+        className={cn(
+          "max-w-full truncate text-caption leading-none mt-1",
+          active ? "font-semibold text-[#242820]" : "font-medium text-[#777970]",
+        )}
+      >
+        {label}
+      </span>
+    </Link>
   );
 }

@@ -170,6 +170,17 @@ class FarmMembership
         return $this->assignedBuildings->contains($building);
     }
 
+    public function isBuildingAssignedId(string $buildingId): bool
+    {
+        foreach ($this->assignedBuildings as $building) {
+            if ($building->getId()?->toBase32() === $buildingId) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function hasBuildingRestrictions(): bool
     {
         if ($this->role === FarmRole::OWNER || $this->role === FarmRole::ADMIN || $this->role === FarmRole::MANAGER) {

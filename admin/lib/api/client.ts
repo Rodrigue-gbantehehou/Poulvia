@@ -19,9 +19,9 @@ if (
 
 export class ApiError extends Error {
   status: number;
-  data: any;
+  data: unknown;
 
-  constructor(message: string, status: number, data?: any) {
+  constructor(message: string, status: number, data?: unknown) {
     super(message);
     this.name = "ApiError";
     this.status = status;
@@ -32,7 +32,7 @@ export class ApiError extends Error {
 /**
  * Wrapper fetch universel avec injection du jeton JWT Super-Admin et gestion des erreurs
  */
-export async function apiRequest<T = any>(
+export async function apiRequest<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
@@ -64,7 +64,7 @@ export async function apiRequest<T = any>(
     return {} as T;
   }
 
-  let body: any;
+  let body: unknown;
   try {
     body = await response.json();
   } catch {
@@ -79,9 +79,13 @@ export async function apiRequest<T = any>(
         window.location.href = "/login";
       }
     }
+    const errorBody =
+      typeof body === "object" && body !== null
+        ? (body as Record<string, unknown>)
+        : null;
     const errorMsg =
-      body?.message ||
-      body?.error ||
+      (typeof errorBody?.message === "string" && errorBody.message) ||
+      (typeof errorBody?.error === "string" && errorBody.error) ||
       `Erreur serveur (${response.status} ${response.statusText})`;
     throw new ApiError(errorMsg, response.status, body);
   }

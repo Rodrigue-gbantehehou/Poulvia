@@ -20,7 +20,6 @@ export default function RolesMatrixPage() {
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [selectedRole, setSelectedRole] = useState<FarmRole | null>(null);
   const [editedPermissions, setEditedPermissions] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -35,13 +34,10 @@ export default function RolesMatrixPage() {
   useEffect(() => {
     if (activeFarm?.id && hasModule("custom_roles")) {
       loadData();
-    } else {
-      setIsLoading(false);
     }
   }, [activeFarm?.id]);
 
   async function loadData() {
-    setIsLoading(true);
     try {
       const [permsData, rolesData] = await Promise.all([
         api.roles.getPermissionsCatalog(),
@@ -56,7 +52,6 @@ export default function RolesMatrixPage() {
     } catch (err) {
       console.error(err);
     } finally {
-      setIsLoading(false);
     }
   }
 
@@ -87,8 +82,8 @@ export default function RolesMatrixPage() {
       toast.success("Permissions du rôle mises à jour avec succès !");
       setSelectedRole(updated);
       setRoles((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
-    } catch (err: any) {
-      toast.error(err?.message || "Erreur lors de la mise à jour du rôle");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Erreur lors de la mise à jour du rôle");
     } finally {
       setIsSaving(false);
     }
@@ -113,8 +108,8 @@ export default function RolesMatrixPage() {
       await loadData();
       setSelectedRole(created);
       setEditedPermissions(created.permissions || []);
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors de la création du rôle personnalisé";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de la création du rôle personnalisé";
       setCreateError(msg);
       toast.error(msg);
     } finally {

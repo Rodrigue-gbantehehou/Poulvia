@@ -20,7 +20,7 @@ function downloadCsv(content: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-function escapeCsvField(val: any): string {
+function escapeCsvField(val: unknown): string {
   if (val === null || val === undefined) return "";
   const str = String(val).replace(/"/g, '""');
   if (str.includes(";") || str.includes("\n") || str.includes('"')) {

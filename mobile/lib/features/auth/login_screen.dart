@@ -5,6 +5,7 @@ import '../../core/theme/app_theme.dart';
 import '../navigation/bottom_nav_scaffold.dart';
 import 'auth_provider.dart';
 import 'farm_onboarding_screen.dart';
+import 'password_reset_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -291,6 +292,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             }
                             return null;
                           },
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => PasswordResetScreen(
+                                    initialEmail: _emailController.text.trim(),
+                                  ),
+                                ),
+                              );
+                            },
+                            child: const Text('Mot de passe oublié ?'),
+                          ),
                         ),
                         const SizedBox(height: 20),
 

@@ -5,9 +5,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_provider.dart';
 import '../auth/auth_provider.dart';
 import '../auth/login_screen.dart';
-import '../health/health_screen.dart';
 import '../buildings/buildings_screen.dart';
-import '../reports/reports_screen.dart';
 import '../sync/sync_provider.dart';
 import '../sync/sync_screen.dart';
 import '../subscriptions/subscription_screen.dart';
@@ -15,9 +13,8 @@ import '../settings/farm_settings_screen.dart';
 
 class AppDrawer extends ConsumerWidget {
   final Function(String moduleKey)? onSelectModule;
-  final Function(int tabIndex)? onSelectTab;
 
-  const AppDrawer({super.key, this.onSelectModule, this.onSelectTab});
+  const AppDrawer({super.key, this.onSelectModule});
 
   void _navigateTo(BuildContext context, String key, Widget screen) {
     HapticFeedback.lightImpact();
@@ -29,21 +26,12 @@ class AppDrawer extends ConsumerWidget {
     }
   }
 
-  void _selectTab(BuildContext context, int index, String key) {
-    HapticFeedback.lightImpact();
-    Navigator.of(context).pop();
-    if (onSelectModule != null) {
-      onSelectModule!(key);
-    } else {
-      onSelectTab?.call(index);
-    }
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final farm = authState.activeFarm;
+    final pendingCount = ref.watch(syncProvider).pendingCount;
 
     return Drawer(
       backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
@@ -118,84 +106,34 @@ class AppDrawer extends ConsumerWidget {
               ),
             ),
 
-            // Liste de navigation organisée en 5 espaces cibles + outils secondaires
+            // Les espaces principaux restent dans la barre du bas.
+            // Le tiroir ne contient que les destinations complémentaires.
             Expanded(
               child: ListView(
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 children: [
-                  // --- 5 ESPACES PRINCIPAUX ---
-                  _SectionHeader(label: "ESPACES PRINCIPAUX", isDark: isDark),
+                  _SectionHeader(label: "ÉLEVAGE", isDark: isDark),
 
-                  // 1. Accueil / Tableau de bord
-                  _DrawerItem(
-                    icon: Icons.dashboard_rounded,
-                    label: "Tableau de bord",
-                    onTap: () => _selectTab(context, 0, 'dashboard'),
-                  ),
-
-                  // 2. Élevage & Bandes
-                  if (farm == null || farm.canViewFlocks)
-                    _DrawerItem(
-                      icon: Icons.grid_view_rounded,
-                      label: "Élevage & Bandes",
-                      onTap: () => _selectTab(context, 1, 'flocks'),
-                    ),
-
-                  // 3. Production d'œufs (non affiché si élevage exclusivement chair)
-                  if (farm?.canViewEggs == true)
-                    _DrawerItem(
-                      icon: Icons.egg_rounded,
-                      label: "Production d'œufs",
-                      onTap: () => _selectTab(context, 2, 'eggs'),
-                    ),
-
-                  // 4. Santé & Traitements (Navigation secondaire pérenne)
-                  if (farm == null || farm.canViewHealth)
-                    _DrawerItem(
-                      icon: Icons.medical_services_rounded,
-                      label: "Santé & Traitements",
-                      onTap: () => _navigateTo(context, 'health', const HealthScreen()),
-                    ),
-
-                  // 5. Espace Gestion (Hub Caisse, Stocks, Contacts, Équipe)
-                  _DrawerItem(
-                    icon: Icons.business_center_rounded,
-                    label: "Espace Gestion",
-                    onTap: () => _selectTab(context, 3, 'management'),
-                  ),
-
-                  const SizedBox(height: 12),
-                  const Divider(height: 1),
-                  const SizedBox(height: 8),
-
-                  // --- OUTILS & CONFIGURATION SECONDAIRE ---
-                  _SectionHeader(label: "OUTILS & CONFIGURATION", isDark: isDark),
-
-                  // Bâtiments & Poulaillers
+                  // Les bandes sont accessibles depuis l'onglet Élevage.
                   if (farm?.canManageBuildings == true)
                     _DrawerItem(
                       icon: Icons.home_work_rounded,
-                      label: "Bâtiments & Poulaillers",
+                      label: "Bâtiments",
                       onTap: () => _navigateTo(context, 'buildings', const BuildingsScreen()),
                     ),
 
-                  // Rapports & Synthèses (WhatsApp/PDF)
-                  if (farm == null || farm.canViewReports)
-                    _DrawerItem(
-                      icon: Icons.bar_chart_rounded,
-                      label: "Rapports & Synthèses",
-                      onTap: () => _navigateTo(context, 'reports', const ReportsScreen()),
-                    ),
+                  const SizedBox(height: 8),
+                  _SectionHeader(label: "OUTILS ET PARAMÈTRES", isDark: isDark),
 
                   // Synchronisation hors-ligne
                   _DrawerItem(
                     icon: Icons.sync_rounded,
                     label: "Synchronisation",
-                    badge: ref.watch(syncProvider).pendingCount > 0
-                        ? "${ref.watch(syncProvider).pendingCount} en attente"
+                    badge: pendingCount > 0
+                        ? "$pendingCount en attente"
                         : null,
-                    badgeIsAlert: ref.watch(syncProvider).pendingCount > 0,
+                    badgeIsAlert: pendingCount > 0,
                     onTap: () => _navigateTo(context, 'sync', const SyncScreen()),
                   ),
 

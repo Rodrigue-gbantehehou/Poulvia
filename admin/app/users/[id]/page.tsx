@@ -34,6 +34,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatDate } from "@/lib/utils";
 import { useAdminAuth } from "@/context/admin-auth-context";
+import type { AdminRoleItem } from "@/lib/types";
 
 export default function UserDetailPage() {
   const { hasPermission } = useAdminAuth();
@@ -44,7 +45,7 @@ export default function UserDetailPage() {
   const userId = params?.id;
 
   const [user, setUser] = useState<UserItem | null>(null);
-  const [availableRoles, setAvailableRoles] = useState<any[]>([]);
+  const [availableRoles, setAvailableRoles] = useState<AdminRoleItem[]>([]);
   const [selectedRoleId, setSelectedRoleId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdatingActive, setIsUpdatingActive] = useState(false);
@@ -75,7 +76,8 @@ export default function UserDetailPage() {
   };
 
   useEffect(() => {
-    fetchUserAndRoles();
+    const task = window.setTimeout(() => void fetchUserAndRoles(), 0);
+    return () => window.clearTimeout(task);
   }, [userId]);
 
   const handleAssignRole = async () => {
@@ -317,9 +319,9 @@ export default function UserDetailPage() {
             <div className="flex items-center gap-2">
               <ShieldAlert className="h-5 w-5 text-primary" />
               <div>
-                <CardTitle>Rôle d'administration</CardTitle>
+                <CardTitle>Rôle d&apos;administration</CardTitle>
                 <CardDescription>
-                  Droits d'accès sur l'espace d'administration.
+                  Droits d&apos;accès sur l&apos;espace d&apos;administration.
                 </CardDescription>
               </div>
             </div>
@@ -361,7 +363,7 @@ export default function UserDetailPage() {
                     className="h-9 px-3 rounded-lg border border-border bg-surface-muted/30 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer flex-1"
                   >
                     <option value="">Aucun (Utilisateur simple)</option>
-                    {availableRoles.map((r: any) => (
+                    {availableRoles.map((r) => (
                       <option key={r.id} value={r.id}>
                         {r.name}
                       </option>

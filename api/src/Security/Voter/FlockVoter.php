@@ -10,6 +10,7 @@ use App\Entity\Flock;
 use App\Entity\User;
 use App\Repository\FarmMembershipRepository;
 use App\Security\ApiKeySecurityChecker;
+use App\Security\FarmPermissionChecker;
 use App\Security\Permission;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
@@ -27,6 +28,7 @@ class FlockVoter extends Voter
     public function __construct(
         private readonly FarmMembershipRepository $membershipRepository,
         private readonly ApiKeySecurityChecker $apiKeyChecker,
+        private readonly FarmPermissionChecker $permissionChecker,
     ) {
     }
 
@@ -56,16 +58,20 @@ class FlockVoter extends Voter
             return false;
         }
 
+        $requiredPermission = match ($attribute) {
+            self::VIEW => Permission::FLOCK_VIEW,
+            self::CREATE => Permission::FLOCK_CREATE,
+            self::EDIT => Permission::FLOCK_EDIT,
+            self::MOVE => Permission::FLOCK_MOVEMENT,
+            default => 'none',
+        };
+
+        if (!$this->permissionChecker->moduleAllows($farm, $requiredPermission)) {
+            return false;
+        }
+
         $apiKey = $this->apiKeyChecker->getApiKey();
         if ($apiKey !== null) {
-            $requiredPermission = match ($attribute) {
-                self::VIEW => Permission::FLOCK_VIEW,
-                self::CREATE => Permission::FLOCK_CREATE,
-                self::EDIT => Permission::FLOCK_EDIT,
-                self::MOVE => Permission::FLOCK_MOVEMENT,
-                default => 'none',
-            };
-
             if (!$this->apiKeyChecker->isAccessAllowed($farm, $requiredPermission)) {
                 return false;
             }
@@ -91,10 +97,10 @@ class FlockVoter extends Voter
         }
 
         return match ($attribute) {
-            self::VIEW => $membership->hasPermission(Permission::FLOCK_VIEW),
-            self::CREATE => $membership->hasPermission(Permission::FLOCK_CREATE),
-            self::EDIT => $membership->hasPermission(Permission::FLOCK_EDIT) || $membership->hasPermission(Permission::FLOCK_CREATE),
-            self::MOVE => $membership->hasPermission(Permission::FLOCK_MOVEMENT),
+            self::VIEW => $this->permissionChecker->allows($membership, Permission::FLOCK_VIEW, false),
+            self::CREATE => $this->permissionChecker->allows($membership, Permission::FLOCK_CREATE),
+            self::EDIT => $this->permissionChecker->allows($membership, Permission::FLOCK_EDIT) || $this->permissionChecker->allows($membership, Permission::FLOCK_CREATE),
+            self::MOVE => $this->permissionChecker->allows($membership, Permission::FLOCK_MOVEMENT),
             default => false,
         };
     }

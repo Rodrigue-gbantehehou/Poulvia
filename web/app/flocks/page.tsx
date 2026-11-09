@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { Plus, Bird, Calendar, Warehouse, ArrowRight, Eye, AlertCircle, Utensils } from "lucide-react";
 import { Shell } from "@/components/layout/shell";
@@ -12,21 +12,41 @@ import { RecordFeedingModal } from "@/components/dashboard";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
 import { api } from "@/lib/api-client";
-import { Flock, FlockType, InventoryItem } from "@/lib/types";
+import { Building, Flock, FlockType, InventoryItem } from "@/lib/types";
 import { formatNumber, formatDate } from "@/lib/utils";
 import { CreateBuildingModal } from "@/components/farms/create-building-modal";
 import { PageHeader } from "@/components/ui/page-header";
+import { ModuleLockedState } from "@/components/ui/module-locked-state";
+
+function getInitialFlockType(productionType?: string): FlockType {
+  return productionType === "BROILER" ? "BROILER" : "LAYER";
+}
+
+function getDefaultBreed(type: FlockType): string {
+  if (type === "BROILER") return "Cobb 500";
+  if (type === "MIXED") return "Goliath / Locale";
+  return "Lohmann Brown";
+}
 
 export default function FlocksPage() {
   const { activeFarm, hasPermission, hasModule, isOwner } = useAuth();
   const { toast } = useToast();
 
-  const canFeed = (hasModule("inventory") || hasModule("feed_rationing")) && (hasPermission("inventory:movement") || hasPermission("flock:update") || isOwner);
+  const canViewFlocks = hasModule("flocks") &&
+    (hasPermission("flock:read") || hasPermission("flock:view") || isOwner);
+  const canViewBuildings = hasModule("buildings") &&
+    (hasPermission("building:manage") || hasPermission("farm:view") || isOwner);
+  const canViewInventory = hasModule("inventory") &&
+    (hasPermission("inventory:read") || hasPermission("inventory:view") || isOwner);
+
+  const canFeed = (hasModule("inventory") || hasModule("feed_rationing")) &&
+    (hasPermission("inventory:movement") || hasPermission("flock:update") || isOwner);
 
   const [flocks, setFlocks] = useState<Flock[]>([]);
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "ENDED">("ACTIVE");
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const filteredFlocks = useMemo(() => {
     return flocks.filter((f) => {
@@ -37,7 +57,7 @@ export default function FlocksPage() {
   }, [flocks, statusFilter]);
 
   // Buildings
-  const [buildings, setBuildings] = useState<any[]>([]);
+  const [buildings, setBuildings] = useState<Building[]>([]);
   const [selectedBuildingId, setSelectedBuildingId] = useState<string>("");
   const [buildingModalOpen, setBuildingModalOpen] = useState(false);
 
@@ -45,32 +65,27 @@ export default function FlocksPage() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [flockName, setFlockName] = useState("");
-  const [flockType, setFlockType] = useState<FlockType>("LAYER");
-  const [breed, setBreed] = useState("Lohmann Brown");
+  const [flockOverrides, setFlockOverrides] = useState<{
+    farmId: string | null;
+    type?: FlockType;
+    breed?: string;
+  }>({ farmId: activeFarm?.id ?? null });
+  const currentOverrides =
+    flockOverrides.farmId === (activeFarm?.id ?? null)
+      ? flockOverrides
+      : { farmId: activeFarm?.id ?? null };
+  const flockType = currentOverrides.type ?? getInitialFlockType(activeFarm?.productionType);
+  const breed = currentOverrides.breed ?? getDefaultBreed(flockType);
   const [initialQuantity, setInitialQuantity] = useState<number | string>(500);
-  const [startDate, setStartDate] = useState("");
+  const [startDate, setStartDate] = useState(() => new Date().toISOString().split("T")[0]);
 
-  const getInitialFlockType = useCallback((productionType?: string): FlockType => {
-    if (productionType === "BROILER") return "BROILER";
-    return "LAYER";
-  }, []);
+  function selectFlockType(type: FlockType) {
+    setFlockOverrides({ farmId: activeFarm?.id ?? null, type, breed: getDefaultBreed(type) });
+  }
 
-  const getDefaultBreed = useCallback((type: FlockType): string => {
-    if (type === "BROILER") return "Cobb 500";
-    if (type === "MIXED") return "Goliath / Locale";
-    return "Lohmann Brown";
-  }, []);
-
-  useEffect(() => {
-    setStartDate(new Date().toISOString().split("T")[0]);
-  }, []);
-
-  // Automatically adapt flock type and breed based on the active farm's production type
-  useEffect(() => {
-    const defaultType = getInitialFlockType(activeFarm?.productionType);
-    setFlockType(defaultType);
-    setBreed(getDefaultBreed(defaultType));
-  }, [activeFarm?.productionType, getInitialFlockType, getDefaultBreed]);
+  function selectBreed(value: string) {
+    setFlockOverrides({ ...currentOverrides, breed: value });
+  }
 
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -89,24 +104,28 @@ export default function FlocksPage() {
   const [feedingModalOpen, setFeedingModalOpen] = useState(false);
 
   useEffect(() => {
-    if (activeFarm?.id) {
+    if (activeFarm?.id && canViewFlocks) {
       loadFlocks();
     }
-  }, [activeFarm?.id]);
+  }, [activeFarm?.id, canViewFlocks]);
 
   async function loadFlocks() {
+    if (!activeFarm?.id || !canViewFlocks) return;
     setIsLoading(true);
+    setLoadError(null);
     try {
-      const [flocksData, buildingsData, invData] = await Promise.all([
-        api.flocks.list({ farmId: activeFarm?.id }),
-        activeFarm?.id ? api.farms.listBuildings(activeFarm.id).catch(() => []) : Promise.resolve([]),
-        activeFarm?.id ? api.inventory.listItems({ farmId: activeFarm.id }).catch(() => []) : Promise.resolve([]),
+      const flocksData = await api.flocks.list({ farmId: activeFarm.id });
+      const [buildingsResult, inventoryResult] = await Promise.allSettled([
+        canViewBuildings ? api.farms.listBuildings(activeFarm.id) : Promise.resolve([]),
+        canViewInventory ? api.inventory.listItems({ farmId: activeFarm.id }) : Promise.resolve([]),
       ]);
+
       setFlocks(flocksData);
-      setBuildings(buildingsData || []);
-      setInventoryItems(invData || []);
+      setBuildings(buildingsResult.status === "fulfilled" ? buildingsResult.value : []);
+      setInventoryItems(inventoryResult.status === "fulfilled" ? inventoryResult.value : []);
     } catch (err) {
-      console.error(err);
+      console.error("Erreur chargement des bandes:", err);
+      setLoadError("Impossible de charger les bandes pour le moment.");
     } finally {
       setIsLoading(false);
     }
@@ -143,8 +162,8 @@ export default function FlocksPage() {
       setSelectedBuildingId("");
       toast.success("Bande créée avec succès !");
       await loadFlocks();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors de la création de la bande";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de la création de la bande";
       setCreateError(msg);
       toast.error(msg);
     } finally {
@@ -173,8 +192,8 @@ export default function FlocksPage() {
           : "Mouvement enregistré avec succès."
       );
       await loadFlocks();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors de l'enregistrement du mouvement";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de l'enregistrement du mouvement";
       setMoveError(msg);
       toast.error(msg);
     } finally {
@@ -307,6 +326,31 @@ export default function FlocksPage() {
     },
   ];
 
+  if (!hasModule("flocks")) {
+    return (
+      <Shell>
+        <ModuleLockedState
+          moduleName="Bandes d'élevage"
+          description="Le suivi des bandes n'est pas activé pour votre exploitation."
+        />
+      </Shell>
+    );
+  }
+
+  if (!canViewFlocks) {
+    return (
+      <Shell>
+        <div className="mx-auto max-w-lg py-16 text-center" role="alert">
+          <h1 className="text-xl font-semibold text-foreground">Accès non autorisé</h1>
+          <p className="mt-2 text-sm text-muted">Votre rôle ne permet pas de consulter les bandes de cette exploitation.</p>
+          <Link href="/" className="mt-5 inline-flex min-h-10 items-center justify-center rounded-control border border-border px-4 text-sm font-medium text-foreground hover:bg-surface-hover">
+            Retour à l’accueil
+          </Link>
+        </div>
+      </Shell>
+    );
+  }
+
   return (
     <Shell>
       {/* En-tête mobile natif */}
@@ -343,7 +387,19 @@ export default function FlocksPage() {
 
       {/* Main Table */}
       <div className="mt-2 sm:mt-3">
-        <DataTable<Flock>
+        {loadError ? (
+          <div className="flex flex-col items-start gap-3 rounded-xl border border-danger/30 bg-danger/5 p-4 sm:flex-row sm:items-center sm:justify-between" role="alert">
+            <p className="text-sm text-danger">{loadError}</p>
+            <button
+              type="button"
+              onClick={loadFlocks}
+              disabled={isLoading}
+              className="inline-flex min-h-10 items-center justify-center rounded-control border border-border bg-surface px-4 text-sm font-semibold text-foreground hover:bg-surface-hover disabled:opacity-60"
+            >
+              {isLoading ? "Chargement…" : "Réessayer"}
+            </button>
+          </div>
+        ) : <DataTable<Flock>
           title="Lots en élevage"
           data={filteredFlocks}
           columns={flockColumns}
@@ -365,7 +421,11 @@ export default function FlocksPage() {
                   <button
                     key={tab.value}
                     type="button"
-                    onClick={() => setStatusFilter(tab.value as any)}
+                    onClick={() => {
+                      if (tab.value === "ACTIVE" || tab.value === "ALL" || tab.value === "ENDED") {
+                        setStatusFilter(tab.value);
+                      }
+                    }}
                     className={`rounded-full px-3 py-1.5 text-xs font-semibold shrink-0 transition-all active:scale-95 cursor-pointer ${
                       isActive
                         ? "bg-primary text-white shadow-xs"
@@ -562,7 +622,7 @@ export default function FlocksPage() {
             actionLabel: hasPermission("flock:create") ? "Nouveau lot" : undefined,
             onAction: () => setCreateModalOpen(true),
           }}
-        />
+        />}
       </div>
 
       {/* CREATE FLOCK MODAL */}
@@ -644,7 +704,7 @@ export default function FlocksPage() {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-xs font-semibold text-foreground">
-                  Type d'élevage
+                  Type d&apos;élevage
                 </label>
                 {activeFarm?.productionType && (
                   <span className="text-[10px] font-semibold text-primary">
@@ -656,8 +716,7 @@ export default function FlocksPage() {
                 value={flockType}
                 onChange={(e) => {
                   const newType = e.target.value as FlockType;
-                  setFlockType(newType);
-                  setBreed(getDefaultBreed(newType));
+                  selectFlockType(newType);
                 }}
                 className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-xs font-semibold text-foreground focus:border-primary focus:outline-hidden"
               >
@@ -675,7 +734,7 @@ export default function FlocksPage() {
                 type="text"
                 required
                 value={breed}
-                onChange={(e) => setBreed(e.target.value)}
+                onChange={(e) => selectBreed(e.target.value)}
                 placeholder="ex. Goliath, Lohmann, Cobb 500"
                 className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-xs text-foreground focus:border-primary focus:outline-hidden"
               />
@@ -703,7 +762,7 @@ export default function FlocksPage() {
 
             <div>
               <label className="block text-xs font-semibold text-foreground mb-1">
-                Date d'arrivée *
+                Date d&apos;arrivée *
               </label>
               <input
                 type="date"
@@ -860,6 +919,7 @@ export default function FlocksPage() {
 
       {/* QUICK CREATE BUILDING MODAL */}
       <CreateBuildingModal
+        key={`${buildingModalOpen}-${buildings.length}`}
         isOpen={buildingModalOpen}
         onClose={() => setBuildingModalOpen(false)}
         defaultCapacity={Number(initialQuantity) || 1000}
@@ -871,6 +931,7 @@ export default function FlocksPage() {
       />
       {/* FEEDING MODAL */}
       <RecordFeedingModal
+        key={`${feedingModalOpen}-${activeFlock?.id ?? "none"}`}
         isOpen={feedingModalOpen}
         onClose={() => setFeedingModalOpen(false)}
         onSuccess={loadFlocks}

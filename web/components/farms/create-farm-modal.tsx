@@ -4,12 +4,13 @@ import React, { useState } from "react";
 import { Plus } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { api } from "@/lib/api-client";
+import { Farm } from "@/lib/types";
 import { useAuth } from "@/context/auth-context";
 
 interface CreateFarmModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: (createdFarm: any) => void;
+  onSuccess?: (createdFarm: Farm) => void;
 }
 
 export function CreateFarmModal({
@@ -52,8 +53,8 @@ export function CreateFarmModal({
 
       onSuccess?.(created);
       onClose();
-    } catch (err: any) {
-      setError(err?.message || "Erreur lors de la création de l'exploitation.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erreur lors de la création de l'exploitation.");
     } finally {
       setSubmitting(false);
     }
@@ -102,7 +103,12 @@ export function CreateFarmModal({
             </label>
             <select
               value={productionType}
-              onChange={(e) => setProductionType(e.target.value as any)}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "LAYER" || value === "BROILER" || value === "MIXED") {
+                  setProductionType(value);
+                }
+              }}
               className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-xs text-foreground focus:border-primary focus:outline-hidden"
             >
               <option value="LAYER">Pondeuses</option>

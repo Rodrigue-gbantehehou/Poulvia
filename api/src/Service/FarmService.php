@@ -20,6 +20,7 @@ use App\Repository\OrganizationRepository;
 use App\Service\Admin\CommercialPlanService;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\Uid\Ulid;
@@ -31,6 +32,7 @@ class FarmService
         private readonly BuildingRepository $buildingRepository,
         private readonly OrganizationRepository $organizationRepository,
         private readonly CommercialPlanService $commercialPlanService,
+        private readonly SubscriptionTrialService $subscriptionTrialService,
         private readonly EntityManagerInterface $entityManager,
         private readonly SluggerInterface $slugger,
     ) {
@@ -67,6 +69,13 @@ class FarmService
                 $this->entityManager->refresh($user, LockMode::PESSIMISTIC_WRITE);
             }
 
+            foreach ($user->getFarmMemberships() as $membership) {
+                $existingOrganization = $membership->getFarm()->getOrganization();
+                if ($existingOrganization !== null && $this->subscriptionTrialService->isExpired($existingOrganization)) {
+                    throw new AccessDeniedHttpException('La période d’essai est terminée. Activez un abonnement pour créer une exploitation.');
+                }
+            }
+
             $this->commercialPlanService->assertCanCreateFarm($user);
 
             // 1. Déterminer l'organisation de rattachement du propriétaire
@@ -91,6 +100,7 @@ class FarmService
                     $uniqueSlug = sprintf('%s-%d', $baseSlug, $counter++);
                 }
                 $organization = new Organization($dto->name, $uniqueSlug);
+                $this->subscriptionTrialService->startFor($organization);
                 $this->entityManager->persist($organization);
             }
 

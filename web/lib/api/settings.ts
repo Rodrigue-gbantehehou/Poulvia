@@ -2,13 +2,18 @@ import { apiRequest } from "./client";
 import { farmsApi } from "./farms";
 import { DeveloperApiKey, FarmMember, FarmRole, Permission } from "../types";
 
+interface PermissionCatalogResponse {
+  permissions?: Permission[] | Record<string, { module?: string; label?: string; description?: string }>;
+  total?: number;
+}
+
 export const rolesApi = {
   getPermissionsCatalog: async () => {
-    const res = await apiRequest<any>("/permissions");
+    const res = await apiRequest<PermissionCatalogResponse>("/permissions");
     const raw = res?.permissions || {};
     const list: Permission[] = Array.isArray(raw)
       ? raw
-      : Object.entries(raw).map(([key, val]: [string, any]) => ({
+      : Object.entries(raw).map(([key, val]) => ({
           key,
           category: val?.module || "Général",
           label: val?.label || key,
@@ -22,7 +27,7 @@ export const rolesApi = {
 
   listRoles: async (farmId?: string) => {
     if (!farmId) return [];
-    const list = await apiRequest<any[]>(`/farms/${farmId}/roles`);
+    const list = await apiRequest<FarmRole[]>(`/farms/${farmId}/roles`);
     return Array.isArray(list) ? list : [];
   },
 
@@ -55,7 +60,7 @@ export const developerApi = {
       farmId = farmList[0]?.id;
     }
     if (!farmId) return [];
-    const res = await apiRequest<any>(`/farms/${farmId}/api-keys`);
+    const res = await apiRequest<DeveloperApiKey[]>(`/farms/${farmId}/api-keys`);
     return Array.isArray(res) ? res : [];
   },
 
@@ -76,7 +81,7 @@ export const developerApi = {
 export const membersApi = {
   list: async (farmId?: string): Promise<FarmMember[]> => {
     if (!farmId) return [];
-    const res = await apiRequest<any>(`/farms/${farmId}/members`);
+    const res = await apiRequest<FarmMember[]>(`/farms/${farmId}/members`);
     return Array.isArray(res) ? res : [];
   },
 
@@ -110,6 +115,12 @@ export const membersApi = {
     return apiRequest<FarmMember>(`/farms/${farmId}/members/${membershipId}`, {
       method: "PUT",
       body: JSON.stringify(data),
+    });
+  },
+
+  resendInvitation: async (farmId: string, membershipId: string): Promise<{ message: string }> => {
+    return apiRequest<{ message: string }>(`/farms/${farmId}/members/${membershipId}/resend-invitation`, {
+      method: "POST",
     });
   },
 

@@ -64,6 +64,20 @@ const ALL_MODULES: ModuleItem[] = [
   { key: "priority_support", category: "Assistance & Services", name: "Support Prioritaire WhatsApp", desc: "Assistance zootechnique dédiée et hotline prioritaire" },
 ];
 
+// Fonctions proposées uniquement après activation spécifique, non détaillées dans l'interface client standard.
+const ADVANCED_MODULE_KEYS = new Set([
+  "health_alerts",
+  "prophylaxis_program",
+  "inventory_valuation",
+  "feed_rationing",
+  "finance_margin",
+  "credit_debt",
+  "reports_accounting",
+  "performance_benchmark",
+  "dashboard_advanced",
+  "api_iot",
+]);
+
 export function PlanDetailsModal({
   isOpen,
   onClose,
@@ -117,7 +131,7 @@ export function PlanDetailsModal({
         {quotas && (
           <div className="space-y-2">
             <div className="text-xs font-bold uppercase tracking-wider text-muted">
-              Limites d'utilisation
+              Limites d&apos;utilisation
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <div className="rounded-xl border border-border bg-surface-muted p-2.5 text-center">
@@ -154,7 +168,7 @@ export function PlanDetailsModal({
             Modules de la plateforme
           </div>
           <div className="divide-y divide-border rounded-2xl border border-border bg-surface-muted/50 overflow-hidden max-h-[320px] overflow-y-auto pr-1">
-            {ALL_MODULES.map((mod) => {
+            {ALL_MODULES.filter((mod) => !ADVANCED_MODULE_KEYS.has(mod.key)).map((mod) => {
               const isIncluded = modulesList.includes(mod.key);
               return (
                 <div

@@ -1,8 +1,43 @@
 import { apiRequest } from "./client";
 import { flocksApi } from "./flocks";
 import { dashboardApi } from "./dashboard";
-import { EggProduction } from "../types";
+import { EggProduction, EggSession } from "../types";
 import { localDateString } from "../utils";
+
+interface EggProductionResponse {
+  id: string;
+  productionDate?: string;
+  date?: string;
+  session: EggSession | "AFTERNOON" | "ALL_DAY";
+  goodEggs?: number;
+  crackedEggs?: number;
+  brokenEggs?: number;
+  dirtyEggs?: number;
+  deformedEggs?: number;
+  abnormalEggs?: number;
+  totalEggs?: number;
+  traysCount?: number;
+  looseEggsCount?: number;
+  notes?: string | null;
+  createdAt?: string;
+}
+
+interface EggCollectionInput {
+  flockId: string;
+  date?: string;
+  productionDate?: string;
+  session?: EggSession | "ALL_DAY";
+  goodEggs: number;
+  brokenEggs?: number;
+  crackedEggs?: number;
+  abnormalEggs?: number;
+  dirtyEggs?: number;
+  deformedEggs?: number;
+  notes?: string;
+  allowUpdate?: boolean;
+}
+
+type EggUpdateInput = Omit<EggCollectionInput, "flockId" | "date" | "productionDate" | "session" | "allowUpdate">;
 
 export const eggsApi = {
   list: async (params?: { farmId?: string; flockId?: string }) => {
@@ -12,15 +47,16 @@ export const eggsApi = {
       const layerFlocks = flocks.filter((f) => f.type === "LAYER" || f.type === "MIXED");
       const allProds: EggProduction[] = [];
       for (const lf of layerFlocks) {
-        try {
-          const list = await apiRequest<any[]>(`/flocks/${lf.id}/egg-productions`);
-          if (Array.isArray(list)) {
-            allProds.push(
-              ...list.map((p) => ({
+        const list = await apiRequest<EggProductionResponse[]>(`/flocks/${lf.id}/egg-productions`);
+        if (Array.isArray(list)) {
+          allProds.push(
+            ...list
+              .filter((p) => Boolean(p.productionDate || p.date))
+              .map((p) => ({
                 id: p.id,
                 flockId: lf.id,
                 flockName: lf.name,
-                date: p.productionDate || p.date,
+                date: p.productionDate || p.date!,
                 session: p.session === "AFTERNOON" ? "NOON" : p.session,
                 goodEggs: p.goodEggs || 0,
                 brokenEggs: p.crackedEggs !== undefined ? p.crackedEggs : (p.brokenEggs || 0),
@@ -29,22 +65,19 @@ export const eggsApi = {
                 traysCount: p.traysCount || Math.floor((p.goodEggs || 0) / 30),
                 looseEggs: p.looseEggsCount !== undefined ? p.looseEggsCount : ((p.goodEggs || 0) % 30),
                 notes: p.notes,
-                createdAt: p.createdAt,
-              }))
-            );
-          }
-        } catch {
-          // continue
+                createdAt: p.createdAt || p.productionDate || p.date!,
+              })),
+          );
         }
       }
       return allProds;
     }
     if (!params?.flockId) return [];
-    const list = await apiRequest<any[]>(`/flocks/${params.flockId}/egg-productions`);
-    return (list || []).map((p) => ({
+    const list = await apiRequest<EggProductionResponse[]>(`/flocks/${params.flockId}/egg-productions`);
+    return (list || []).filter((p) => Boolean(p.productionDate || p.date)).map((p) => ({
       id: p.id,
       flockId: params.flockId!,
-      date: p.productionDate || p.date,
+      date: p.productionDate || p.date!,
       session: p.session === "AFTERNOON" ? "NOON" : p.session,
       goodEggs: p.goodEggs || 0,
       brokenEggs: p.crackedEggs !== undefined ? p.crackedEggs : (p.brokenEggs || 0),
@@ -53,12 +86,12 @@ export const eggsApi = {
       traysCount: p.traysCount || Math.floor((p.goodEggs || 0) / 30),
       looseEggs: p.looseEggsCount !== undefined ? p.looseEggsCount : ((p.goodEggs || 0) % 30),
       notes: p.notes,
-      createdAt: p.createdAt,
+      createdAt: p.createdAt || p.productionDate || p.date!,
     }));
   },
 
-  create: async (data: any) => {
-    let session = data.session || "ALL_DAY";
+  create: async (data: EggCollectionInput) => {
+    let session: string = data.session || "ALL_DAY";
     if (session === "NOON") session = "AFTERNOON";
 
     const payload = {
@@ -78,7 +111,7 @@ export const eggsApi = {
     });
   },
 
-  update: async (id: string, data: any) => {
+  update: async (id: string, data: EggUpdateInput) => {
     const payload = {
       goodEggs: Number(data.goodEggs || 0),
       crackedEggs: Number(data.crackedEggs !== undefined ? data.crackedEggs : (data.brokenEggs || 0)),
@@ -104,6 +137,10 @@ export const eggsApi = {
       totalEggsToday: kpi.eggProductionToday.totalEggs,
       traysCountToday: kpi.eggProductionToday.traysCount,
       layingRate: kpi.eggProductionToday.layingRatePercent,
+      chart: kpi.eggProductionChart ?? [],
+      chartError: kpi.dashboardError,
+      chartStartDate: kpi.eggChartStartDate,
+      chartEndDate: kpi.eggChartEndDate,
     };
   },
 };

@@ -29,10 +29,13 @@ import { api } from "@/lib/api-client";
 import { EggProduction, EggSession, Flock } from "@/lib/types";
 import { formatNumber, formatPercent, calcEggTrays, formatDate } from "@/lib/utils";
 import { ModuleLockedState } from "@/components/ui/module-locked-state";
+import { EggProductionChart, EggChartPoint } from "@/components/dashboard/egg-production-chart";
 
 export default function EggsPage() {
-  const { activeFarm, hasPermission, hasModule } = useAuth();
+  const { activeFarm, hasPermission, hasModule, isOwner } = useAuth();
   const { toast } = useToast();
+  const canViewEggs = hasModule("eggs") &&
+    (hasPermission("egg:read") || hasPermission("egg:view") || isOwner);
 
   const [productions, setProductions] = useState<EggProduction[]>([]);
   const [sessionFilter, setSessionFilter] = useState<"ALL" | EggSession>("ALL");
@@ -41,8 +44,14 @@ export default function EggsPage() {
     totalEggsToday: number;
     traysCountToday: number;
     layingRate: number;
-  }>({ totalEggsToday: 0, traysCountToday: 0, layingRate: 0 });
+    chart: EggChartPoint[];
+    chartError?: string;
+    chartStartDate?: string;
+    chartEndDate?: string;
+  }>({ totalEggsToday: 0, traysCountToday: 0, layingRate: 0, chart: [] });
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const showLoading = isLoading && Boolean(activeFarm?.id && hasModule("eggs"));
 
   const filteredProductions = useMemo(() => {
     if (sessionFilter === "ALL") return productions;
@@ -53,11 +62,7 @@ export default function EggsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [eggError, setEggError] = useState<string | null>(null);
   const [selectedFlockId, setSelectedFlockId] = useState("");
-  const [collectionDate, setCollectionDate] = useState("");
-
-  useEffect(() => {
-    setCollectionDate(new Date().toISOString().split("T")[0]);
-  }, []);
+  const [collectionDate, setCollectionDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [session, setSession] = useState<EggSession>("MORNING");
   const [goodEggs, setGoodEggs] = useState<number | string>(0);
   const [brokenEggs, setBrokenEggs] = useState<number | string>(0);
@@ -127,21 +132,28 @@ export default function EggsPage() {
   }
 
   useEffect(() => {
-    if (activeFarm?.id && hasModule("eggs")) {
+    if (activeFarm?.id && canViewEggs) {
       loadData();
-    } else {
-      setIsLoading(false);
     }
-  }, [activeFarm?.id]);
+  }, [activeFarm?.id, canViewEggs]);
 
   async function loadData() {
+    if (!activeFarm?.id || !canViewEggs) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
+    setLoadError(false);
     try {
-      const [prodsData, flocksData, summaryData] = await Promise.all([
-        api.eggs.list({ farmId: activeFarm?.id }),
-        api.flocks.list({ farmId: activeFarm?.id, type: "LAYER", status: "ACTIVE" }),
-        api.eggs.getSummary(activeFarm?.id),
+      const [prodsData, summaryData] = await Promise.all([
+        api.eggs.list({ farmId: activeFarm.id }),
+        api.eggs.getSummary(activeFarm.id),
       ]);
+      const canViewFlocks = hasModule("flocks") &&
+        (hasPermission("flock:read") || hasPermission("flock:view") || isOwner);
+      const flocksData = canViewFlocks
+        ? await api.flocks.list({ farmId: activeFarm.id, type: "LAYER", status: "ACTIVE" }).catch(() => [])
+        : [];
       setProductions(prodsData);
       setFlocks(flocksData);
       setSummary(summaryData);
@@ -150,6 +162,7 @@ export default function EggsPage() {
       }
     } catch (err) {
       console.error(err);
+      setLoadError(true);
     } finally {
       setIsLoading(false);
     }
@@ -189,8 +202,8 @@ export default function EggsPage() {
       setAbnormalEggs(0);
       setNotes("");
       await loadData();
-    } catch (err: any) {
-      const msg = err?.message || "Erreur lors de l'enregistrement de la collecte";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de l'enregistrement de la collecte";
       setEggError(msg);
       toast.error(msg);
     } finally {
@@ -340,6 +353,17 @@ export default function EggsPage() {
     );
   }
 
+  if (!canViewEggs) {
+    return (
+      <Shell>
+        <div className="mx-auto max-w-lg py-16 text-center" role="alert">
+          <h1 className="text-xl font-semibold text-foreground">Accès non autorisé</h1>
+          <p className="mt-2 text-sm text-muted">Votre rôle ne permet pas de consulter les données de production de cette exploitation.</p>
+        </div>
+      </Shell>
+    );
+  }
+
   const isBroilerOnly =
     activeFarm?.productionType?.toUpperCase() === "BROILER" ||
     activeFarm?.productionType?.toUpperCase() === "BROILERS";
@@ -353,17 +377,17 @@ export default function EggsPage() {
           </div>
           <h2 className="text-xl font-bold text-foreground">Élevage de poulets de chair</h2>
           <p className="mt-2 text-sm text-muted leading-relaxed">
-            Votre exploitation <span className="font-semibold text-foreground">{activeFarm?.name}</span> est configurée pour l'élevage de poulets de chair (sans production d'œufs de ponte).
+            Votre exploitation <span className="font-semibold text-foreground">{activeFarm?.name}</span> est configurée pour l&apos;élevage de poulets de chair (sans production d&apos;œufs de ponte).
           </p>
           <p className="mt-1 text-xs text-muted">
-            Le suivi des effectifs, pesées, mortalités et ventes s'effectue dans l'espace Élevage.
+            Le suivi des effectifs, pesées, mortalités et ventes s&apos;effectue dans l&apos;espace Élevage.
           </p>
           <div className="mt-6 flex items-center gap-3">
             <Link
               href="/flocks"
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-primary-hover transition-colors"
             >
-              <span>Accéder à l'espace Élevage</span>
+            <span>Accéder à l&apos;espace Élevage</span>
             </Link>
           </div>
         </div>
@@ -376,7 +400,7 @@ export default function EggsPage() {
       {/* En-tête mobile natif */}
       <PageHeader
         title="Production d'œufs"
-        subtitle={`${formatNumber(summary.totalEggsToday)} œuf(s) récolté(s) aujourd'hui`}
+        subtitle={loadError ? "Données momentanément indisponibles" : `${formatNumber(summary.totalEggsToday)} œuf(s) récolté(s) aujourd'hui`}
         icon={<Egg className="h-4 w-4 text-accent" />}
         actions={
           hasPermission("egg:create") && (
@@ -392,8 +416,17 @@ export default function EggsPage() {
         }
       />
 
+      {loadError && (
+        <div role="alert" className="mt-4 flex flex-col gap-3 rounded-xl border border-danger/30 bg-danger/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-danger">Impossible de charger les données de production. Les indicateurs et l’historique peuvent être incomplets.</p>
+          <button type="button" onClick={() => void loadData()} disabled={isLoading} className="min-h-10 rounded-control border border-border bg-surface px-4 text-sm font-semibold text-foreground hover:bg-surface-hover disabled:opacity-60">
+            {isLoading ? "Chargement…" : "Réessayer"}
+          </button>
+        </div>
+      )}
+
       {/* KPI Cards */}
-      <div className="mt-2 sm:mt-3.5 grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4">
+      {!loadError && <div className="mt-2 sm:mt-3.5 grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4">
         <StatCard
           title="Ponte du jour"
           value={formatNumber(summary.totalEggsToday)}
@@ -414,11 +447,15 @@ export default function EggsPage() {
           accent={todayDamaged > 0 ? "rose" : "zinc"}
           icon={<Layers className="h-5 w-5" />}
         />
-      </div>
+      </div>}
+
+      {!loadError && <div className="mt-5 sm:mt-7">
+        <EggProductionChart points={summary.chart} isLoading={showLoading} error={summary.chartError} startDate={summary.chartStartDate} endDate={summary.chartEndDate} title="Évolution de la production" />
+      </div>}
 
 
       {/* Production History Table & Mobile Cards */}
-      <div className="mt-6 sm:mt-8">
+      {!loadError && <div className="mt-6 sm:mt-8">
         <DataTable<EggProduction>
           title="Historique des collectes"
           data={filteredProductions}
@@ -430,7 +467,7 @@ export default function EggsPage() {
           searchAccessor={(p) => `${p.flockName || ""} ${p.session} ${p.notes || ""}`}
           pageSize={15}
           initialSort={{ key: "date", direction: "desc" }}
-          isLoading={isLoading}
+          isLoading={showLoading}
           secondaryFilter={
             <div className="flex items-center gap-1.5 shrink-0">
               {[
@@ -444,7 +481,7 @@ export default function EggsPage() {
                   <button
                     key={tab.value}
                     type="button"
-                    onClick={() => setSessionFilter(tab.value as any)}
+                    onClick={() => setSessionFilter(tab.value as EggSession | "ALL")}
                     className={`rounded-full px-3 py-1.5 text-xs font-semibold shrink-0 transition-all active:scale-95 cursor-pointer ${
                       isActive
                         ? "bg-primary text-white shadow-xs"
@@ -474,6 +511,11 @@ export default function EggsPage() {
                 label: "Soir",
                 icon: Moon,
                 color: "text-indigo-500 bg-indigo-500/10 border-indigo-500/30",
+              },
+              ALL_DAY: {
+                label: "Toute la journée",
+                icon: Sun,
+                color: "text-primary bg-primary/10 border-primary/30",
               },
             }[p.session] || {
               label: p.session,
@@ -559,7 +601,7 @@ export default function EggsPage() {
                 <div className="flex items-center justify-between pt-1 text-xs">
                   {p.notes ? (
                     <span className="text-[11px] text-muted truncate max-w-[190px] italic">
-                      "{p.notes}"
+                      &quot;{p.notes}&quot;
                     </span>
                   ) : (
                     <span className="text-[11px] text-muted/60">Sans remarque</span>
@@ -587,7 +629,7 @@ export default function EggsPage() {
             onAction: () => setModalOpen(true),
           }}
         />
-      </div>
+      </div>}
 
       {/* COLLECTION MODAL (Bottom Sheet sur smartphone) */}
       <Modal
@@ -650,7 +692,7 @@ export default function EggsPage() {
                   onClick={setToday}
                   className="rounded-lg bg-surface-muted border border-border px-2 py-0.5 text-[10px] font-semibold text-muted hover:text-foreground"
                 >
-                  Aujourd'hui
+                  Aujourd&apos;hui
                 </button>
                 <button
                   type="button"

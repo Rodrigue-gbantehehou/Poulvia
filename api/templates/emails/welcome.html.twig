@@ -1,0 +1,13 @@
+{% extends 'emails/base.html.twig' %}
+
+{% block title %}Bienvenue sur Poulvia{% endblock %}
+{% block preheader %}Votre compte Poulvia est prêt.{% endblock %}
+
+{% block content %}
+  <h1>Bienvenue{% if firstName is defined and firstName %}, {{ firstName }}{% endif %} !</h1>
+  <p>Votre compte Poulvia est prêt. Vous pouvez maintenant organiser le suivi de votre exploitation depuis votre espace.</p>
+  {% if dashboardUrl is defined and dashboardUrl %}
+    <div class="button-wrap"><a class="button" href="{{ dashboardUrl }}">Accéder à Poulvia</a></div>
+  {% endif %}
+  <p class="muted">Gardez vos identifiants confidentiels. Poulvia ne vous demandera jamais votre mot de passe par e-mail.</p>
+{% endblock %}

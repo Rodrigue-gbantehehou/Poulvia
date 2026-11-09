@@ -266,6 +266,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             return false;
         }
 
+        if (str_starts_with($this->passwordResetToken, '$2y$')) {
+            return password_verify($token, $this->passwordResetToken);
+        }
+
+        // Accepte brièvement les codes non hachés créés avant ce changement;
+        // leur durée de vie est limitée à 15 minutes.
         return hash_equals($this->passwordResetToken, $token);
     }
 

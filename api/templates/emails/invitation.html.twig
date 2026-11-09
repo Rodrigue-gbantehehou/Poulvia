@@ -1,0 +1,13 @@
+{% extends 'emails/base.html.twig' %}
+
+{% block title %}Invitation à rejoindre une exploitation{% endblock %}
+{% block preheader %}Vous avez reçu une invitation à rejoindre {{ farmName }}.{% endblock %}
+
+{% block content %}
+  <h1>Vous êtes invité{% if firstName is defined and firstName %}, {{ firstName }}{% endif %} !</h1>
+  <p><strong>{{ inviterName }}</strong> vous invite à rejoindre l’exploitation <strong>{{ farmName }}</strong> sur Poulvia.</p>
+  <p>Acceptez l’invitation pour accéder aux informations et aux fonctionnalités autorisées pour votre rôle.</p>
+  <div class="button-wrap"><a class="button" href="{{ invitationUrl }}">Voir l’invitation</a></div>
+  {% if expiresAt is defined and expiresAt %}<p class="muted">Cette invitation expire le {{ expiresAt|date('d/m/Y à H:i') }}.</p>{% endif %}
+  <p class="muted">Si vous ne connaissez pas l’expéditeur, ignorez ce message.</p>
+{% endblock %}

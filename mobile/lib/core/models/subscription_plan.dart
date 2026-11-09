@@ -66,6 +66,8 @@ class SubscriptionPlanModel {
   final bool isRecommended;
   final bool isPopular;
   final bool isAvailable;
+  final int trialDays;
+  final List<String> allowedBillingCycles;
 
   const SubscriptionPlanModel({
     required this.id,
@@ -83,6 +85,8 @@ class SubscriptionPlanModel {
     this.isRecommended = false,
     this.isPopular = false,
     this.isAvailable = true,
+    this.trialDays = 0,
+    this.allowedBillingCycles = const ['MONTHLY', 'ANNUALLY'],
   });
 
   factory SubscriptionPlanModel.fromJson(Map<String, dynamic> json) {
@@ -107,6 +111,11 @@ class SubscriptionPlanModel {
       isRecommended: json['isRecommended'] as bool? ?? false,
       isPopular: json['isPopular'] as bool? ?? false,
       isAvailable: json['isAvailable'] as bool? ?? true,
+      trialDays: (json['trialDays'] as num?)?.toInt() ?? 0,
+      allowedBillingCycles: (json['allowedBillingCycles'] as List<dynamic>?)
+              ?.map((cycle) => cycle.toString().toUpperCase())
+              .toList() ??
+          const ['MONTHLY', 'ANNUALLY'],
     );
   }
 

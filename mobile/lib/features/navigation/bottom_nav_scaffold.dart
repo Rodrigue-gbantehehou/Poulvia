@@ -282,6 +282,7 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
     ];
 
     final safeIndex = _currentIndex < screens.length ? _currentIndex : 0;
+    final showEggs = farm == null || farm.canViewEggs;
 
     return PopScope(
       canPop: _activeSecondaryKey == null,
@@ -295,14 +296,6 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
         key: _scaffoldKey,
         drawer: AppDrawer(
           onSelectModule: (modKey) => _navigateToModule(modKey),
-          onSelectTab: (idx) {
-            if (idx < screens.length) {
-              setState(() {
-                _activeSecondaryKey = null;
-                _currentIndex = idx;
-              });
-            }
-          },
         ),
         extendBody: false,
         body: _activeSecondaryKey != null
@@ -337,7 +330,6 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
             top: false,
             child: Row(
               children: [
-                // Bloc gauche : Accueil & Élevage
                 Expanded(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -357,21 +349,18 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
                     ],
                   ),
                 ),
-
-                // Espace central pour le FAB encastré (+)
                 const SizedBox(width: 56),
-
-                // Bloc droit : Production & Gestion
                 Expanded(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildNavItem(
-                        index: 2,
-                        icon: Icons.egg_outlined,
-                        activeIcon: Icons.egg_rounded,
-                        label: "Production",
-                      ),
+                      if (showEggs)
+                        _buildNavItem(
+                          index: 2,
+                          icon: Icons.egg_outlined,
+                          activeIcon: Icons.egg_rounded,
+                          label: "Production",
+                        ),
                       _buildNavItem(
                         index: 3,
                         icon: Icons.business_center_outlined,

@@ -50,7 +50,8 @@ export default function SystemHealthPage() {
   };
 
   useEffect(() => {
-    checkHealth();
+    const task = window.setTimeout(() => void checkHealth(), 0);
+    return () => window.clearTimeout(task);
   }, []);
 
   const isConnected = !!health && !apiError;
@@ -187,7 +188,7 @@ export default function SystemHealthPage() {
           <CardHeader>
             <CardTitle>Composants & Dépendances Réelles</CardTitle>
             <CardDescription>
-              État retourné par le point de terminaison d'administration Symfony (GET /api/admin/health).
+              État retourné par le point de terminaison d&apos;administration Symfony (GET /api/admin/health).
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -211,7 +212,7 @@ export default function SystemHealthPage() {
                     )}
                   </div>
                   <p className="text-xs text-muted mt-0.5">
-                    Moteur d'API central hébergé sur http://127.0.0.1:8000.
+                    Moteur d&apos;API central hébergé sur http://127.0.0.1:8000.
                   </p>
                   <span className="text-[11px] text-muted font-mono mt-1 block">
                     Endpoint : /api/admin/health
@@ -278,7 +279,7 @@ export default function SystemHealthPage() {
           <CardHeader>
             <CardTitle className="text-sm">Environnement Serveur Réel</CardTitle>
             <CardDescription>
-              Données techniques inspectées à l'exécution sur le serveur Symfony.
+              Données techniques inspectées à l&apos;exécution sur le serveur Symfony.
             </CardDescription>
           </CardHeader>
           <CardContent>

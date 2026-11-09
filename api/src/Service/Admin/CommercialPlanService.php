@@ -71,10 +71,61 @@ class CommercialPlanService
         foreach ($entities as $entity) {
             $sku = $entity->getSku();
             $subscribers = $subscriberCounts[$sku] ?? 0;
-            $plans[$sku] = $entity->toArray($subscribers);
+            $plans[$sku] = $this->applyRuntimePlanPolicy($sku, $entity->toArray($subscribers));
         }
 
         return $plans;
+    }
+
+    /**
+     * Apply the public single-offer entitlement to STANDARD at runtime without
+     * rewriting persisted plans. Extra modules remain available through private
+     * plans assigned to a specific organization by an administrator.
+     *
+     * @param array<string, mixed> $plan
+     * @return array<string, mixed>
+     */
+    private function applyRuntimePlanPolicy(string $sku, array $plan): array
+    {
+        if (strtoupper($sku) !== 'STANDARD') {
+            return $plan;
+        }
+
+        $plan['name'] = 'Poulvia';
+        $plan['tier'] = 'Offre unique';
+        $plan['badge'] = 'Offre unique';
+        $plan['description'] = 'Les outils essentiels pour suivre votre élevage, votre production, votre santé et votre gestion. Les options avancées peuvent être activées sur demande.';
+        $plan['features'] = [
+            'Suivi des bâtiments, bandes et mouvements d\'élevage',
+            'Collecte et suivi de production selon le type de ferme',
+            'Suivi sanitaire et traitements',
+            'Stocks essentiels, dépenses, recettes et ventes',
+            'Contacts, équipe et rôles personnalisés',
+        ];
+        $plan['flags'] = [
+            'accounting_exports' => false,
+            'health_alerts' => false,
+            'iot_sensors' => false,
+            'api_access' => false,
+            'priority_support' => false,
+        ];
+        $plan['modules'] = [
+            'flocks',
+            'eggs',
+            'inventory',
+            'health',
+            'finance',
+            'sales_receipts',
+            'contacts',
+            'buildings',
+            'team',
+            'custom_roles',
+        ];
+        $plan['allowedBillingCycles'] = ['MONTHLY', 'ANNUALLY'];
+        $plan['isPopular'] = false;
+        $plan['isRecommended'] = false;
+
+        return $plan;
     }
 
     /**

@@ -38,7 +38,7 @@ export const organizationsApi = {
   setStatus: async (
     id: string,
     status: "ACTIVE" | "SUSPENDED" | "TRIAL"
-  ): Promise<any> => {
+  ): Promise<void> => {
     return apiRequest(`/api/admin/organizations/${id}/status`, {
       method: "PUT",
       body: JSON.stringify({ status }),
