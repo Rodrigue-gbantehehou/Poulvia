@@ -54,6 +54,13 @@ class MemberService
             // (fait avant le contrôle de quota pour pouvoir passer le candidat à assertCanAddMember)
             $user = $this->userRepository->findOneBy(['email' => $normalizedEmail]);
             if ($user === null) {
+                $initialPassword = (string) $dto->password;
+                if (mb_strlen($initialPassword) < 12) {
+                    throw new BadRequestHttpException(
+                        'Un mot de passe initial d’au moins 12 caractères est requis pour créer le compte du collaborateur.'
+                    );
+                }
+
                 $user = new User(
                     $normalizedEmail,
                     trim($dto->firstName),
@@ -63,8 +70,7 @@ class MemberService
                     $user->setPhone(trim($dto->phone));
                 }
 
-                $rawPassword = $dto->password ?? 'Poulvia@' . date('Y');
-                $hashed = $this->passwordHasher->hashPassword($user, $rawPassword);
+                $hashed = $this->passwordHasher->hashPassword($user, $initialPassword);
                 $user->setPassword($hashed);
 
                 $this->entityManager->persist($user);

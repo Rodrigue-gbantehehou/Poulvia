@@ -36,7 +36,7 @@ class CreateMemberRequestDto
     /**
      * Mot de passe initial pour le compte (si nouvel utilisateur).
      */
-    #[Assert\Length(min: 6, minMessage: 'Le mot de passe doit comporter au moins 6 caractères.')]
+    #[Assert\Length(max: 255, maxMessage: 'Le mot de passe ne doit pas dépasser 255 caractères.')]
     public ?string $password = null;
 
     /**

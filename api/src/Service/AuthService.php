@@ -20,6 +20,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Psr\Log\LoggerInterface;
 
 class AuthService
 {
@@ -33,6 +35,10 @@ class AuthService
         private readonly AdminAuditService $adminAuditService,
         private readonly CommercialPlanService $commercialPlanService,
         private readonly SubscriptionTrialService $subscriptionTrialService,
+        private readonly EmailSender $emailSender,
+        private readonly LoggerInterface $logger,
+        #[Autowire('%kernel.environment%')]
+        private readonly string $environment,
     ) {
     }
 
@@ -209,16 +215,37 @@ class AuthService
         }
 
         $code = sprintf('%06d', random_int(100000, 999999));
-        $user->setPasswordResetToken($code);
+        $user->setPasswordResetToken(password_hash($code, PASSWORD_BCRYPT));
         $user->setPasswordResetExpiresAt(new \DateTimeImmutable('+15 minutes'));
 
         $this->entityManager->flush();
 
-        return [
+        if ($channel === 'email' && strtolower($clean) === strtolower($user->getEmail())) {
+            try {
+                $this->emailSender->sendTemplate(
+                    $user->getEmail(),
+                    'Code de réinitialisation de votre mot de passe Poulvia',
+                    'emails/password_reset.html.twig',
+                    ['resetCode' => $code, 'expiresInMinutes' => 15],
+                );
+            } catch (\Throwable $exception) {
+                // Ne révèle pas l’existence du compte et ne consigne jamais le code.
+                $this->logger->warning('Échec de livraison du courriel de réinitialisation.', [
+                    'exceptionClass' => $exception::class,
+                ]);
+            }
+        }
+
+        $response = [
             'message' => 'Si un compte est associé à ces coordonnées, des instructions de réinitialisation ont été envoyées.',
-            'devCode' => $code,
             'channel' => $channel,
         ];
+
+        if ($this->environment === 'dev') {
+            $response['devCode'] = $code;
+        }
+
+        return $response;
     }
 
     /**

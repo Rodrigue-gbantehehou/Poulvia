@@ -563,17 +563,20 @@ export default function MembersManagementPage() {
 
           <div>
             <label className="block text-xs font-semibold text-foreground mb-1">
-              Mot de passe (optionnel)
+              Mot de passe initial (requis si nouveau compte)
             </label>
             <input
               type="password"
+              minLength={12}
+              maxLength={255}
+              autoComplete="new-password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Par défaut : Poulvia@2026"
+              placeholder="12 caractères minimum"
               className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-xs text-foreground focus:border-primary focus:outline-hidden"
             />
             <p className="mt-1 text-[11px] text-muted">
-              Modifiable à la 1ère connexion.
+              Le mot de passe du compte existant reste inchangé. Pour un nouveau compte, choisissez un mot de passe d’au moins 12 caractères.
             </p>
           </div>
 

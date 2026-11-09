@@ -870,10 +870,17 @@ class _AddMemberModalState extends ConsumerState<_AddMemberModal> {
               TextFormField(
                 controller: _passwordController,
                 obscureText: true,
+                validator: (value) {
+                  final password = value ?? '';
+                  if (password.isNotEmpty && password.length < 12) {
+                    return '12 caractères minimum';
+                  }
+                  return null;
+                },
                 decoration: InputDecoration(
-                  labelText: "Mot de passe initial (optionnel)",
-                  hintText: "Défaut: poulvia@2026",
-                  helperText: "Si le compte existe déjà, son mot de passe existant est conservé",
+                  labelText: "Mot de passe initial (si nouveau compte)",
+                  hintText: "12 caractères minimum",
+                  helperText: "Requis pour un nouveau compte. Le mot de passe d’un compte existant reste inchangé.",
                   prefixIcon: const Icon(Icons.lock_outline, size: 20),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
