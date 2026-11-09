@@ -53,7 +53,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
 }
 
 function ShellLayout({ children }: { children: React.ReactNode }) {
-  const { openMobile } = useSidebar();
+  const { openMobile, setOpenMobile } = useSidebar();
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">

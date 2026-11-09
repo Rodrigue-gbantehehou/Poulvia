@@ -27,6 +27,7 @@ import '../sync/sync_screen.dart';
 import '../subscriptions/subscription_screen.dart';
 import '../contacts/contacts_screen.dart';
 import '../settings/farm_settings_screen.dart';
+import '../settings/settings_screen.dart';
 import '../management/management_screen.dart';
 import 'app_drawer.dart';
 
@@ -232,6 +233,11 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
         );
       case 'farm_settings':
         return FarmSettingsScreen(
+          onOpenMenu: _openDrawer,
+          onBack: _closeSecondaryModule,
+        );
+      case 'settings':
+        return SettingsScreen(
           onOpenMenu: _openDrawer,
           onBack: _closeSecondaryModule,
         );

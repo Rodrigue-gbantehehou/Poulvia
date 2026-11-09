@@ -9,8 +9,7 @@ import '../buildings/buildings_screen.dart';
 import '../health/health_screen.dart';
 import '../sync/sync_provider.dart';
 import '../sync/sync_screen.dart';
-import '../subscriptions/subscription_screen.dart';
-import '../settings/farm_settings_screen.dart';
+import '../settings/settings_screen.dart';
 
 class AppDrawer extends ConsumerWidget {
   final Function(String moduleKey)? onSelectModule;
@@ -148,21 +147,11 @@ class AppDrawer extends ConsumerWidget {
                     onTap: () => _navigateTo(context, 'sync', const SyncScreen()),
                   ),
 
-                  // Abonnement & Formules
-                  if (farm?.canManageSubscription == true)
-                    _DrawerItem(
-                      icon: Icons.workspace_premium_rounded,
-                      label: "Abonnement & Formules",
-                      onTap: () => _navigateTo(context, 'subscription', const SubscriptionScreen()),
-                    ),
-
-                  // Paramètres de la ferme
-                  if (farm?.isOwner == true)
-                    _DrawerItem(
-                      icon: Icons.settings_rounded,
-                      label: "Paramètres de la ferme",
-                      onTap: () => _navigateTo(context, 'farm_settings', const FarmSettingsScreen()),
-                    ),
+                  _DrawerItem(
+                    icon: Icons.settings_rounded,
+                    label: "Paramètres",
+                    onTap: () => _navigateTo(context, 'settings', const SettingsScreen()),
+                  ),
                 ],
               ),
             ),
