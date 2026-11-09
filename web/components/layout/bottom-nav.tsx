@@ -21,11 +21,7 @@ import {
 import { useAuth } from "@/context/auth-context";
 import { cn } from "@/lib/utils";
 
-interface BottomNavProps {
-  onOpenMenu: () => void;
-}
-
-export function BottomNav({ onOpenMenu }: BottomNavProps) {
+export function BottomNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { hasModule, hasPermission, activeFarm, isOwner } = useAuth();
@@ -94,25 +90,15 @@ export function BottomNav({ onOpenMenu }: BottomNavProps) {
 
   return (
     <>
-      {/* ─── BARRE DE FOND INFÉRIEURE ANTI-DÉFILEMENT ─── */}
-      <div
-        aria-hidden="true"
-        className="fixed bottom-0 left-0 right-0 z-38 lg:hidden pointer-events-none select-none"
-      >
-        <div className="h-6 w-full bg-gradient-to-t from-background via-background/80 to-transparent" />
-        <div
-          className="w-full bg-[#f8f7f3] border-t border-[#e6e4dd]"
-          style={{ height: "calc(4.75rem + env(safe-area-inset-bottom, 0px))" }}
-        />
-      </div>
-
       {/* Navigation compacte à cinq espaces, filtrée selon l'exploitation et le profil. */}
-      <nav
-        aria-label="Navigation mobile"
-        className="fixed bottom-2.5 left-1.5 right-1.5 sm:left-1/2 sm:-translate-x-1/2 sm:w-[450px] z-40 lg:hidden pointer-events-none"
+      <div
+        className="fixed bottom-2.5 left-1/2 z-40 flex w-[calc(100%-1rem)] max-w-[30rem] -translate-x-1/2 items-center gap-2 lg:hidden"
         style={{ marginBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
-        <div className="pointer-events-auto flex h-16 items-center justify-between px-1 rounded-card bg-[#f8f7f3] border border-[#e6e4dd] text-[#242820] shadow-card">
+        <nav
+          aria-label="Navigation mobile"
+          className="flex h-14 min-w-0 flex-1 items-center rounded-full border border-[#e2e1dc] bg-[#eeede9] p-1 text-[#242820] shadow-card"
+        >
           <MobileNavItem href="/" label="Accueil" icon={LayoutDashboard} active={isHomeActive} />
           {(canViewFlocks || canViewBuildings) && (
             <MobileNavItem href={canViewFlocks ? "/flocks" : "/buildings"} label="Élevage" icon={Bird} active={isFlocksActive} />
@@ -126,22 +112,24 @@ export function BottomNav({ onOpenMenu }: BottomNavProps) {
           {canViewManagement && (
             <MobileNavItem href="/management" label="Gestion" icon={Briefcase} active={isManagementActive} />
           )}
-        </div>
-      </nav>
+        </nav>
 
-      {/* Action quotidienne gardée à portée de pouce, hors des destinations. */}
-      <button
-        type="button"
-        onClick={() => setSheetOpen(!sheetOpen)}
-        aria-label={sheetOpen ? "Fermer les actions" : "Enregistrer une opération"}
-        aria-expanded={sheetOpen}
-        className={cn(
-          "fixed right-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom,0px))] z-40 flex h-12 w-12 items-center justify-center rounded-full text-white border-2 border-surface ring-1 ring-border shadow-card transition-colors lg:hidden",
-          sheetOpen ? "rotate-45 bg-danger" : "bg-accent hover:bg-accent-hover",
+        {/* Action quotidienne séparée de la navigation, comme sur la référence. */}
+        {hasAnyAction && (
+          <button
+            type="button"
+            onClick={() => setSheetOpen(!sheetOpen)}
+            aria-label={sheetOpen ? "Fermer les actions" : "Enregistrer une opération"}
+            aria-expanded={sheetOpen}
+            className={cn(
+              "flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white shadow-card transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef625e] focus-visible:ring-offset-2",
+              sheetOpen ? "rotate-45 bg-[#d94f4b]" : "bg-[#ef625e] hover:bg-[#d94f4b]",
+            )}
+          >
+            <Plus className="h-6 w-6 stroke-[2.5]" />
+          </button>
         )}
-      >
-        <Plus className="h-6 w-6 stroke-[2.5]" />
-      </button>
+      </div>
 
       {/* ─── ACTION SHEET MOBILE NATIVE TACTILE ─── */}
       {sheetOpen && (
@@ -304,25 +292,20 @@ function MobileNavItem({
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
+      aria-label={label}
       className={cn(
-        "group relative flex min-w-0 flex-1 flex-col items-center justify-center py-1.5 transition-colors",
-        active ? "text-[#242820]" : "text-[#777970] hover:text-[#242820]",
+        "group flex h-11 min-w-0 items-center justify-center gap-1 rounded-full px-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#73766f]",
+        active ? "flex-[2]" : "flex-1",
+        active ? "bg-white text-[#242820] shadow-sm" : "text-[#777970] hover:text-[#242820]",
       )}
     >
-      <span
-        className={cn(
-          "flex h-8 w-8 items-center justify-center rounded-control transition-colors",
-          active
-            ? "bg-transparent text-[#242820]"
-            : "bg-transparent text-[#777970] group-hover:text-[#242820]",
-        )}
-      >
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center">
         <Icon className="h-5 w-5" aria-hidden="true" />
       </span>
       <span
         className={cn(
-          "max-w-full truncate text-caption leading-none mt-1",
-          active ? "font-semibold text-[#242820]" : "font-medium text-[#777970]",
+          "truncate text-caption leading-none",
+          active ? "max-w-20 font-semibold text-[#242820]" : "sr-only",
         )}
       >
         {label}

@@ -400,16 +400,6 @@ class _FlocksScreenState extends ConsumerState<FlocksScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'fab_flocks',
-        onPressed: () => RecordMovementModal.show(
-          context,
-          onSaved: () => ref.read(flockProvider.notifier).loadFlocks(showLoading: false),
-        ),
-        backgroundColor: AppColors.danger,
-        icon: const Icon(Icons.remove_circle_outline, color: Colors.white),
-        label: const Text("Mortalité / Perte", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-      ),
       body: RefreshIndicator(
         onRefresh: () => ref.read(flockProvider.notifier).loadFlocks(showLoading: false),
         child: flockState.isLoading

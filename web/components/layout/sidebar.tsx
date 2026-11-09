@@ -199,10 +199,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                         aria-current={childActive ? "page" : undefined}
                         title={isCollapsed ? child.name : undefined}
                         className={cn(
-                          "group relative flex min-h-11 items-center rounded-control py-2.5 text-label font-medium transition-colors",
+                          "group relative flex min-h-11 items-center rounded-full py-2.5 text-label font-medium transition-colors",
                           isCollapsed ? "justify-center px-0" : "gap-3 px-3.5",
                           childActive
-                            ? "text-[#242820] font-semibold before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-full before:bg-[#a9aaa3]"
+                            ? "bg-white font-semibold text-[#242820] shadow-sm ring-1 ring-[#e6e4dd]"
                             : "text-[#686b64] hover:bg-[#eeede8] hover:text-[#242820]",
                         )}
                       >
@@ -236,10 +236,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 aria-current={isActive ? "page" : undefined}
                 title={isCollapsed ? item.name : undefined}
                 className={cn(
-                  "group relative flex min-h-11 items-center rounded-control py-2.5 text-label font-medium transition-colors",
+                    "group relative flex min-h-11 items-center rounded-full py-2.5 text-label font-medium transition-colors",
                   isCollapsed ? "justify-center px-0" : "gap-3 px-3.5",
                   isActive
-                    ? "text-[#242820] font-semibold before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-full before:bg-[#a9aaa3]"
+                    ? "bg-white font-semibold text-[#242820] shadow-sm ring-1 ring-[#e6e4dd]"
                     : "text-[#686b64] hover:bg-[#eeede8] hover:text-[#242820]"
                 )}
               >
@@ -262,9 +262,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             aria-label="Paramètres"
             title={isCollapsed ? "Paramètres" : undefined}
             className={cn(
-              "group relative flex min-h-11 items-center rounded-control py-2.5 text-label font-medium text-[#686b64] transition-colors hover:bg-[#eeede8] hover:text-[#242820]",
+              "group relative flex min-h-11 items-center rounded-full py-2.5 text-label font-medium text-[#686b64] transition-colors hover:bg-[#eeede8] hover:text-[#242820]",
               isCollapsed ? "justify-center px-0" : "gap-3 px-3.5",
-              pathname.startsWith("/settings") && "text-[#242820] font-semibold before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-full before:bg-[#a9aaa3]",
+              pathname.startsWith("/settings") && "bg-white font-semibold text-[#242820] shadow-sm ring-1 ring-[#e6e4dd]",
             )}
           >
             <Settings className="h-5 w-5 shrink-0" aria-hidden="true" />

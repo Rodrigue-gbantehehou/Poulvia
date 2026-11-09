@@ -272,5 +272,5 @@ class Farm {
 
   /// Au moins une action de saisie rapide est autorisée
   bool get hasAnyQuickAction =>
-      canCreateEggs || canFeed || canCreateFinance || canManageHealth || canRecordFlockMovement;
+      canCreateEggs || canFeed || canCreateFinance || canRecordFlockMovement;
 }

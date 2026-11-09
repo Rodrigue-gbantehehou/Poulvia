@@ -160,16 +160,6 @@ class _EggsScreenState extends ConsumerState<EggsScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'fab_eggs',
-        onPressed: () => _openRecordEggDialog(eggState.layerFlocks, eggState.selectedFlockId),
-        backgroundColor: AppColors.accent,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text(
-          "Collecte",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-      ),
       body: RefreshIndicator(
         onRefresh: () => ref.read(eggProvider.notifier).loadData(showLoading: false),
         child: eggState.isLoading

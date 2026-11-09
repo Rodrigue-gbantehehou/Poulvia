@@ -75,13 +75,6 @@ class _FinancesScreenState extends ConsumerState<FinancesScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'fab_finances',
-        onPressed: () => _openRecordTransactionDialog("INCOME"),
-        backgroundColor: AppColors.success,
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: const Text("Encaissement", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-      ),
       body: RefreshIndicator(
         onRefresh: () => ref.read(financeProvider.notifier).loadTransactions(showLoading: false),
         child: financeState.isLoading
