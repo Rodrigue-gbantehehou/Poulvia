@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/theme/app_theme.dart';
 import '../auth/auth_provider.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../dashboard/dashboard_provider.dart';
@@ -263,9 +262,6 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
     final authState = ref.watch(authProvider);
     final farm = authState.activeFarm;
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final navBgColor = isDark ? AppColors.navBarDark : AppColors.navBarLight;
-
     // ─── 4 ÉCRANS STABLES EN BAS ───
     final screens = <Widget>[
       DashboardScreen(
@@ -304,73 +300,75 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
                 index: safeIndex,
                 children: screens,
               ),
-        floatingActionButton: (farm == null || farm.hasAnyQuickAction)
-            ? FloatingActionButton(
-                heroTag: 'fab_nav_center',
-                onPressed: _openQuickActions,
-                backgroundColor: AppColors.accentLight,
-                foregroundColor: Colors.white,
-                elevation: 6,
-                shape: const CircleBorder(),
-                tooltip: "Actions rapides",
-                child: const Icon(Icons.add_rounded, size: 28),
-              )
-            : null,
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-        bottomNavigationBar: BottomAppBar(
-          elevation: 10,
-          shadowColor: Colors.black.withValues(alpha: 0.35),
-          color: navBgColor,
-          notchMargin: 6,
-          shape: const CircularNotchedRectangle(),
-          clipBehavior: Clip.antiAlias,
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          height: 64,
+        bottomNavigationBar: Container(
+          color: const Color(0xFFFAFAF8),
           child: SafeArea(
             top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
             child: Row(
               children: [
                 Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildNavItem(
-                        index: 0,
-                        icon: Icons.dashboard_outlined,
-                        activeIcon: Icons.dashboard_rounded,
-                        label: "Accueil",
-                      ),
-                      _buildNavItem(
-                        index: 1,
-                        icon: Icons.pets_outlined,
-                        activeIcon: Icons.pets_rounded,
-                        label: "Élevage",
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 56),
-                Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      if (showEggs)
+                  child: Container(
+                    height: 58,
+                    padding: const EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0F0EE),
+                      borderRadius: BorderRadius.circular(32),
+                      border: Border.all(color: const Color(0xFFE7E7E3)),
+                    ),
+                    child: Row(
+                      children: [
                         _buildNavItem(
-                          index: 2,
-                          icon: Icons.egg_outlined,
-                          activeIcon: Icons.egg_rounded,
-                          label: "Production",
+                          index: 0,
+                          icon: Icons.home_outlined,
+                          activeIcon: Icons.home_rounded,
+                          label: "Accueil",
                         ),
-                      _buildNavItem(
-                        index: 3,
-                        icon: Icons.business_center_outlined,
-                        activeIcon: Icons.business_center_rounded,
-                        label: "Gestion",
-                      ),
-                    ],
+                        _buildNavItem(
+                          index: 1,
+                          icon: Icons.pets_outlined,
+                          activeIcon: Icons.pets_rounded,
+                          label: "Élevage",
+                        ),
+                        if (showEggs)
+                          _buildNavItem(
+                            index: 2,
+                            icon: Icons.egg_outlined,
+                            activeIcon: Icons.egg_rounded,
+                            label: "Production",
+                          ),
+                        _buildNavItem(
+                          index: 3,
+                          icon: Icons.business_center_outlined,
+                          activeIcon: Icons.business_center_rounded,
+                          label: "Gestion",
+                        ),
+                      ],
+                    ),
                   ),
                 ),
+                if (farm == null || farm.hasAnyQuickAction) ...[
+                  const SizedBox(width: 10),
+                  SizedBox(
+                    width: 54,
+                    height: 54,
+                    child: Material(
+                      color: const Color(0xFFF05257),
+                      shape: const CircleBorder(),
+                      child: InkWell(
+                        onTap: _openQuickActions,
+                        customBorder: const CircleBorder(),
+                        child: const Tooltip(
+                          message: "Actions rapides",
+                          child: Icon(Icons.add_rounded, size: 27, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
+            ),
             ),
           ),
         ),
@@ -385,46 +383,50 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
     required String label,
   }) {
     final isSelected = _activeSecondaryKey == null && _currentIndex == index;
-    final color = isSelected ? Colors.white : Colors.white.withValues(alpha: 0.70);
-    const activeIndicatorColor = AppColors.accentGold;
+    final flex = isSelected ? 4 : 2;
 
-    return InkWell(
-      onTap: () => _onTabSelected(index),
-      borderRadius: BorderRadius.circular(12),
-      splashColor: Colors.white.withValues(alpha: 0.15),
-      highlightColor: Colors.white.withValues(alpha: 0.1),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              isSelected ? activeIcon : icon,
-              color: isSelected ? AppColors.accentWarm : color,
-              size: 22,
-            ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10.5,
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
-                color: isSelected ? Colors.white : color,
-                letterSpacing: isSelected ? 0.2 : 0,
+    return Expanded(
+      flex: flex,
+      child: Semantics(
+        button: true,
+        selected: isSelected,
+        label: label,
+        child: Material(
+          color: isSelected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(26),
+          child: InkWell(
+            onTap: () => _onTabSelected(index),
+            borderRadius: BorderRadius.circular(26),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 6),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isSelected ? activeIcon : icon,
+                    color: isSelected ? const Color(0xFF262724) : const Color(0xFF777873),
+                    size: 20,
+                  ),
+                  if (isSelected) ...[
+                    const SizedBox(width: 5),
+                    Flexible(
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF262724),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
-            const SizedBox(height: 2),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: isSelected ? 16 : 0,
-              height: 2.5,
-              decoration: BoxDecoration(
-                color: activeIndicatorColor,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

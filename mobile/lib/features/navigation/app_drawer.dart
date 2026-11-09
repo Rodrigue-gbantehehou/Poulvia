@@ -6,6 +6,7 @@ import '../../core/theme/theme_provider.dart';
 import '../auth/auth_provider.dart';
 import '../auth/login_screen.dart';
 import '../buildings/buildings_screen.dart';
+import '../health/health_screen.dart';
 import '../sync/sync_provider.dart';
 import '../sync/sync_screen.dart';
 import '../subscriptions/subscription_screen.dart';
@@ -122,6 +123,16 @@ class AppDrawer extends ConsumerWidget {
                       label: "Bâtiments",
                       onTap: () => _navigateTo(context, 'buildings', const BuildingsScreen()),
                     ),
+
+                  if (farm?.canViewHealth == true) ...[
+                    const SizedBox(height: 6),
+                    _SectionHeader(label: "SANTÉ", isDark: isDark),
+                    _DrawerItem(
+                      icon: Icons.medical_services_outlined,
+                      label: "Suivi sanitaire",
+                      onTap: () => _navigateTo(context, 'health', const HealthScreen()),
+                    ),
+                  ],
 
                   const SizedBox(height: 8),
                   _SectionHeader(label: "OUTILS ET PARAMÈTRES", isDark: isDark),

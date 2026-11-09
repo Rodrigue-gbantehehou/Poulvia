@@ -11,7 +11,6 @@ class QuickActionSheet extends ConsumerWidget {
   final VoidCallback? onRecordEggSale;
   final VoidCallback onRecordIncome;
   final VoidCallback onRecordExpense;
-  final VoidCallback? onRecordHealth;
 
   const QuickActionSheet({
     super.key,
@@ -22,7 +21,6 @@ class QuickActionSheet extends ConsumerWidget {
     this.onRecordEggSale,
     required this.onRecordIncome,
     required this.onRecordExpense,
-    this.onRecordHealth,
   });
 
   static void show(
@@ -34,7 +32,6 @@ class QuickActionSheet extends ConsumerWidget {
     VoidCallback? onRecordEggSale,
     required VoidCallback onRecordIncome,
     required VoidCallback onRecordExpense,
-    VoidCallback? onRecordHealth,
   }) {
     showModalBottomSheet(
       context: context,
@@ -48,7 +45,6 @@ class QuickActionSheet extends ConsumerWidget {
         onRecordEggSale: onRecordEggSale,
         onRecordIncome: onRecordIncome,
         onRecordExpense: onRecordExpense,
-        onRecordHealth: onRecordHealth,
       ),
     );
   }
@@ -65,10 +61,9 @@ class QuickActionSheet extends ConsumerWidget {
     final canEgg = farm != null && farm.canCreateEggs;
     final canFeed = farm != null && farm.canFeed;
     final canFinance = farm != null && farm.canCreateFinance;
-    final canHealth = farm != null && farm.canManageHealth;
     final canMovement = farm != null && farm.canRecordFlockMovement;
 
-    final hasAnyAction = canEgg || canFeed || canFinance || canHealth || canMovement;
+    final hasAnyAction = canEgg || canFeed || canFinance || canMovement;
 
     return Material(
       color: surfaceColor,
@@ -226,26 +221,7 @@ class QuickActionSheet extends ConsumerWidget {
                       },
                     ),
 
-                  // 7. Soin / Traitement sanitaire (Conditionné par rôle sanitaire)
-                  if (canHealth)
-                    _ActionButton(
-                      icon: Icons.medical_services_outlined,
-                      label: "Soin / Vaccin",
-                      subtitle: "Suivi vétérinaire",
-                      color: AppColors.primary,
-                      onTap: () {
-                        Navigator.pop(context);
-                        if (onRecordHealth != null) {
-                          onRecordHealth!();
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Enregistrement soin / vaccin sanitaire...")),
-                          );
-                        }
-                      },
-                    ),
-
-                  // 8. Déclaration de mortalité
+                  // Déclaration de mortalité
                   if (canMovement)
                     _ActionButton(
                       icon: Icons.heart_broken_rounded,

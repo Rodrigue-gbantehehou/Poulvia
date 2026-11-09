@@ -53,7 +53,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
 }
 
 function ShellLayout({ children }: { children: React.ReactNode }) {
-  const { openMobile, setOpenMobile } = useSidebar();
+  const { openMobile } = useSidebar();
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
@@ -64,7 +64,7 @@ function ShellLayout({ children }: { children: React.ReactNode }) {
           <div className="mx-auto max-w-7xl">{children}</div>
         </main>
       </div>
-      <BottomNav onOpenMenu={() => setOpenMobile(true)} />
+      <BottomNav />
     </div>
   );
 }
