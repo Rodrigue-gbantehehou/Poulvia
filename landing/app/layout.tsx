@@ -7,8 +7,8 @@ export const metadata: Metadata = {
     "Organisez le suivi de votre ferme : enregistrez vos pontes en plateaux de 30 alvéoles, gérez vos stocks de provende en sacs ou kg, suivez vos vaccins et tenez votre trésorerie en FCFA.",
   icons: {
     icon: [
-      { url: "/favicon.ico" },
-      { url: "/icon.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon.ico", sizes: "any", type: "image/x-icon" },
+      { url: "/icon.png", sizes: "64x64", type: "image/png" },
     ],
     apple: [
       { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
@@ -62,8 +62,6 @@ export default function RootLayout({
   return (
     <html lang="fr" className="scroll-smooth">
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

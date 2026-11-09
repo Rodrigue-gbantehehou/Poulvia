@@ -1,0 +1,17 @@
+sentry:
+    dsn: '%env(SENTRY_DSN)%'
+    options:
+        environment: '%kernel.environment%'
+        traces_sample_rate: '%env(float:SENTRY_TRACES_SAMPLE_RATE)%'
+        profiles_sample_rate: '%env(float:SENTRY_PROFILES_SAMPLE_RATE)%'
+        enable_logs: true
+        enable_metrics: true
+        send_default_pii: false
+
+when@test:
+    sentry:
+        dsn: ''
+        options:
+            traces_sample_rate: 0.0
+            profiles_sample_rate: 0.0
+            enable_logs: false

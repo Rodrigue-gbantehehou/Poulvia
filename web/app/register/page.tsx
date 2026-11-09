@@ -1,17 +1,15 @@
 ﻿"use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bird, Lock, Mail, User, Phone, ArrowRight, AlertCircle, Sun, Moon } from "lucide-react";
+import { Lock, Mail, User, Phone, ArrowRight, AlertCircle } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
-import { useTheme } from "@/context/theme-context";
 
 export default function RegisterPage() {
   const router = useRouter();
   const { register } = useAuth();
-  const { theme, toggleTheme } = useTheme();
-
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -46,8 +44,8 @@ export default function RegisterPage() {
       <div className="w-full max-w-lg">
         {/* Header / Logo */}
         <div className="text-center mb-8">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white shadow-md mb-3">
-            <Bird className="h-8 w-8 text-accent" />
+          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-white p-2 shadow-md">
+            <Image src="/logo.png" alt="Logo Poulvia" width={48} height={48} className="h-full w-full object-contain" priority />
           </div>
           <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
             Poulvia

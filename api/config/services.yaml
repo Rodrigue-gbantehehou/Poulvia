@@ -19,5 +19,11 @@ services:
     App\:
         resource: '../src/'
 
+    Sentry\SentryBundle\Monolog\LogsHandler:
+        arguments:
+            - '%env(SENTRY_LOG_LEVEL)%'
+            - true
+            - true
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
