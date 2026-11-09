@@ -1,9 +1,9 @@
 ﻿"use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
-  Bird,
   Lock,
   Mail,
   ArrowRight,
@@ -96,8 +96,8 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-md">
         {/* Brand Header */}
         <div className="mb-8 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/25">
-            <Bird className="h-8 w-8" />
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-white p-2 shadow-md">
+            <Image src="/logo.png" alt="Logo Poulvia" width={48} height={48} className="h-full w-full object-contain" priority />
           </div>
           <h1 className="mt-4 text-2xl font-black tracking-tight text-foreground sm:text-3xl">
             Poulvia
