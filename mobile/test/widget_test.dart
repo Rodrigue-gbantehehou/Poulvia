@@ -64,7 +64,7 @@ void main() {
     expect(find.text('Démarrer mon exploitation'), findsOneWidget);
   });
 
-  testWidgets('BottomNavScaffold smoke test - displays main navigation tabs', (WidgetTester tester) async {
+  testWidgets('BottomNavScaffold smoke test - exposes compact main navigation tabs', (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: MaterialApp(
@@ -73,10 +73,18 @@ void main() {
       ),
     );
 
+    for (final label in ['Accueil', 'Élevage', 'Production', 'Gestion']) {
+      expect(
+        find.byWidgetPredicate(
+          (widget) => widget is Semantics && widget.properties.label == label,
+        ),
+        findsOneWidget,
+      );
+    }
     expect(find.text('Accueil'), findsOneWidget);
-    expect(find.text('Élevage'), findsOneWidget);
-    expect(find.text('Production'), findsOneWidget);
-    expect(find.text('Gestion'), findsOneWidget);
+    expect(find.text('Élevage'), findsNothing);
+    expect(find.text('Production'), findsNothing);
+    expect(find.text('Gestion'), findsNothing);
     expect(find.text('Menu'), findsNothing);
     expect(find.text('Ponte'), findsNothing);
   });
