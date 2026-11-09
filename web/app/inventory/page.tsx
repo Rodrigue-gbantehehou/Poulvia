@@ -16,6 +16,9 @@ import { InventoryItem, InventoryCategory, StockMovement, StockMovementType } fr
 import { formatFcfa, formatNumber } from "@/lib/utils";
 import { exportInventoryToCsv } from "@/lib/export";
 import { ModuleLockedState } from "@/components/ui/module-locked-state";
+
+// La valorisation avancée reste disponible dans le code, mais n'est pas présentée dans le parcours standard.
+const SHOW_ADVANCED_STOCK_VALUATION = false;
 import {
   formatInventoryUnit,
   getUnitLabel,
@@ -485,12 +488,14 @@ export default function InventoryPage() {
 
       {/* KPI Cards */}
       <div className="mt-2 sm:mt-3.5 grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4">
-        <StatCard
-          title="Valeur du stock"
-          value={formatFcfa(totalStockValue)}
-          accent="primary"
-          icon={<Package className="h-5 w-5" />}
-        />
+        {SHOW_ADVANCED_STOCK_VALUATION && hasModule("inventory_valuation") && (
+          <StatCard
+            title="Valeur du stock"
+            value={formatFcfa(totalStockValue)}
+            accent="primary"
+            icon={<Package className="h-5 w-5" />}
+          />
+        )}
         <StatCard
           title="Références"
           value={items.length}

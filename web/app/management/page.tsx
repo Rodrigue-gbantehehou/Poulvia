@@ -44,9 +44,11 @@ export default function ManagementPage() {
     hasModule("contacts") &&
     (hasPermission("contact:read") || hasPermission("contact:view") || isOwner);
   const canManageMembers =
-    hasPermission("member:manage") || hasPermission("member:read") || isOwner;
+    hasModule("team") &&
+    (hasPermission("member:manage") || isOwner);
   const canManageRoles =
-    hasPermission("role:manage") || hasPermission("role:read") || isOwner;
+    hasModule("custom_roles") &&
+    (hasPermission("role:manage") || isOwner);
 
   useEffect(() => {
     async function loadQuickStats() {

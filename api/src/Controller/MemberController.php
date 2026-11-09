@@ -33,7 +33,7 @@ class MemberController extends AbstractController
     }
 
     #[Route('', name: 'list', methods: ['GET'])]
-    #[IsGranted(FarmVoter::VIEW, subject: 'farm')]
+    #[IsGranted(FarmVoter::VIEW_MEMBERS, subject: 'farm')]
     public function list(Farm $farm): JsonResponse
     {
         $members = $this->memberService->getMembersForFarm($farm);

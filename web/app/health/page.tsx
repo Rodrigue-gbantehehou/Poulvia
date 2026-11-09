@@ -355,7 +355,7 @@ export default function HealthPage() {
       <Shell>
         <ModuleLockedState
           moduleName="Santé & Vaccins"
-          description="Le registre sanitaire, le calendrier vaccinal et la prophylaxie ne sont pas inclus dans votre formule actuelle."
+          description="Le suivi des soins et interventions sanitaires n'est pas inclus dans votre formule actuelle."
         />
       </Shell>
     );
@@ -371,34 +371,14 @@ export default function HealthPage() {
           icon={<HeartPulse className="h-4 w-4 text-accent" />}
           actions={
             canManageHealth && (
-              <>
-                {hasModule("prophylaxis_program") && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (flocks.length === 0) {
-                        toast.warning("Veuillez d'abord créer une bande de volailles.");
-                        return;
-                      }
-                      setProgramError(null);
-                      setProgramModalOpen(true);
-                    }}
-                    className="inline-flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent/20 transition-colors shadow-2xs active:scale-95 cursor-pointer"
-                  >
-                    <Zap className="h-3.5 w-3.5" />
-                    <span className="hidden xs:inline">1-Clic</span>
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  onClick={handleOpenCreateModal}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 sm:px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-primary-hover active:scale-95 transition-all cursor-pointer"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>Nouveau soin</span>
-                </button>
-              </>
+              <button
+                type="button"
+                onClick={handleOpenCreateModal}
+                className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 sm:px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-primary-hover active:scale-95 transition-all cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Nouveau soin</span>
+              </button>
             )
           }
         />
@@ -512,15 +492,15 @@ export default function HealthPage() {
           <div className="flex h-64 items-center justify-center rounded-xl border border-border bg-surface">
             <div className="flex items-center gap-3 text-muted">
               <Clock className="h-5 w-5 animate-spin text-accent" />
-              <span>Chargement du calendrier prophylactique...</span>
+              <span>Chargement du suivi sanitaire...</span>
             </div>
           </div>
         ) : filteredTreatments.length === 0 ? (
           <EmptyState
             title="Aucune intervention sanitaire trouvée"
-            description="Créez une intervention ou utilisez la génération de programme en 1-clic pour planifier automatiquement les vaccins de votre bande."
-            actionLabel="Générer le programme vaccinal"
-            onAction={() => setProgramModalOpen(true)}
+            description="Enregistrez un soin ou une intervention pour commencer le suivi sanitaire de votre ferme."
+            actionLabel={canManageHealth ? "Créer une intervention" : undefined}
+            onAction={handleOpenCreateModal}
           />
         ) : (
           <div className="space-y-3">
@@ -926,7 +906,8 @@ export default function HealthPage() {
         </form>
       </Modal>
 
-      {/* MODALE 2 : GÉNÉRATION DU PROGRAMME STANDARD 1-CLIC */}
+      {/* Générateur avancé conservé pour activation sur demande, absent du parcours standard. */}
+      {hasModule("prophylaxis_program") && (
       <Modal
         isOpen={programModalOpen}
         onClose={() => setProgramModalOpen(false)}
@@ -1000,6 +981,7 @@ export default function HealthPage() {
           </div>
         </form>
       </Modal>
+      )}
 
       {/* MODALE 3 : VALIDER L'ADMINISTRATION D'UN SOIN */}
       <Modal

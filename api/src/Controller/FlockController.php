@@ -17,6 +17,7 @@ use App\Repository\FarmMembershipRepository;
 use App\Repository\TransactionRepository;
 use App\Security\Voter\FarmVoter;
 use App\Security\Voter\FlockVoter;
+use App\Security\BuildingAccessChecker;
 use App\Service\FlockService;
 use App\Service\IdempotencyService;
 use App\Service\PdfService;
@@ -40,6 +41,7 @@ class FlockController extends AbstractController
         private readonly EggProductionRepository $eggProductionRepository,
         private readonly PdfService $pdfService,
         private readonly IdempotencyService $idempotencyService,
+        private readonly BuildingAccessChecker $buildingAccessChecker,
     ) {
     }
 
@@ -84,6 +86,7 @@ class FlockController extends AbstractController
         #[CurrentUser] User $user,
         Request $request,
     ): JsonResponse {
+        $this->buildingAccessChecker->assertBuildingIdAssigned($user, $farm, $dto->buildingId);
         $idempotencyKey = IdempotencyService::requireKey($request, 'créer une bande');
 
         return $this->idempotencyService->process(
@@ -117,6 +120,10 @@ class FlockController extends AbstractController
         Flock $flock,
         #[MapRequestPayload] UpdateFlockRequestDto $dto,
     ): JsonResponse {
+        $currentUser = $this->getUser();
+        if ($currentUser instanceof User) {
+            $this->buildingAccessChecker->assertBuildingIdAssigned($currentUser, $flock->getFarm(), $dto->buildingId);
+        }
         $updatedFlock = $this->flockService->updateFlock($flock, $dto);
 
         return $this->json([
@@ -140,6 +147,9 @@ class FlockController extends AbstractController
         if ($user === null) {
             throw new BadRequestHttpException("Utilisateur non authentifié.");
         }
+
+        $targetBuildingId = $dto->targetBuildingId ?? $dto->destinationBuildingId;
+        $this->buildingAccessChecker->assertBuildingIdAssigned($user, $flock->getFarm(), $targetBuildingId);
 
         /** @var JsonResponse */
         return $this->idempotencyService->process(

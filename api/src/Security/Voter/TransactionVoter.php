@@ -10,6 +10,7 @@ use App\Entity\Transaction;
 use App\Entity\User;
 use App\Repository\FarmMembershipRepository;
 use App\Security\ApiKeySecurityChecker;
+use App\Security\FarmPermissionChecker;
 use App\Security\Permission;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
@@ -27,6 +28,7 @@ class TransactionVoter extends Voter
     public function __construct(
         private readonly FarmMembershipRepository $membershipRepository,
         private readonly ApiKeySecurityChecker $apiKeyChecker,
+        private readonly FarmPermissionChecker $permissionChecker,
     ) {
     }
 
@@ -56,16 +58,20 @@ class TransactionVoter extends Voter
             return false;
         }
 
+        $requiredPermission = match ($attribute) {
+            self::VIEW => Permission::FINANCE_VIEW,
+            self::RECORD => Permission::FINANCE_CREATE,
+            self::EDIT => Permission::FINANCE_EDIT,
+            self::DELETE => Permission::FINANCE_DELETE,
+            default => 'none',
+        };
+
+        if (!$this->permissionChecker->moduleAllows($farm, $requiredPermission)) {
+            return false;
+        }
+
         $apiKey = $this->apiKeyChecker->getApiKey();
         if ($apiKey !== null) {
-            $requiredPermission = match ($attribute) {
-                self::VIEW => Permission::FINANCE_VIEW,
-                self::RECORD => Permission::FINANCE_CREATE,
-                self::EDIT => Permission::FINANCE_EDIT,
-                self::DELETE => Permission::FINANCE_DELETE,
-                default => 'none',
-            };
-
             if (!$this->apiKeyChecker->isAccessAllowed($farm, $requiredPermission)) {
                 return false;
             }
@@ -84,10 +90,10 @@ class TransactionVoter extends Voter
         }
 
         return match ($attribute) {
-            self::VIEW => $membership->hasPermission(Permission::FINANCE_VIEW),
-            self::RECORD => $membership->hasPermission(Permission::FINANCE_CREATE),
-            self::EDIT => $membership->hasPermission(Permission::FINANCE_EDIT) || $membership->hasPermission(Permission::FINANCE_CREATE),
-            self::DELETE => $membership->hasPermission(Permission::FINANCE_DELETE) || $membership->hasPermission(Permission::FINANCE_CREATE),
+            self::VIEW => $this->permissionChecker->allows($membership, Permission::FINANCE_VIEW, false),
+            self::RECORD => $this->permissionChecker->allows($membership, Permission::FINANCE_CREATE),
+            self::EDIT => $this->permissionChecker->allows($membership, Permission::FINANCE_EDIT) || $this->permissionChecker->allows($membership, Permission::FINANCE_CREATE),
+            self::DELETE => $this->permissionChecker->allows($membership, Permission::FINANCE_DELETE) || $this->permissionChecker->allows($membership, Permission::FINANCE_CREATE),
             default => false,
         };
     }

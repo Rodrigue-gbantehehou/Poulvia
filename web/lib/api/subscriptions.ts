@@ -39,6 +39,7 @@ export interface PublicPlan {
 export interface UpgradeRequestPayload {
   farmId: string;
   targetPlan: string;
+  billingCycle?: "MONTHLY" | "ANNUALLY";
   message?: string;
 }
 
@@ -124,6 +125,18 @@ export const subscriptionsApi = {
   async getPublicPlans(): Promise<PublicPlan[]> {
     const { publicPlans } = await subscriptionsApi.getPlans();
     return publicPlans;
+  },
+
+  async getFarmPlan(farmId: string): Promise<{
+    currentPlan: PublicPlan;
+    orgStatus: string;
+    billingCycle: "MONTHLY" | "ANNUALLY";
+  }> {
+    return await apiRequest<{
+      currentPlan: PublicPlan;
+      orgStatus: string;
+      billingCycle: "MONTHLY" | "ANNUALLY";
+    }>(`/subscriptions/farm/${farmId}`);
   },
 
   /**

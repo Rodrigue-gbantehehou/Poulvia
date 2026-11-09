@@ -4,6 +4,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_provider.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/models/inventory_item.dart';
+import '../auth/auth_provider.dart';
 import '../../core/widgets/brand_loader.dart';
 import 'inventory_provider.dart';
 import 'inventory_detail_screen.dart';
@@ -18,6 +19,8 @@ class InventoryScreen extends ConsumerStatefulWidget {
 }
 
 class _InventoryScreenState extends ConsumerState<InventoryScreen> {
+  // La valorisation avancée reste disponible dans le code, mais n'est pas présentée dans le parcours standard.
+  final bool _showAdvancedStockValuation = false;
   int _activeTabIndex = 0; // 0 = Stocks en réserve, 1 = Journal des mouvements
   String _searchQuery = "";
 
@@ -845,6 +848,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final invState = ref.watch(inventoryProvider);
+    final activeFarm = ref.watch(authProvider).activeFarm;
+    final canViewStockValuation = _showAdvancedStockValuation &&
+        (activeFarm?.modules.contains('inventory_valuation') ?? false);
     final summary = invState.summary;
 
     final filteredItems = invState.items.where((i) {
@@ -1030,7 +1036,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // En-tête KPI de valorisation marchande
+                              // La valorisation avancée reste masquée sans activation du module.
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 12, top: 2),
                                 child: Row(
@@ -1042,7 +1048,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                         Row(
                                           children: [
                                             Text(
-                                              CurrencyFormatter.formatFcfa(summary.estimatedTotalValue),
+                                              canViewStockValuation
+                                                  ? CurrencyFormatter.formatFcfa(summary.estimatedTotalValue)
+                                                  : "${summary.totalItems}",
                                               style: const TextStyle(
                                                 fontSize: 22,
                                                 fontWeight: FontWeight.w900,
@@ -1051,14 +1059,14 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                               ),
                                             ),
                                             const SizedBox(width: 4),
-                                            const Text(
-                                              "FCFA",
-                                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                            Text(
+                                              canViewStockValuation ? "FCFA" : "articles",
+                                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                                             ),
                                           ],
                                         ),
                                         Text(
-                                          "${summary.totalItems} références • ${summary.lowStockCount} alerte(s) réappro",
+                                          "${summary.lowStockCount} alerte(s) de réapprovisionnement",
                                           style: TextStyle(
                                             fontSize: 11,
                                             color: summary.lowStockCount > 0 ? AppColors.danger : AppColors.textMutedLight,

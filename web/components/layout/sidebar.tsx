@@ -10,14 +10,8 @@ import {
   Warehouse,
   Egg,
   HeartPulse,
-  Package,
-  Wallet,
-  ContactRound,
-  ShieldCheck,
-  Users,
   X,
   Settings,
-  CreditCard,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { cn } from "@/lib/utils";
@@ -30,95 +24,71 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const { hasPermission, hasModule, activePlan, isOwner } = useAuth();
+  const { hasPermission, hasModule, activeFarm, isOwner } = useAuth();
   const { state, isMobile } = useSidebar();
   const isCollapsed = !isMobile && state === "collapsed";
 
+  const canViewFlocks =
+    hasModule("flocks") &&
+    (hasPermission("flock:read") || hasPermission("flock:view") || isOwner);
+  const canViewBuildings =
+    hasModule("buildings") &&
+    (hasPermission("building:manage") || hasPermission("farm:view") || isOwner);
+  const canViewProduction =
+    activeFarm?.productionType !== "BROILER" &&
+    hasModule("eggs") &&
+    (hasPermission("egg:read") || hasPermission("egg:view") || isOwner);
+  const canViewHealth =
+    hasModule("health") &&
+    (hasPermission("health:view") || hasPermission("health:manage") || isOwner);
+  const canViewFinance =
+    hasModule("finance") &&
+    (hasPermission("finance:read") || hasPermission("finance:view") || isOwner);
+  const canViewInventory =
+    hasModule("inventory") &&
+    (hasPermission("inventory:read") || hasPermission("inventory:view") || isOwner);
+  const canViewContacts =
+    hasModule("contacts") &&
+    (hasPermission("contact:read") || hasPermission("contact:view") || isOwner);
+  const canViewMembers =
+    hasModule("team") &&
+    (hasPermission("member:manage") || isOwner);
+  const canViewRoles =
+    hasModule("custom_roles") &&
+    (hasPermission("role:manage") || isOwner);
+  const canViewManagement =
+    canViewFinance || canViewInventory || canViewContacts || canViewMembers || canViewRoles;
+
   const navigation = [
     {
-      name: "Tableau de bord",
+      name: "Accueil",
       href: "/",
       icon: LayoutDashboard,
-      module: undefined,
       show: true,
     },
     {
-      name: "Poulaillers & Bâtiments",
-      href: "/buildings",
-      icon: Warehouse,
-      module: "buildings",
-      show: hasPermission("building:manage") || hasPermission("farm:view"),
-    },
-    {
-      name: "Bandes de volailles",
-      href: "/flocks",
+      name: "Élevage",
+      href: canViewFlocks ? "/flocks" : "/buildings",
       icon: Bird,
-      module: "flocks",
-      show: hasPermission("flock:read") || hasPermission("flock:view"),
+      show: canViewFlocks || canViewBuildings,
+      children: [
+        ...(canViewFlocks ? [{ name: "Bandes", href: "/flocks", icon: Bird }] : []),
+        ...(canViewBuildings ? [{ name: "Bâtiments", href: "/buildings", icon: Warehouse }] : []),
+      ],
     },
     {
-      name: "Pontes d'œufs",
+      name: "Production",
       href: "/eggs",
       icon: Egg,
-      module: "eggs",
-      show: hasPermission("egg:read") || hasPermission("egg:view"),
+      show: canViewProduction,
     },
     {
-      name: "Santé & Soins",
+      name: "Santé",
       href: "/health",
       icon: HeartPulse,
-      module: "health",
-      show: hasPermission("health:view") || hasPermission("health:manage"),
+      show: canViewHealth,
     },
-    {
-      name: "Stocks & Intrants",
-      href: "/inventory",
-      icon: Package,
-      module: "inventory",
-      show: hasPermission("inventory:read") || hasPermission("inventory:view"),
-    },
-    {
-      name: "Trésorerie & Ventes",
-      href: "/finances",
-      icon: Wallet,
-      module: "finance",
-      show: hasPermission("finance:read") || hasPermission("finance:view"),
-    },
-    {
-      name: "Contacts & Tiers",
-      href: "/contacts",
-      icon: ContactRound,
-      module: "contacts",
-      show: hasPermission("contact:read") || hasPermission("contact:view"),
-    },
-    {
-      name: "Équipe & Accès",
-      href: "/settings/members",
-      icon: Users,
-      module: "team",
-      show: hasPermission("member:manage") || hasPermission("member:read"),
-    },
-    {
-      name: "Rôles & Permissions",
-      href: "/settings/roles",
-      icon: ShieldCheck,
-      module: "custom_roles",
-      show: hasPermission("role:manage") || hasPermission("role:read"),
-    },
-    {
-      name: "Mon abonnement",
-      href: "/settings/subscription",
-      icon: CreditCard,
-      module: undefined,
-      show: isOwner,
-    },
-    {
-      name: "Paramètres de la ferme",
-      href: "/settings/farm",
-      icon: Settings,
-      module: undefined,
-      show: true,
-    },
+    { name: "Gestion", href: "/management", icon: Settings, show: canViewManagement },
   ];
 
   return (
@@ -186,11 +156,57 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             Exploitation
           </div>
           {navigation.map((item) => {
-            const isModuleAllowed = item.module ? hasModule(item.module) : true;
-
-            // Ne pas afficher les modules non concernés par l'offre ou non autorisés par le rôle
-            if (!isModuleAllowed || !item.show) {
+            if (!item.show) {
               return null;
+            }
+
+            if ("children" in item && item.children) {
+              return (
+                <div key={item.name} className="space-y-1">
+                  <div
+                    className={cn(
+                      "pb-1 text-caption font-medium text-muted",
+                      isCollapsed ? "sr-only" : "px-3.5 pt-2",
+                    )}
+                  >
+                    {item.name}
+                  </div>
+                  {item.children.map((child) => {
+                    const childActive = pathname.startsWith(child.href);
+                    const ChildIcon = child.icon;
+
+                    return (
+                      <Link
+                        key={child.href}
+                        href={child.href}
+                        onClick={onClose}
+                        aria-label={`${item.name} — ${child.name}`}
+                        aria-current={childActive ? "page" : undefined}
+                        title={isCollapsed ? child.name : undefined}
+                        className={cn(
+                          "group relative flex min-h-11 items-center rounded-control py-2.5 text-label font-medium transition-colors",
+                          isCollapsed ? "justify-center px-0" : "gap-3 px-3.5",
+                          childActive
+                            ? "bg-primary-soft text-primary font-semibold"
+                            : "text-muted hover:bg-surface-hover hover:text-foreground",
+                        )}
+                      >
+                        {childActive && (
+                          <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r-full bg-primary" />
+                        )}
+                        <ChildIcon
+                          className={cn(
+                            "h-5 w-5 shrink-0",
+                            childActive ? "text-primary" : "text-muted group-hover:text-foreground",
+                          )}
+                          aria-hidden="true"
+                        />
+                        <span className={cn("truncate", isCollapsed && "sr-only")}>{child.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              );
             }
 
             const isActive =
@@ -236,47 +252,23 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           })}
         </nav>
 
-        {/* Footer avec formule active (réservé au propriétaire) */}
-        {isOwner && (
-          <div className={cn(
-            "border-t border-border pb-[max(1rem,env(safe-area-inset-bottom))]",
-            isCollapsed ? "p-2" : "p-4",
-          )}>
-            {isCollapsed ? (
-              <Link
-                href="/settings/subscription"
-                onClick={onClose}
-                aria-label={`Abonnement ${activePlan?.planName || "Formule Starter"}`}
-                title={`Abonnement : ${activePlan?.planName || "Formule Starter"}`}
-                className="flex h-11 w-11 items-center justify-center rounded-control bg-surface-muted text-primary hover:bg-surface-hover transition-colors"
-              >
-                <CreditCard className="h-5 w-5" aria-hidden="true" />
-              </Link>
-            ) : (
-              <Link
-                href="/settings/subscription"
-                onClick={onClose}
-                className="block rounded-control bg-surface-muted border border-border p-3.5 hover:bg-surface-hover transition-colors group"
-              >
-                <div className="text-caption font-medium uppercase tracking-wide text-muted group-hover:text-primary transition-colors">
-                  Formule de la ferme
-                </div>
-                <div className="mt-1 flex items-center justify-between">
-                  <span className="text-label font-semibold text-foreground truncate">
-                    {activePlan?.planName || "Formule Starter"}
-                  </span>
-                  <span className="rounded-control bg-primary-soft text-primary px-2 py-1 text-caption font-medium">
-                    {activePlan?.badge || activePlan?.plan || "Gratuit"}
-                  </span>
-                </div>
-                <div className="mt-1.5 text-caption text-muted group-hover:text-primary transition-colors flex items-center gap-1 font-medium">
-                  <CreditCard className="h-3.5 w-3.5 text-primary" />
-                  Gérer mon abonnement →
-                </div>
-              </Link>
+        <div className="border-t border-border p-3">
+          <Link
+            href="/settings"
+            onClick={onClose}
+            aria-label="Paramètres"
+            title={isCollapsed ? "Paramètres" : undefined}
+            className={cn(
+              "flex min-h-11 items-center rounded-control py-2.5 text-label font-medium text-muted transition-colors hover:bg-surface-hover hover:text-foreground",
+              isCollapsed ? "justify-center px-0" : "gap-3 px-3.5",
+              pathname.startsWith("/settings") && "bg-primary-soft text-primary",
             )}
-          </div>
-        )}
+          >
+            <Settings className="h-5 w-5 shrink-0" aria-hidden="true" />
+            <span className={cn(isCollapsed && "sr-only")}>Paramètres</span>
+          </Link>
+        </div>
+
       </aside>
     </>
   );

@@ -48,6 +48,9 @@ export interface FarmSubscription {
     retentionMonths?: number;
   };
   status?: string;
+  trialEndsAt?: string | null;
+  trialExpired?: boolean;
+  billingCycle?: "MONTHLY" | "ANNUALLY" | null;
 }
 
 export interface Building {

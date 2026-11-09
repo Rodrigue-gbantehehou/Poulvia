@@ -19,6 +19,8 @@ class FinancesScreen extends ConsumerStatefulWidget {
 }
 
 class _FinancesScreenState extends ConsumerState<FinancesScreen> {
+  // Les créances avancées restent compatibles avec les données existantes, mais sont masquées du parcours standard.
+  final bool _showAdvancedReceivables = false;
   @override
   void initState() {
     super.initState();
@@ -356,7 +358,7 @@ class _FinancesScreenState extends ConsumerState<FinancesScreen> {
                                         ),
                                       ],
                                     ),
-                                    if (!tx.isPaid) ...[
+                                    if (_showAdvancedReceivables && !tx.isPaid) ...[
                                       const SizedBox(height: 4),
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),

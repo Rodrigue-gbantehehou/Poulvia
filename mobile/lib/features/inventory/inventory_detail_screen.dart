@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/api_endpoints.dart';
 import '../../core/models/inventory_item.dart';
+import '../auth/auth_provider.dart';
 import '../../core/models/stock_movement.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/currency_formatter.dart';
@@ -24,6 +25,8 @@ class InventoryDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
+  // La valorisation avancée reste disponible dans le code, mais n'est pas présentée dans le parcours standard.
+  final bool _showAdvancedStockValuation = false;
   late InventoryItem _item;
   bool _isLoading = true;
   List<StockMovement> _movements = [];
@@ -90,6 +93,9 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final surfaceColor = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final activeFarm = ref.watch(authProvider).activeFarm;
+    final canViewStockValuation = _showAdvancedStockValuation &&
+        (activeFarm?.modules.contains('inventory_valuation') ?? false);
 
     final isBag = _item.unit == "BAG" || _item.unit == "BAG_50KG" || _item.unit == "BAG_25KG";
     final bagWeight = _item.packageWeightKg ?? 50.0;
@@ -189,15 +195,17 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                             color: _item.isLowStock ? AppColors.danger : AppColors.primary,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _ProductKpiCard(
-                            label: "VALEUR DU STOCK",
-                            value: CurrencyFormatter.formatFcfa(totalStockValue),
-                            sub: "À ${_item.unitPrice != null ? CurrencyFormatter.formatFcfa(_item.unitPrice!) : '0 FCFA'} / ${_item.unitShortLabel}",
-                            color: AppColors.success,
+                        if (canViewStockValuation) ...[
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _ProductKpiCard(
+                              label: "VALEUR DU STOCK",
+                              value: CurrencyFormatter.formatFcfa(totalStockValue),
+                              sub: "À ${_item.unitPrice != null ? CurrencyFormatter.formatFcfa(_item.unitPrice!) : '0 FCFA'} / ${_item.unitShortLabel}",
+                              color: AppColors.success,
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 8),

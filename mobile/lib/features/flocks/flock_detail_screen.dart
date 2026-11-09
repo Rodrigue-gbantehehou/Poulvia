@@ -415,7 +415,7 @@ class _FlockDetailScreenState extends ConsumerState<FlockDetailScreen>
               grossMargin: _grossMargin,
             ),
           ),
-          if (_flock.isActive && (farm?.canRecordFlockMovement == true || farm?.isOwner == true))
+          if (_flock.isActive && farm?.canRecordFlockMovement == true)
             IconButton(
               icon: const Icon(Icons.archive_outlined),
               tooltip: "Clôturer le lot",

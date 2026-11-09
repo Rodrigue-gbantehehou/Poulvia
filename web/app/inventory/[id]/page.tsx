@@ -31,6 +31,9 @@ import { Modal } from "@/components/ui/modal";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, ColumnDef } from "@/components/ui/data-table";
 import { ModuleLockedState } from "@/components/ui/module-locked-state";
+
+// La valorisation avancée reste disponible dans le code, mais n'est pas présentée dans le parcours standard.
+const SHOW_ADVANCED_STOCK_VALUATION = false;
 import { PageHeader } from "@/components/ui/page-header";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
@@ -664,12 +667,14 @@ function InventoryItemDetailContent() {
           icon={<Package className="h-5 w-5" />}
         />
 
-        <StatCard
-          title="Valeur en stock"
-          value={formatFcfa(totalStockValue)}
-          subtitle={`${formatFcfa(item.unitCostFcfa)} / ${unitShort}`}
-          icon={<Wallet className="h-5 w-5" />}
-        />
+        {SHOW_ADVANCED_STOCK_VALUATION && hasModule("inventory_valuation") && (
+          <StatCard
+            title="Valeur en stock"
+            value={formatFcfa(totalStockValue)}
+            subtitle={`${formatFcfa(item.unitCostFcfa)} / ${unitShort}`}
+            icon={<Wallet className="h-5 w-5" />}
+          />
+        )}
 
         <StatCard
           title="Total entrées"

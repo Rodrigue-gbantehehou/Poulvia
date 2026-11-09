@@ -45,10 +45,12 @@ class SubscriptionPlansController extends AbstractController
     {
         $allPlans = array_values($this->planService->getPlans());
 
-        // Filtrer : offres publiées, disponibles et publiques uniquement
-        // Les offres privées (sur devis / réservées) ne doivent pas s'afficher dans le catalogue public
+        // Poulvia ne publie qu'une seule formule payante. Les anciens SKUs restent
+        // disponibles pour préserver les abonnements historiques et les offres
+        // personnalisées, mais ne constituent plus des niveaux publics.
         $publicPlans = array_values(array_filter($allPlans, static function (array $plan): bool {
-            return ($plan['status'] ?? 'PUBLISHED') === 'PUBLISHED'
+            return strtoupper((string) ($plan['sku'] ?? '')) === 'STANDARD'
+                && ($plan['status'] ?? 'PUBLISHED') === 'PUBLISHED'
                 && ($plan['isAvailable'] ?? true) === true
                 && ($plan['isVisibilityPublic'] ?? true) === true;
         }));
@@ -117,6 +119,8 @@ class SubscriptionPlansController extends AbstractController
             'data' => [
                 'currentPlan' => $plan,
                 'orgStatus' => $org->getStatus()->value,
+                'billingCycle' => $org->getSubscriptionBillingCycle(),
+                'trialEndsAt' => $org->getSubscriptionTrialEndsAt()?->format(\DateTimeInterface::ATOM),
             ],
         ]);
     }
@@ -172,11 +176,25 @@ class SubscriptionPlansController extends AbstractController
             ], Response::HTTP_FORBIDDEN);
         }
 
-        $targetPlanData = $this->planService->getPlan($targetPlan);
-        if ($targetPlanData === null) {
+        // Les formules historiques et les offres personnalisées restent gérées
+        // côté administration et ne peuvent pas être demandées depuis le catalogue client.
+        $targetPlanData = $targetPlan === 'STANDARD' ? $this->planService->getPlan($targetPlan) : null;
+        if ($targetPlanData === null
+            || ($targetPlanData['status'] ?? 'PUBLISHED') !== 'PUBLISHED'
+            || !($targetPlanData['isAvailable'] ?? true)
+            || !($targetPlanData['isVisibilityPublic'] ?? true)
+        ) {
             return $this->json([
                 'status' => 'error',
-                'message' => sprintf('L\'offre "%s" n\'existe pas dans notre catalogue.', $targetPlan),
+                'message' => 'Cette offre n\'est pas disponible dans le catalogue client.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $billingCycle = strtoupper(trim((string) ($payload['billingCycle'] ?? 'MONTHLY')));
+        if (!in_array($billingCycle, $targetPlanData['allowedBillingCycles'] ?? ['MONTHLY', 'ANNUALLY'], true)) {
+            return $this->json([
+                'status' => 'error',
+                'message' => 'Cette périodicité n\'est pas disponible pour l\'offre choisie.',
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
@@ -198,7 +216,7 @@ class SubscriptionPlansController extends AbstractController
             currentPlan: $currentPlan,
             targetPlan: $targetPlan,
             targetPlanName: $targetPlanData['name'],
-            billingCycle: (string) ($payload['billingCycle'] ?? 'MONTHLY'),
+            billingCycle: $billingCycle,
             message: $message !== '' ? $message : null,
         );
 

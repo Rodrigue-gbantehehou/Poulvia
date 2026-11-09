@@ -15,6 +15,7 @@ class FarmPermission {
   static const String healthManage = 'health:manage';
   static const String buildingManage = 'building:manage';
   static const String memberManage = 'member:manage';
+  static const String roleManage = 'role:manage';
   static const String contactView = 'contact:view';
   static const String contactCreate = 'contact:create';
 }
@@ -29,6 +30,9 @@ class Farm {
   final String? role;
   final String? plan;
   final String? planName;
+  final String? subscriptionTrialEndsAt;
+  final bool subscriptionTrialExpired;
+  final String? billingCycle;
   final List<String> modules;
   final PlanQuotas? quotas;
 
@@ -57,6 +61,9 @@ class Farm {
     this.role,
     this.plan,
     this.planName,
+    this.subscriptionTrialEndsAt,
+    this.subscriptionTrialExpired = false,
+    this.billingCycle,
     this.modules = const [],
     this.quotas,
     this.permissions,
@@ -102,6 +109,9 @@ class Farm {
       role: json['role'] as String?,
       plan: (subscription['plan'] ?? json['plan'] ?? json['subscriptionPlan']) as String?,
       planName: subscription['planName'] as String?,
+      subscriptionTrialEndsAt: subscription['trialEndsAt'] as String?,
+      subscriptionTrialExpired: subscription['trialExpired'] == true,
+      billingCycle: subscription['billingCycle'] as String?,
       modules: parsedModules,
       quotas: parsedQuotas,
       permissions: parsedPermissions,
@@ -134,6 +144,9 @@ class Farm {
     'subscription': {
       'plan': plan,
       'planName': planName,
+      'trialEndsAt': subscriptionTrialEndsAt,
+      'trialExpired': subscriptionTrialExpired,
+      'billingCycle': billingCycle,
       'modules': modules,
     },
   };
@@ -149,7 +162,10 @@ class Farm {
   String get _role => (role ?? '').toUpperCase();
 
   /// Propriétaire ou Administrateur avec pleins pouvoirs
-  bool get isOwner => _role == 'OWNER' || _role == 'ADMIN';
+  bool get isFarmOwner => _role == 'OWNER' || _role == 'ADMIN';
+
+  /// Propriétaire opérationnel : les propriétaires en essai expiré restent en lecture seule.
+  bool get isOwner => isFarmOwner;
 
   /// Indique si l'utilisateur connecté a des restrictions sur des bâtiments spécifiques
   bool get hasBuildingRestrictions =>
@@ -165,6 +181,15 @@ class Farm {
 
   /// Vérifie un droit : matrice serveur (rôle ∩ abonnement) si disponible, sinon règles de rôle par défaut.
   bool hasPermission(String permission) {
+    final isReadOnlyAdministrativePermission = const {
+      FarmPermission.memberManage,
+      FarmPermission.roleManage,
+      FarmPermission.buildingManage,
+    }.contains(permission);
+    final isWritePermission = RegExp(r':(create|edit|update|delete|movement|manage)$').hasMatch(permission);
+    if (subscriptionTrialExpired && isWritePermission && !isReadOnlyAdministrativePermission) {
+      return false;
+    }
     final perms = permissions;
     if (perms != null) {
       return perms.contains('*') || perms.contains(permission);
@@ -242,7 +267,7 @@ class Farm {
   /// Administration
   bool get canManageBuildings => hasPermission(FarmPermission.buildingManage);
   bool get canManageMembers => hasPermission(FarmPermission.memberManage);
-  bool get canManageSubscription => isOwner;
+  bool get canManageSubscription => isFarmOwner;
   bool get canViewReports => canViewEggs || canViewFlocks || canViewFinance;
 
   /// Au moins une action de saisie rapide est autorisée

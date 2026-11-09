@@ -32,6 +32,7 @@ class AuthService
         private readonly SluggerInterface $slugger,
         private readonly AdminAuditService $adminAuditService,
         private readonly CommercialPlanService $commercialPlanService,
+        private readonly SubscriptionTrialService $subscriptionTrialService,
     ) {
     }
 
@@ -71,6 +72,7 @@ class AuthService
                 }
 
                 $organization = new Organization($orgName, $uniqueSlug);
+                $this->subscriptionTrialService->startFor($organization);
                 $this->entityManager->persist($organization);
 
                 $farm = new Farm($organization, $dto->farmName, $dto->productionType ?? \App\Enum\ProductionType::MIXED);
@@ -158,7 +160,10 @@ class AuthService
                             'maxBuildings' => 2,
                             'retentionMonths' => 3,
                         ],
-                        'status' => $plan['status'] ?? 'ACTIVE',
+                        'status' => $org->getStatus()->value,
+                        'trialEndsAt' => $org->getSubscriptionTrialEndsAt()?->format(\DateTimeInterface::ATOM),
+                        'trialExpired' => $this->subscriptionTrialService->isExpired($org),
+                        'billingCycle' => $org->getSubscriptionBillingCycle(),
                     ],
                 ];
             }

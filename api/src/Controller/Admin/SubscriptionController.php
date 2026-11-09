@@ -366,6 +366,16 @@ class SubscriptionController extends AbstractController
         $body = $request->toArray();
         $newPlan = isset($body['plan']) ? strtoupper(trim((string) $body['plan'])) : null;
         $newStatus = isset($body['status']) ? strtoupper(trim((string) $body['status'])) : null;
+        $newBillingCycle = isset($body['billingCycle'])
+            ? strtoupper(trim((string) $body['billingCycle']))
+            : null;
+
+        if ($newBillingCycle !== null && !in_array($newBillingCycle, ['MONTHLY', 'ANNUALLY'], true)) {
+            return $this->json([
+                'status' => 'error',
+                'message' => 'Périodicité invalide. Valeurs autorisées : MONTHLY, ANNUALLY.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
 
         if ($newPlan !== null) {
             $planDef = $this->planService->getPlan($newPlan);
@@ -386,6 +396,20 @@ class SubscriptionController extends AbstractController
                 ], Response::HTTP_UNPROCESSABLE_ENTITY);
             }
             $organization->setStatus(OrganizationStatus::from($newStatus));
+
+            if ($newStatus === 'ACTIVE') {
+                $organization->setSubscriptionTrialEndsAt(null);
+            } elseif ($newStatus === 'TRIAL') {
+                $plan = $this->planService->getPlan($organization->getSubscriptionPlan());
+                $trialDays = max(0, (int) ($plan['trialDays'] ?? 0));
+                $organization->setSubscriptionTrialEndsAt(
+                    (new \DateTimeImmutable())->modify(sprintf('+%d days', $trialDays))
+                );
+            }
+        }
+
+        if ($newBillingCycle !== null) {
+            $organization->setSubscriptionBillingCycle($newBillingCycle);
         }
 
         $this->entityManager->flush();
@@ -485,9 +509,9 @@ class SubscriptionController extends AbstractController
 
         // 1. Appliquer le changement de formule à l'organisation
         $organization->setSubscriptionPlan($targetPlan);
-        if ($organization->getStatus() === OrganizationStatus::SUSPENDED) {
-            $organization->setStatus(OrganizationStatus::ACTIVE);
-        }
+        $organization->setSubscriptionBillingCycle($upgradeReq->getBillingCycle());
+        $organization->setSubscriptionTrialEndsAt(null);
+        $organization->setStatus(OrganizationStatus::ACTIVE);
 
         // 2. Marquer la demande comme approuvée
         $adminUser = $this->getUser();

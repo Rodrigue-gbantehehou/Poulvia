@@ -89,6 +89,7 @@ class _FarmSettingsScreenState extends ConsumerState<FarmSettingsScreen> {
     }
 
     final isOwner = farm.isOwner;
+    final canEditFarm = isOwner && !farm.subscriptionTrialExpired;
 
     return Scaffold(
       appBar: AppBar(
@@ -311,7 +312,7 @@ class _FarmSettingsScreenState extends ConsumerState<FarmSettingsScreen> {
                     const SizedBox(height: 36),
 
                     // ZONE DE DANGER (Propriétaire uniquement)
-                    if (isOwner) ...[
+                    if (canEditFarm) ...[
                       _buildDangerZone(context, farm, isDark),
                     ],
                   ],

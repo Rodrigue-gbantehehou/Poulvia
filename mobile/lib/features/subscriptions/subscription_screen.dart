@@ -84,6 +84,29 @@ class SubscriptionScreen extends ConsumerWidget {
     });
 
     final currentPlan = state.currentPlan;
+    final paidPlans = state.publicPlans.where((plan) => plan.sku == 'STANDARD').toList();
+    final currentPlanName = currentPlan?.sku == 'STANDARD'
+        ? 'Poulvia'
+        : (currentPlan?.name ?? 'Offre Poulvia');
+    final trialEnd = DateTime.tryParse(farm.subscriptionTrialEndsAt ?? '');
+    final orgStatus = state.orgStatus.toUpperCase();
+    final trialExpired =
+        (orgStatus == 'TRIAL' || orgStatus == 'SUSPENDED') &&
+        trialEnd != null &&
+        !trialEnd.isAfter(DateTime.now());
+    final isSuspended = orgStatus == 'SUSPENDED' || trialExpired;
+    final statusLabel = isSuspended
+        ? 'Lecture seule'
+        : (orgStatus == 'TRIAL' ? 'Essai en cours' : 'Actif');
+    final statusColor = isSuspended
+        ? AppColors.accent
+        : AppColors.success;
+    final annualAllowed = paidPlans.any(
+      (plan) => plan.allowedBillingCycles.contains('ANNUALLY') && plan.priceAnnually > 0,
+    );
+    final annualDiscount = paidPlans.isEmpty || paidPlans.first.priceMonthly <= 0 || paidPlans.first.priceAnnually <= 0
+        ? 0
+        : ((1 - paidPlans.first.priceAnnually / (paidPlans.first.priceMonthly * 12)) * 100).round();
 
     return Scaffold(
       appBar: AppBar(
@@ -100,7 +123,7 @@ class SubscriptionScreen extends ConsumerWidget {
                     onPressed: onOpenMenu,
                   )
                 : null),
-        title: const Text("Abonnement & Licences"),
+        title: const Text("Abonnement"),
         actions: [
           IconButton(
             icon: Icon(
@@ -147,7 +170,7 @@ class SubscriptionScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                currentPlan?.name ?? "Formule Gratuite",
+                                currentPlanName,
                                 style: const TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.w900,
@@ -156,7 +179,7 @@ class SubscriptionScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                "Statut : ${state.orgStatus == 'ACTIVE' ? 'Actif' : state.orgStatus} • Quotas opérationnels",
+                                "Statut : $statusLabel • Quotas opérationnels",
                                 style: const TextStyle(fontSize: 12, color: AppColors.textMutedLight),
                               ),
                             ],
@@ -165,21 +188,59 @@ class SubscriptionScreen extends ConsumerWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: AppColors.success.withValues(alpha: 0.12),
+                            color: statusColor.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Text(
-                            "Souscription active",
+                          child: Text(
+                            statusLabel,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.success,
+                              color: statusColor,
                             ),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
+
+                    if (isSuspended) ...[
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.accent.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
+                        ),
+                        child: Text(
+                          trialExpired
+                              ? "Votre période d’essai est terminée. Les opérations sont en lecture seule et vos données restent consultables. Choisissez l’offre Poulvia pour demander l’activation."
+                              : "Votre accès aux opérations est suspendu. Vos données restent consultables. Contactez Poulvia pour réactiver l’abonnement.",
+                          style: const TextStyle(fontSize: 12, height: 1.35),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+
+                    if (currentPlan != null && currentPlan.sku != 'STANDARD') ...[
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isDark ? AppColors.surfaceDark : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                          ),
+                        ),
+                        child: Text(
+                          "Votre formule actuelle (${currentPlan.name}) est une offre historique et n’est plus proposée aux nouvelles souscriptions.",
+                          style: const TextStyle(fontSize: 12, height: 1.35),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
 
                     // Quotas actuels
                     if (currentPlan != null)
@@ -225,7 +286,7 @@ class SubscriptionScreen extends ConsumerWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          "Formules & Évolutions",
+                          "Offre Poulvia",
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                         Container(
@@ -241,11 +302,12 @@ class SubscriptionScreen extends ConsumerWidget {
                                 isSelected: state.billingCycle == 'MONTHLY',
                                 onTap: () => ref.read(subscriptionProvider.notifier).setBillingCycle('MONTHLY'),
                               ),
-                              _CycleOption(
-                                label: "Annuel (-15%)",
-                                isSelected: state.billingCycle == 'ANNUALLY',
-                                onTap: () => ref.read(subscriptionProvider.notifier).setBillingCycle('ANNUALLY'),
-                              ),
+                              if (annualAllowed)
+                                _CycleOption(
+                                  label: annualDiscount > 0 ? "Annuel (-$annualDiscount%)" : "Annuel",
+                                  isSelected: state.billingCycle == 'ANNUALLY',
+                                  onTap: () => ref.read(subscriptionProvider.notifier).setBillingCycle('ANNUALLY'),
+                                ),
                             ],
                           ),
                         ),
@@ -257,10 +319,10 @@ class SubscriptionScreen extends ConsumerWidget {
                     ListView.separated(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      itemCount: state.publicPlans.length,
+                      itemCount: paidPlans.length,
                       separatorBuilder: (_, __) => const SizedBox(height: 12),
                       itemBuilder: (ctx, index) {
-                        final plan = state.publicPlans[index];
+                        final plan = paidPlans[index];
                         final isCurrent = currentPlan?.sku == plan.sku;
 
                         return _PlanCard(
@@ -375,7 +437,8 @@ class _PlanCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final price = billingCycle == 'ANNUALLY' && plan.priceAnnually > 0
         ? "${CurrencyFormatter.formatFcfa(plan.priceAnnually)} / an"
-        : (plan.isFree ? "Gratuit" : "${CurrencyFormatter.formatFcfa(plan.priceMonthly)} / mois");
+        : "${CurrencyFormatter.formatFcfa(plan.priceMonthly)} / mois";
+    final cyclePriceAvailable = billingCycle != 'ANNUALLY' || plan.priceAnnually > 0;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -397,31 +460,9 @@ class _PlanCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Text(
-                    plan.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  if (plan.badge != null && plan.badge!.isNotEmpty) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.accent.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        plan.badge!,
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.accent,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
+              const Text(
+                "Poulvia",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
               if (isCurrent)
                 Container(
@@ -452,11 +493,23 @@ class _PlanCard extends StatelessWidget {
               color: AppColors.primary,
             ),
           ),
-          if (plan.description != null && plan.description!.isNotEmpty) ...[
+          if (!cyclePriceAvailable)
+            const Padding(
+              padding: EdgeInsets.only(top: 4),
+              child: Text(
+                "Le tarif annuel n’est pas encore configuré.",
+                style: TextStyle(fontSize: 11, color: AppColors.accent),
+              ),
+            ),
+          if (plan.trialDays > 0) ...[
             const SizedBox(height: 4),
             Text(
-              plan.description!,
-              style: const TextStyle(fontSize: 12, color: AppColors.textMutedLight),
+              "Essai gratuit de ${plan.trialDays} jours",
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.success,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
           const SizedBox(height: 12),
@@ -471,8 +524,14 @@ class _PlanCard extends StatelessWidget {
           const SizedBox(height: 8),
 
           // Liste des fonctionnalités incluses
-          ...plan.features.take(4).map(
-                (f) => Padding(
+          ...const [
+            "Suivi des bandes, bâtiments et mortalités",
+            "Production selon le type d’exploitation",
+            "Suivi sanitaire et traitements",
+            "Stocks, dépenses, recettes et ventes",
+            "Contacts, équipe et rôles personnalisés",
+          ].map(
+                (feature) => Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Row(
                     children: [
@@ -480,7 +539,7 @@ class _PlanCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          f,
+                          feature,
                           style: const TextStyle(fontSize: 11, color: AppColors.textMutedLight),
                         ),
                       ),
@@ -491,30 +550,18 @@ class _PlanCard extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          if (isCurrent)
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: null,
-                style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                child: const Text("Votre formule actuelle", style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-            )
-          else
-            SizedBox(
+          SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: onSelectUpgrade,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: plan.isRecommended ? AppColors.accent : AppColors.primary,
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 11),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 child: Text(
-                  "Choisir la formule ${plan.name}",
+                  isCurrent ? "Choisir cette périodicité" : "Demander l’offre Poulvia",
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                 ),
               ),
@@ -559,6 +606,11 @@ class _UpgradeModalState extends ConsumerState<_UpgradeModal> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final state = ref.watch(subscriptionProvider);
+    final isAnnual = state.billingCycle == 'ANNUALLY';
+    final selectedPrice = isAnnual && widget.plan.priceAnnually > 0
+        ? widget.plan.priceAnnually
+        : widget.plan.priceMonthly;
+    final pricePeriod = isAnnual ? '/ an' : '/ mois';
 
     return Container(
       decoration: BoxDecoration(
@@ -601,12 +653,12 @@ class _UpgradeModalState extends ConsumerState<_UpgradeModal> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      "Évolution vers ${widget.plan.name}",
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    const Text(
+                      "Offre Poulvia",
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      "${widget.plan.priceMonthly > 0 ? CurrencyFormatter.formatFcfa(widget.plan.priceMonthly) : '0'} FCFA / mois",
+                      "${CurrencyFormatter.formatFcfa(selectedPrice)} $pricePeriod",
                       style: const TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.bold),
                     ),
                   ],
@@ -616,7 +668,7 @@ class _UpgradeModalState extends ConsumerState<_UpgradeModal> {
           ),
           const SizedBox(height: 14),
           const Text(
-            "Votre demande sera transmise à l'équipe commerciale pour activation de vos nouveaux quotas et fonctionnalités sous 24h.",
+            "Votre demande sera transmise à l’équipe Poulvia pour activation de l’abonnement. La périodicité choisie s’applique au même ensemble de modules.",
             style: TextStyle(fontSize: 12, color: AppColors.textMutedLight, height: 1.3),
           ),
           const SizedBox(height: 14),

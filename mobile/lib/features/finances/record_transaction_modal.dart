@@ -43,6 +43,8 @@ class RecordTransactionModal extends ConsumerStatefulWidget {
 }
 
 class _RecordTransactionModalState extends ConsumerState<RecordTransactionModal> {
+  // Les champs et contrats de règlement restent préservés, sans exposer le suivi des créances standard.
+  final bool _showAdvancedReceivables = false;
   late String _type;
   late String _category;
   final _amountController = TextEditingController();
@@ -584,7 +586,7 @@ class _RecordTransactionModalState extends ConsumerState<RecordTransactionModal>
             const SizedBox(height: 14),
 
             // Mode d'encaissement / Crédit client (Uniquement pour les recettes)
-            if (_type == "INCOME") ...[
+            if (_showAdvancedReceivables && _type == "INCOME") ...[
               const Text("Statut d'encaissement (Comptant vs Crédit) *",
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),

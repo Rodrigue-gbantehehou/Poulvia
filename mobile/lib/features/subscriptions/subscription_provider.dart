@@ -91,6 +91,7 @@ class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
 
       SubscriptionPlanModel? currentPlan;
       String status = 'ACTIVE';
+      String billingCycle = 'MONTHLY';
 
       if (farmPlanRes.data['data'] != null) {
         final currentPlanMap = farmPlanRes.data['data']['currentPlan'] as Map<String, dynamic>?;
@@ -98,6 +99,11 @@ class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
           currentPlan = SubscriptionPlanModel.fromJson(currentPlanMap);
         }
         status = farmPlanRes.data['data']['orgStatus'] as String? ?? 'ACTIVE';
+        final cycle = farmPlanRes.data['data']['billingCycle']?.toString().toUpperCase();
+        if ((cycle == 'MONTHLY' || cycle == 'ANNUALLY') &&
+            (currentPlan?.allowedBillingCycles.contains(cycle) ?? true)) {
+          billingCycle = cycle!;
+        }
       }
 
       state = state.copyWith(
@@ -105,6 +111,7 @@ class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
         publicPlans: publicPlans,
         currentPlan: currentPlan,
         orgStatus: status,
+        billingCycle: billingCycle,
       );
     } on DioException catch (e) {
       String message = "Impossible de charger les formules d'abonnement.";

@@ -8,7 +8,6 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Filter,
-  Download,
   Printer,
   AlertTriangle,
   AlertCircle,
@@ -34,9 +33,11 @@ import {
   PaymentStatus,
 } from "@/lib/types";
 import { formatFcfa, formatDate, cn } from "@/lib/utils";
-import { exportTransactionsToCsv } from "@/lib/export";
 import { SalesReceiptModal } from "@/components/finances/sales-receipt-modal";
 import { ModuleLockedState } from "@/components/ui/module-locked-state";
+
+// Le suivi avancé des créances reste dans le code et les contrats API, mais n'est pas proposé dans le parcours standard.
+const SHOW_ADVANCED_RECEIVABLES = false;
 
 export default function FinancesPage() {
   const { activeFarm, hasPermission, hasModule } = useAuth();
@@ -162,6 +163,7 @@ export default function FinancesPage() {
 
   const filteredTransactions = transactions.filter((t) => {
     if (filterType === "ALL") return true;
+    // Filtre avancé conservé dans le traitement des données pour une réactivation ciblée.
     if (filterType === "CREDIT") {
       return t.type === "INCOME" && (t.paymentStatus === "PARTIAL" || t.paymentStatus === "UNPAID");
     }
@@ -297,7 +299,7 @@ export default function FinancesPage() {
             >
               {isIncome ? "+" : "-"} {formatFcfa(tx.amountFcfa)}
             </span>
-            {isIncome && tx.paymentStatus === "PARTIAL" && tx.paidAmount !== undefined && (
+            {SHOW_ADVANCED_RECEIVABLES && isIncome && tx.paymentStatus === "PARTIAL" && tx.paidAmount !== undefined && (
               <span className="text-[10px] text-muted font-mono">
                 Reçu : {formatFcfa(tx.paidAmount)}
               </span>
@@ -388,18 +390,6 @@ export default function FinancesPage() {
         icon={<Wallet className="h-4 w-4" />}
         actions={
           <>
-            {hasModule("reports_accounting") && (
-              <button
-                type="button"
-                onClick={() => exportTransactionsToCsv(transactions, activeFarm?.name || "ferme")}
-                className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-surface-hover shadow-2xs active:scale-95 transition-all cursor-pointer"
-                title="Exporter CSV"
-              >
-                <Download className="h-3.5 w-3.5 text-muted" />
-                <span className="hidden xs:inline">Export</span>
-              </button>
-            )}
-
             {hasPermission("finance:create") && (
               <button
                 type="button"
@@ -434,13 +424,15 @@ export default function FinancesPage() {
           accent={netBalance >= 0 ? "primary" : "rose"}
           icon={<Wallet className="h-5 w-5" />}
         />
-        <StatCard
-          title="Créances"
-          value={formatFcfa(totalReceivables)}
-          subtitle={pendingReceivablesCount > 0 ? `${pendingReceivablesCount} impayé(s)` : undefined}
-          accent={totalReceivables > 0 ? "amber" : "zinc"}
-          icon={<Clock className="h-5 w-5 text-warning" />}
-        />
+        {SHOW_ADVANCED_RECEIVABLES && (
+          <StatCard
+            title="Créances"
+            value={formatFcfa(totalReceivables)}
+            subtitle={pendingReceivablesCount > 0 ? `${pendingReceivablesCount} impayé(s)` : undefined}
+            accent={totalReceivables > 0 ? "amber" : "zinc"}
+            icon={<Clock className="h-5 w-5 text-warning" />}
+          />
+        )}
       </div>
 
       {/* Transactions Table */}
@@ -448,7 +440,7 @@ export default function FinancesPage() {
         <DataTable<Transaction>
           title="Historique des flux"
           data={filteredTransactions}
-          columns={txColumns}
+          columns={SHOW_ADVANCED_RECEIVABLES ? txColumns : txColumns.filter((column) => column.key !== "paymentStatus")}
           periodFilter={true}
           dateAccessor={(tx) => tx.date}
           searchable={true}
@@ -474,7 +466,7 @@ export default function FinancesPage() {
                       {tx.category}
                     </span>
                   </div>
-                  {tx.paymentStatus && tx.paymentStatus !== "PAID" && (
+                  {SHOW_ADVANCED_RECEIVABLES && tx.paymentStatus && tx.paymentStatus !== "PAID" && (
                     <Badge variant={tx.paymentStatus === "UNPAID" ? "danger" : "warning"} size="sm">
                       {tx.paymentStatus === "UNPAID" ? "Impayé" : "Acompte"}
                     </Badge>
@@ -506,7 +498,7 @@ export default function FinancesPage() {
                     <div className={cn("text-sm font-extrabold font-mono", isIncome ? "text-success" : "text-danger")}>
                       {isIncome ? "+" : "-"} {formatFcfa(tx.amountFcfa)}
                     </div>
-                    {tx.paidAmount !== undefined && tx.paidAmount !== null && tx.paidAmount < tx.amountFcfa && (
+                    {SHOW_ADVANCED_RECEIVABLES && tx.paidAmount !== undefined && tx.paidAmount !== null && tx.paidAmount < tx.amountFcfa && (
                       <div className="text-[10px] font-mono text-muted">
                         Reçu: {formatFcfa(tx.paidAmount)}
                       </div>
@@ -539,7 +531,6 @@ export default function FinancesPage() {
                 { label: "Toutes", value: "ALL" },
                 { label: "Recettes", value: "INCOME" },
                 { label: "Dépenses", value: "EXPENSE" },
-                { label: "Créances & Impayés", value: "CREDIT" },
               ].map((tab) => {
                 const isActive = filterType === tab.value;
                 return (
@@ -647,7 +638,7 @@ export default function FinancesPage() {
           </div>
 
           {/* Payment Status (for sales / receivables tracking) */}
-          {type === "INCOME" && (
+          {SHOW_ADVANCED_RECEIVABLES && type === "INCOME" && (
             <div className="rounded-xl border border-border/80 bg-surface-muted/50 p-3 space-y-3">
               <label className="block text-xs font-semibold text-foreground">
                 Règlement

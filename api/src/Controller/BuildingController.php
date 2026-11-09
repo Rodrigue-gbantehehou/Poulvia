@@ -7,6 +7,8 @@ namespace App\Controller;
 use App\Dto\Building\UpdateBuildingRequestDto;
 use App\Entity\Building;
 use App\Security\Voter\FarmVoter;
+use App\Security\BuildingAccessChecker;
+use App\Entity\User;
 use App\Service\FarmService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -19,6 +21,7 @@ class BuildingController extends AbstractController
 {
     public function __construct(
         private readonly FarmService $farmService,
+        private readonly BuildingAccessChecker $buildingAccessChecker,
     ) {
     }
 
@@ -26,6 +29,11 @@ class BuildingController extends AbstractController
     public function show(Building $building): JsonResponse
     {
         $this->denyAccessUnlessGranted(FarmVoter::VIEW, $building->getFarm());
+        $this->buildingAccessChecker->assertModuleAllowed($building->getFarm());
+        $currentUser = $this->getUser();
+        if ($currentUser instanceof User) {
+            $this->buildingAccessChecker->assertBuildingAssigned($currentUser, $building->getFarm(), $building);
+        }
 
         return $this->json([
             'data' => $this->farmService->serializeBuilding($building),
@@ -38,6 +46,11 @@ class BuildingController extends AbstractController
         #[MapRequestPayload] UpdateBuildingRequestDto $dto,
     ): JsonResponse {
         $this->denyAccessUnlessGranted(FarmVoter::EDIT, $building->getFarm());
+        $this->buildingAccessChecker->assertModuleAllowed($building->getFarm());
+        $currentUser = $this->getUser();
+        if ($currentUser instanceof User) {
+            $this->buildingAccessChecker->assertBuildingAssigned($currentUser, $building->getFarm(), $building);
+        }
 
         $updated = $this->farmService->updateBuilding($building, $dto);
 
@@ -50,6 +63,11 @@ class BuildingController extends AbstractController
     public function delete(Building $building): JsonResponse
     {
         $this->denyAccessUnlessGranted(FarmVoter::EDIT, $building->getFarm());
+        $this->buildingAccessChecker->assertModuleAllowed($building->getFarm());
+        $currentUser = $this->getUser();
+        if ($currentUser instanceof User) {
+            $this->buildingAccessChecker->assertBuildingAssigned($currentUser, $building->getFarm(), $building);
+        }
 
         $this->farmService->deleteBuilding($building);
 
