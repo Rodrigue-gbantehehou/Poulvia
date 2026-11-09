@@ -210,6 +210,37 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Demande l'envoi du code de réinitialisation à l'adresse e-mail.
+  /// Le code de développement n'est présent que si l'API tourne en environnement dev.
+  Future<String?> requestPasswordReset(String email) async {
+    final response = await _apiClient.dio.post<dynamic>(
+      ApiEndpoints.requestPasswordReset,
+      data: {'identifier': email.trim(), 'channel': 'email'},
+    );
+
+    final body = response.data;
+    if (body is! Map) return null;
+    final data = body['data'];
+    if (data is! Map) return null;
+    final code = data['devCode'];
+    return code is String ? code : null;
+  }
+
+  Future<void> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    await _apiClient.dio.post<dynamic>(
+      ApiEndpoints.resetPassword,
+      data: {
+        'identifier': email.trim(),
+        'code': code.trim(),
+        'newPassword': newPassword,
+      },
+    );
+  }
+
   Future<void> loadFarms() async {
     try {
       // Le profil /me fournit, pour chaque ferme, les permissions effectives (rôle ∩ abonnement)
