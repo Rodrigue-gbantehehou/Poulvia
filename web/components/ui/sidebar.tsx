@@ -188,7 +188,7 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
             ref={ref}
             data-mobile="true"
             className={cn(
-              "fixed top-0 bottom-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col rounded-r-3xl border-r border-white/10 bg-gradient-to-b from-[#1b4331] via-[#163627] to-[#11291d] text-white shadow-2xl transition-transform duration-300 ease-in-out lg:hidden",
+              "fixed top-0 bottom-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col rounded-r-3xl border-r border-[#e6e4dd] bg-[#f8f7f3] text-[#242820] shadow-2xl transition-transform duration-300 ease-in-out lg:hidden",
               openMobile ? "translate-x-0" : "-translate-x-full",
               className
             )}
@@ -209,7 +209,7 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
         data-state={state}
         data-collapsible={collapsible}
         className={cn(
-          "relative hidden lg:flex flex-col border-r border-white/10 bg-gradient-to-b from-[#1b4331] via-[#163627] to-[#11291d] text-white transition-[width] duration-300 ease-in-out shrink-0 select-none",
+          "relative hidden lg:flex flex-col border-r border-[#e6e4dd] bg-[#f8f7f3] text-[#242820] transition-[width] duration-300 ease-in-out shrink-0 select-none",
           isCollapsed ? "w-[72px]" : "w-64",
           className
         )}
@@ -239,7 +239,7 @@ export const SidebarTrigger = React.forwardRef<
         toggleSidebar();
       }}
       className={cn(
-        "inline-flex h-8 w-8 items-center justify-center rounded-lg p-1.5 text-white/70 hover:bg-white/10 hover:text-white transition-colors cursor-pointer",
+        "inline-flex h-8 w-8 items-center justify-center rounded-lg p-1.5 text-[#686b64] hover:bg-[#eeede8] hover:text-[#242820] transition-colors cursor-pointer",
         className
       )}
       {...props}

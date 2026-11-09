@@ -32,6 +32,7 @@ class MemberService
         private readonly BuildingRepository $buildingRepository,
         private readonly CommercialPlanService $commercialPlanService,
         private readonly UserPasswordHasherInterface $passwordHasher,
+        private readonly MemberInvitationService $memberInvitationService,
     ) {
     }
 
@@ -53,14 +54,14 @@ class MemberService
             // 1. Rechercher si l'utilisateur existe déjà ou le créer
             // (fait avant le contrôle de quota pour pouvoir passer le candidat à assertCanAddMember)
             $user = $this->userRepository->findOneBy(['email' => $normalizedEmail]);
-            if ($user === null) {
-                $initialPassword = (string) $dto->password;
-                if (mb_strlen($initialPassword) < 12) {
-                    throw new BadRequestHttpException(
-                        'Un mot de passe initial d’au moins 12 caractères est requis pour créer le compte du collaborateur.'
-                    );
-                }
+            $isNewAccount = $user === null;
+            if ($user !== null && !$user->isActive()) {
+                throw new BadRequestHttpException(
+                    'Ce compte est désactivé ou attend déjà une activation. Le collaborateur doit d’abord réactiver son compte ou contacter le support.'
+                );
+            }
 
+            if ($user === null) {
                 $user = new User(
                     $normalizedEmail,
                     trim($dto->firstName),
@@ -70,8 +71,10 @@ class MemberService
                     $user->setPhone(trim($dto->phone));
                 }
 
-                $hashed = $this->passwordHasher->hashPassword($user, $initialPassword);
-                $user->setPassword($hashed);
+                // Le compte reste inutilisable jusqu'à la définition d'un mot de passe via le lien.
+                $unusablePassword = bin2hex(random_bytes(32));
+                $user->setPassword($this->passwordHasher->hashPassword($user, $unusablePassword));
+                $user->setIsActive(false);
 
                 $this->entityManager->persist($user);
             }
@@ -109,6 +112,9 @@ class MemberService
 
             // 4. Créer l'association FarmMembership
             $membership = new FarmMembership($farm, $user, $roleEnum, $roleDefinition);
+            if ($isNewAccount) {
+                $membership->setIsActive(false);
+            }
 
             if (!empty($dto->buildingIds)) {
                 foreach ($dto->buildingIds as $bId) {
@@ -126,6 +132,12 @@ class MemberService
 
             $this->entityManager->persist($membership);
             $this->entityManager->flush();
+
+            if ($isNewAccount) {
+                $this->memberInvitationService->inviteNewAccount($membership);
+            } else {
+                $this->memberInvitationService->notifyExistingAccount($membership);
+            }
 
             return $membership;
         });
@@ -223,6 +235,7 @@ class MemberService
             'assignedBuildingIds' => array_map(fn($ab) => $ab['id'], $assignedBuildings),
             'permissions' => $membership->getPermissions(),
             'isActive' => $membership->isActive(),
+            'invitationPending' => !$user->isActive(),
             'isOwner' => $membership->getRole() === FarmRole::OWNER,
             'createdAt' => $membership->getCreatedAt()->format(\DateTimeInterface::ATOM),
         ];

@@ -38,6 +38,7 @@ class FarmMember {
   final List<String> assignedBuildingIds;
   final List<String> assignedBuildingNames;
   final bool isActive;
+  final bool invitationPending;
   final bool isOwner;
   final DateTime? createdAt;
 
@@ -54,6 +55,7 @@ class FarmMember {
     this.assignedBuildingIds = const [],
     this.assignedBuildingNames = const [],
     this.isActive = true,
+    this.invitationPending = false,
     this.isOwner = false,
     this.createdAt,
   });
@@ -89,6 +91,7 @@ class FarmMember {
       assignedBuildingIds: parsedIds,
       assignedBuildingNames: parsedNames,
       isActive: json['isActive'] as bool? ?? true,
+      invitationPending: json['invitationPending'] as bool? ?? false,
       isOwner: json['isOwner'] as bool? ?? (json['role'] == 'OWNER'),
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'] as String)

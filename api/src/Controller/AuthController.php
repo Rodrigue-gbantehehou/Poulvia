@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Dto\Auth\RegisterRequestDto;
+use App\Dto\Auth\AcceptMemberInvitationRequestDto;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\AuthService;
 use App\Service\DeviceAuthService;
+use App\Service\MemberInvitationService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,6 +28,7 @@ class AuthController extends AbstractController
         private readonly DeviceAuthService $deviceAuthService,
         private readonly UserRepository $userRepository,
         private readonly UserPasswordHasherInterface $passwordHasher,
+        private readonly MemberInvitationService $memberInvitationService,
     ) {
     }
 
@@ -58,6 +61,26 @@ class AuthController extends AbstractController
                 ] : null,
             ],
         ], Response::HTTP_CREATED);
+    }
+
+    #[Route('/accept-member-invitation', name: 'accept_member_invitation', methods: ['POST'])]
+    public function acceptMemberInvitation(
+        #[MapRequestPayload] AcceptMemberInvitationRequestDto $dto,
+    ): JsonResponse {
+        try {
+            $this->memberInvitationService->accept($dto->token, $dto->password);
+        } catch (\InvalidArgumentException $exception) {
+            return $this->json([
+                'title' => 'Invitation invalide',
+                'detail' => $exception->getMessage(),
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        return $this->json([
+            'data' => [
+                'message' => 'Votre compte est activé. Vous pouvez maintenant vous connecter.',
+            ],
+        ]);
     }
 
     #[Route('/login', name: 'login', methods: ['POST'])]

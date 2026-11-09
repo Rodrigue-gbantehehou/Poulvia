@@ -12,11 +12,14 @@ use App\Repository\OrganizationRepository;
 use App\Repository\SubscriptionUpgradeRequestRepository;
 use App\Security\AdminPermission;
 use App\Service\Admin\CommercialPlanService;
+use App\Service\EmailSender;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Ulid;
@@ -35,6 +38,10 @@ class SubscriptionController extends AbstractController
         private readonly EntityManagerInterface $entityManager,
         private readonly \App\Service\Admin\AdminAuditService $auditService,
         private readonly SubscriptionUpgradeRequestRepository $upgradeRequestRepository,
+        private readonly EmailSender $emailSender,
+        private readonly LoggerInterface $logger,
+        #[Autowire('%env(FRONTEND_URL)%')]
+        private readonly string $frontendUrl,
     ) {
     }
 
@@ -540,6 +547,28 @@ class SubscriptionController extends AbstractController
                 $upgradeReq->getBillingCycle() === 'ANNUALLY' ? 'annuelle' : 'mensuelle'
             ),
         );
+
+        try {
+            $this->emailSender->sendTemplate(
+                $upgradeReq->getUser()->getEmail(),
+                'Votre abonnement Poulvia a été activé',
+                'emails/subscription_notification.html.twig',
+                [
+                    'farmName' => $upgradeReq->getFarm()->getName(),
+                    'planName' => $upgradeReq->getTargetPlanName(),
+                    'statusLabel' => 'Actif',
+                    'billingCycleLabel' => $upgradeReq->getBillingCycle() === 'ANNUALLY' ? 'Annuel' : 'Mensuel',
+                    'effectiveAt' => new \DateTimeImmutable(),
+                    'subscriptionUrl' => rtrim($this->frontendUrl, '/') . '/settings/subscription',
+                ],
+            );
+        } catch (\Throwable $exception) {
+            // La notification n'intervient pas dans l'approbation déjà enregistrée.
+            $this->logger->warning('Échec de livraison de la notification d’abonnement.', [
+                'exceptionClass' => $exception::class,
+                'upgradeRequestId' => $upgradeReq->getId()->toBase32(),
+            ]);
+        }
 
         return $this->json([
             'status' => 'success',

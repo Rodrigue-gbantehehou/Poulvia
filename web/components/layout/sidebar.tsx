@@ -12,6 +12,8 @@ import {
   HeartPulse,
   X,
   Settings,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { cn } from "@/lib/utils";
@@ -25,7 +27,7 @@ interface SidebarProps {
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { hasPermission, hasModule, activeFarm, isOwner } = useAuth();
-  const { state, isMobile } = useSidebar();
+  const { state, isMobile, toggleSidebar } = useSidebar();
   const isCollapsed = !isMobile && state === "collapsed";
 
   const canViewFlocks =
@@ -104,28 +106,28 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* Sidebar container */}
       <aside
         className={cn(
-          "fixed top-0 bottom-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col border-r border-border bg-surface text-foreground shadow-xl transition-[width,transform] duration-200 ease-out lg:static lg:shadow-none lg:translate-x-0 lg:overflow-x-hidden",
+          "fixed top-0 bottom-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col border-r border-[#e6e4dd] bg-[#f8f7f3] text-[#242820] shadow-xl transition-[width,transform] duration-200 ease-out lg:static lg:shadow-none lg:translate-x-0 lg:overflow-x-hidden",
           isOpen ? "translate-x-0" : "-translate-x-full",
           isCollapsed ? "lg:w-[72px]" : "lg:w-64",
         )}
       >
         {/* Header / Brand */}
         <div className={cn(
-          "flex h-16 items-center border-b border-border",
-          isCollapsed ? "justify-center px-2" : "justify-between px-6",
+          "flex h-16 items-center border-b border-[#e6e4dd]",
+          isCollapsed ? "justify-between gap-1 px-1.5" : "justify-between px-5",
         )}>
           <Link
             href="/"
             onClick={onClose}
-            className="flex items-center gap-3 text-lg font-semibold tracking-tight text-foreground group"
+            className={cn("flex min-w-0 items-center gap-3 text-lg font-semibold tracking-tight text-[#242820] group", isCollapsed && "gap-0")}
             aria-label="Poulvia, accueil"
             title={isCollapsed ? "Poulvia — Accueil" : undefined}
           >
-            <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-control bg-primary-soft p-1 border border-border">
+            <div className={cn("relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-control bg-white p-1 border border-[#e6e4dd]", isCollapsed && "h-8 w-8")}>
               <Image src="/logo.png" alt="Poulvia" width={36} height={36} className="h-full w-full object-contain" priority />
             </div>
             <div className={cn("flex flex-col leading-tight", isCollapsed && "sr-only")}>
-              <span className="text-base font-extrabold text-white tracking-tight">
+              <span className="text-base font-extrabold text-[#242820] tracking-tight">
                 Poulvia
               </span>
             </div>
@@ -133,8 +135,21 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
           <button
             type="button"
+            onClick={toggleSidebar}
+            className={cn(
+              "hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#686b64] transition-colors hover:bg-[#eeede8] hover:text-[#242820] lg:inline-flex",
+              isCollapsed && "h-7 w-7",
+            )}
+            aria-label={isCollapsed ? "Déplier le menu" : "Replier le menu"}
+            title={isCollapsed ? "Déplier le menu" : "Replier le menu"}
+          >
+            {isCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+          </button>
+
+          <button
+            type="button"
             onClick={onClose}
-            className="rounded-control p-1.5 text-muted hover:bg-surface-hover hover:text-foreground lg:hidden cursor-pointer"
+            className="rounded-control p-1.5 text-[#686b64] hover:bg-[#eeede8] hover:text-[#242820] lg:hidden cursor-pointer"
             aria-label="Fermer le menu"
           >
             <X className="h-5 w-5" />
@@ -150,7 +165,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           aria-label="Navigation principale"
         >
           <div className={cn(
-            "pb-2 text-caption font-medium tracking-wide uppercase text-muted",
+            "pb-2 text-caption font-semibold tracking-wide uppercase text-[#777970]",
             isCollapsed ? "sr-only" : "px-3",
           )}>
             Exploitation
@@ -165,7 +180,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <div key={item.name} className="space-y-1">
                   <div
                     className={cn(
-                      "pb-1 text-caption font-medium text-muted",
+                      "pb-1 text-caption font-semibold text-[#777970]",
                       isCollapsed ? "sr-only" : "px-3.5 pt-2",
                     )}
                   >
@@ -187,14 +202,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                           "group relative flex min-h-11 items-center rounded-control py-2.5 text-label font-medium transition-colors",
                           isCollapsed ? "justify-center px-0" : "gap-3 px-3.5",
                           childActive
-                            ? "text-foreground font-semibold"
-                            : "text-muted hover:bg-surface-hover hover:text-foreground",
+                            ? "text-[#242820] font-semibold before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-full before:bg-[#a9aaa3]"
+                            : "text-[#686b64] hover:bg-[#eeede8] hover:text-[#242820]",
                         )}
                       >
                         <ChildIcon
                           className={cn(
                             "h-5 w-5 shrink-0",
-                            childActive ? "text-foreground" : "text-muted group-hover:text-foreground",
+                            childActive ? "text-[#242820]" : "text-[#777970] group-hover:text-[#242820]",
                           )}
                           aria-hidden="true"
                         />
@@ -224,14 +239,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   "group relative flex min-h-11 items-center rounded-control py-2.5 text-label font-medium transition-colors",
                   isCollapsed ? "justify-center px-0" : "gap-3 px-3.5",
                   isActive
-                    ? "text-foreground font-semibold"
-                    : "text-muted hover:bg-surface-hover hover:text-foreground"
+                    ? "text-[#242820] font-semibold before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-full before:bg-[#a9aaa3]"
+                    : "text-[#686b64] hover:bg-[#eeede8] hover:text-[#242820]"
                 )}
               >
                 <Icon
                   className={cn(
                     "h-5 w-5 shrink-0 transition-colors",
-                    isActive ? "text-foreground" : "text-muted group-hover:text-foreground"
+                    isActive ? "text-[#242820]" : "text-[#777970] group-hover:text-[#242820]"
                   )}
                 />
                 <span className={cn("truncate", isCollapsed && "sr-only")}>{item.name}</span>
@@ -240,16 +255,16 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           })}
         </nav>
 
-        <div className="border-t border-border p-3">
+        <div className="border-t border-[#e6e4dd] p-3">
           <Link
             href="/settings"
             onClick={onClose}
             aria-label="Paramètres"
             title={isCollapsed ? "Paramètres" : undefined}
             className={cn(
-              "flex min-h-11 items-center rounded-control py-2.5 text-label font-medium text-muted transition-colors hover:bg-surface-hover hover:text-foreground",
+              "group relative flex min-h-11 items-center rounded-control py-2.5 text-label font-medium text-[#686b64] transition-colors hover:bg-[#eeede8] hover:text-[#242820]",
               isCollapsed ? "justify-center px-0" : "gap-3 px-3.5",
-              pathname.startsWith("/settings") && "text-foreground font-semibold",
+              pathname.startsWith("/settings") && "text-[#242820] font-semibold before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-full before:bg-[#a9aaa3]",
             )}
           >
             <Settings className="h-5 w-5 shrink-0" aria-hidden="true" />

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAdminAuth } from "@/context/admin-auth-context";
 import {
@@ -110,6 +111,12 @@ export default function AdminLoginPage() {
                   className="pl-9 text-xs"
                 />
               </div>
+            </div>
+
+            <div className="-mt-2 flex justify-end">
+              <Link href="/forgot-password" className="text-xs font-medium text-primary hover:underline">
+                Mot de passe oublié ?
+              </Link>
             </div>
 
             <Button

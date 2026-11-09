@@ -118,6 +118,12 @@ export const membersApi = {
     });
   },
 
+  resendInvitation: async (farmId: string, membershipId: string): Promise<{ message: string }> => {
+    return apiRequest<{ message: string }>(`/farms/${farmId}/members/${membershipId}/resend-invitation`, {
+      method: "POST",
+    });
+  },
+
   delete: async (farmId: string, membershipId: string): Promise<{ message: string }> => {
     return apiRequest<{ message: string }>(`/farms/${farmId}/members/${membershipId}`, {
       method: "DELETE",

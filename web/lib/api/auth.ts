@@ -81,4 +81,10 @@ export const authApi = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
+  acceptMemberInvitation: (data: { token: string; password: string }) =>
+    apiRequest<{ data: { message: string } }>("/auth/accept-member-invitation", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 };

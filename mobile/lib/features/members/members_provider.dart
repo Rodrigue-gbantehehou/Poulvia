@@ -183,6 +183,29 @@ class MembersNotifier extends StateNotifier<MembersState> {
     }
   }
 
+  Future<bool> resendInvitation(String membershipId) async {
+    final activeFarm = _ref.read(authProvider).activeFarm;
+    if (activeFarm == null) return false;
+
+    try {
+      await _apiClient.dio.post(
+        '${ApiEndpoints.farmMember(activeFarm.id, membershipId)}/resend-invitation',
+      );
+      await loadMembers(showLoading: false);
+      return true;
+    } on DioException catch (e) {
+      String msg = "Impossible de renvoyer l’invitation.";
+      if (e.response?.data is Map && e.response?.data['message'] != null) {
+        msg = e.response!.data['message'] as String;
+      }
+      state = state.copyWith(error: msg);
+      return false;
+    } catch (e) {
+      state = state.copyWith(error: "Erreur: $e");
+      return false;
+    }
+  }
+
   Future<bool> removeMember(String membershipId) async {
     final activeFarm = _ref.read(authProvider).activeFarm;
     if (activeFarm == null) return false;

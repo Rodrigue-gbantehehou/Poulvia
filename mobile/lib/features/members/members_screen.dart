@@ -231,6 +231,9 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                             member: member,
                             onEdit: () => _openEditMemberDialog(context, member),
                             onDelete: () => _confirmRemoveMember(member),
+                            onResendInvitation: member.invitationPending
+                                ? () => _resendInvitation(member)
+                                : null,
                           );
                         },
                       ),
@@ -247,6 +250,19 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => const _AddMemberModal(),
+    );
+  }
+
+  Future<void> _resendInvitation(FarmMember member) async {
+    final success = await ref.read(membersProvider.notifier).resendInvitation(member.id);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(success
+            ? "Invitation renvoyée à ${member.email}."
+            : ref.read(membersProvider).error ?? "Impossible de renvoyer l’invitation."),
+        backgroundColor: success ? AppColors.success : AppColors.danger,
+      ),
     );
   }
 
@@ -346,11 +362,13 @@ class _MemberCard extends StatelessWidget {
   final FarmMember member;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback? onResendInvitation;
 
   const _MemberCard({
     required this.member,
     required this.onEdit,
     required this.onDelete,
+    this.onResendInvitation,
   });
 
   @override
@@ -473,7 +491,9 @@ class _MemberCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        member.isActive ? "Actif" : "Suspendu",
+                        member.invitationPending
+                            ? "Invitation en attente"
+                            : member.isActive ? "Actif" : "Suspendu",
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -530,8 +550,20 @@ class _MemberCard extends StatelessWidget {
               onSelected: (val) {
                 if (val == 'edit') onEdit();
                 if (val == 'delete') onDelete();
+                if (val == 'resend') onResendInvitation?.call();
               },
               itemBuilder: (_) => [
+                if (onResendInvitation != null)
+                  const PopupMenuItem(
+                    value: 'resend',
+                    child: Row(
+                      children: [
+                        Icon(Icons.mark_email_unread_outlined, size: 16),
+                        SizedBox(width: 8),
+                        Text("Renvoyer l’invitation"),
+                      ],
+                    ),
+                  ),
                 const PopupMenuItem(
                   value: 'edit',
                   child: Row(
@@ -573,7 +605,6 @@ class _AddMemberModalState extends ConsumerState<_AddMemberModal> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _passwordController = TextEditingController();
   final Set<String> _selectedBuildingIds = {};
   String _selectedRole = 'MANAGER';
 
@@ -583,7 +614,6 @@ class _AddMemberModalState extends ConsumerState<_AddMemberModal> {
     _firstNameController.dispose();
     _lastNameController.dispose();
     _phoneController.dispose();
-    _passwordController.dispose();
     super.dispose();
   }
 
@@ -599,7 +629,6 @@ class _AddMemberModalState extends ConsumerState<_AddMemberModal> {
           lastName: _lastNameController.text.trim(),
           phone: _phoneController.text.trim().isNotEmpty ? _phoneController.text.trim() : null,
           role: _selectedRole,
-          password: _passwordController.text.trim().isNotEmpty ? _passwordController.text.trim() : null,
           buildingIds: _selectedBuildingIds.isEmpty ? null : _selectedBuildingIds.toList(),
         );
 
@@ -607,7 +636,7 @@ class _AddMemberModalState extends ConsumerState<_AddMemberModal> {
       navigator.pop();
       messenger.showSnackBar(
         const SnackBar(
-          content: Text("Collaborateur invité avec succès"),
+          content: Text("Invitation envoyée par e-mail"),
           backgroundColor: AppColors.primary,
         ),
       );
@@ -682,7 +711,7 @@ class _AddMemberModalState extends ConsumerState<_AddMemberModal> {
               ),
               const SizedBox(height: 4),
               const Text(
-                "Donnez accès à vos ouvriers, gérants ou vétérinaires selon leur métier",
+                "Une invitation sécurisée sera envoyée à leur adresse e-mail.",
                 style: TextStyle(fontSize: 12, color: AppColors.textMutedLight),
               ),
               const SizedBox(height: 18),
@@ -865,28 +894,6 @@ class _AddMemberModalState extends ConsumerState<_AddMemberModal> {
                 ),
               ),
               const SizedBox(height: 12),
-
-              // Mot de passe initial
-              TextFormField(
-                controller: _passwordController,
-                obscureText: true,
-                validator: (value) {
-                  final password = value ?? '';
-                  if (password.isNotEmpty && password.length < 12) {
-                    return '12 caractères minimum';
-                  }
-                  return null;
-                },
-                decoration: InputDecoration(
-                  labelText: "Mot de passe initial (si nouveau compte)",
-                  hintText: "12 caractères minimum",
-                  helperText: "Requis pour un nouveau compte. Le mot de passe d’un compte existant reste inchangé.",
-                  prefixIcon: const Icon(Icons.lock_outline, size: 20),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                ),
-              ),
-              const SizedBox(height: 18),
 
               // Bouton Enregistrer
               SizedBox(

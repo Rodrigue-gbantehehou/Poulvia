@@ -7,6 +7,7 @@ import {
   Shield,
   ShieldCheck,
   Mail,
+  MailPlus,
   Phone,
   Check,
   UserX,
@@ -18,7 +19,6 @@ import {
 import { Shell } from "@/components/layout/shell";
 import { Modal } from "@/components/ui/modal";
 import { StatCard } from "@/components/ui/stat-card";
-import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, ColumnDef } from "@/components/ui/data-table";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
@@ -47,7 +47,6 @@ export default function MembersManagementPage() {
   const [newPhone, setNewPhone] = useState("");
   const [newRoleId, setNewRoleId] = useState("");
   const [newRoleEnum, setNewRoleEnum] = useState("MANAGER");
-  const [newPassword, setNewPassword] = useState("");
   const [submittingCreate, setSubmittingCreate] = useState(false);
 
   // Modal Modification Collaborateur
@@ -58,12 +57,7 @@ export default function MembersManagementPage() {
   const [editRoleEnum, setEditRoleEnum] = useState("");
   const [editIsActive, setEditIsActive] = useState(true);
   const [submittingEdit, setSubmittingEdit] = useState(false);
-
-  useEffect(() => {
-    if (activeFarm?.id && hasModule("team")) {
-      loadData();
-    }
-  }, [activeFarm?.id, authLoading]);
+  const [resendingInvitationId, setResendingInvitationId] = useState<string | null>(null);
 
   async function loadData() {
     if (!activeFarm?.id) return;
@@ -88,6 +82,16 @@ export default function MembersManagementPage() {
     }
   }
 
+  useEffect(() => {
+    if (activeFarm?.id && hasModule("team")) {
+      // Loading the selected farm is the side effect this page uses to populate its state.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      void loadData();
+    }
+    // loadData is intentionally recreated to capture the latest role selection.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeFarm?.id, authLoading, hasModule]);
+
   async function handleAddMember(e: React.FormEvent) {
     e.preventDefault();
     if (!activeFarm?.id || !newEmail || !newFirstName || !newLastName) return;
@@ -103,16 +107,14 @@ export default function MembersManagementPage() {
         phone: newPhone || undefined,
         roleId: newRoleId || undefined,
         role: newRoleEnum,
-        password: newPassword || undefined,
       });
 
-      toast.success(`Collaborateur ${newFirstName} ${newLastName} ajouté avec succès !`);
+      toast.success(`Invitation envoyée à ${newFirstName} ${newLastName}.`);
       setCreateModalOpen(false);
       setNewEmail("");
       setNewFirstName("");
       setNewLastName("");
       setNewPhone("");
-      setNewPassword("");
       await loadData();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Erreur lors de l'ajout du collaborateur.";
@@ -179,6 +181,19 @@ export default function MembersManagementPage() {
       await loadData();
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Erreur lors de la dissociation du collaborateur.");
+    }
+  }
+
+  async function handleResendInvitation(member: FarmMember) {
+    if (!activeFarm?.id || !hasPermission("member:manage")) return;
+    setResendingInvitationId(member.id);
+    try {
+      const result = await api.members.resendInvitation(activeFarm.id, member.id);
+      toast.success(result.message || `Invitation renvoyée à ${member.email}.`);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Impossible de renvoyer l’invitation.");
+    } finally {
+      setResendingInvitationId(null);
     }
   }
 
@@ -252,15 +267,15 @@ export default function MembersManagementPage() {
       key: "status",
       header: "Statut",
       sortable: true,
-      accessor: (m) => (m.isActive ? "Actif" : "Suspendu"),
+      accessor: (m) => (m.invitationPending ? "Invitation en attente" : m.isActive ? "Actif" : "Suspendu"),
       cell: (m) => (
         <span className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground">
           <span
             className={`h-1.5 w-1.5 rounded-full ${
-              m.isActive ? "bg-success" : "bg-danger"
+              m.invitationPending ? "bg-warning" : m.isActive ? "bg-success" : "bg-danger"
             }`}
           />
-          {m.isActive ? "Actif" : "Suspendu"}
+          {m.invitationPending ? "Invitation en attente" : m.isActive ? "Actif" : "Suspendu"}
         </span>
       ),
     },
@@ -279,6 +294,17 @@ export default function MembersManagementPage() {
         if (!hasPermission("member:manage") || m.isOwner) return null;
         return (
           <div className="flex items-center justify-center gap-1">
+            {m.invitationPending && (
+              <button
+                type="button"
+                onClick={() => handleResendInvitation(m)}
+                disabled={resendingInvitationId === m.id}
+                className="rounded-lg p-1.5 text-primary hover:bg-primary-soft transition-colors disabled:opacity-50"
+                title="Renvoyer l’invitation par e-mail"
+              >
+                <MailPlus className="h-3.5 w-3.5" />
+              </button>
+            )}
             <button
               type="button"
               onClick={() => openEditModal(m)}
@@ -406,8 +432,8 @@ export default function MembersManagementPage() {
                     </div>
                   </div>
                   <span className="inline-flex items-center gap-1 text-[11px] font-semibold shrink-0">
-                    <span className={`h-1.5 w-1.5 rounded-full ${m.isActive ? "bg-success" : "bg-danger"}`} />
-                    {m.isActive ? "Actif" : "Suspendu"}
+                    <span className={`h-1.5 w-1.5 rounded-full ${m.invitationPending ? "bg-warning" : m.isActive ? "bg-success" : "bg-danger"}`} />
+                    {m.invitationPending ? "Invitation en attente" : m.isActive ? "Actif" : "Suspendu"}
                   </span>
                 </div>
 
@@ -436,6 +462,17 @@ export default function MembersManagementPage() {
 
                 {hasPermission("member:manage") && !m.isOwner && (
                   <div className="pt-2 border-t border-border/50 flex items-center justify-end gap-2">
+                    {m.invitationPending && (
+                      <button
+                        type="button"
+                        onClick={() => handleResendInvitation(m)}
+                        disabled={resendingInvitationId === m.id}
+                        className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs font-semibold text-primary hover:bg-primary-soft transition-colors disabled:opacity-50"
+                      >
+                        <MailPlus className="h-3 w-3" />
+                        <span>{resendingInvitationId === m.id ? "Envoi…" : "Renvoyer l’invitation"}</span>
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => openEditModal(m)}
@@ -472,7 +509,7 @@ export default function MembersManagementPage() {
         isOpen={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
         title="Nouveau membre"
-        description={activeFarm?.name || "Ajout membre"}
+        description={`Une invitation sera envoyée par e-mail pour rejoindre ${activeFarm?.name || "cette exploitation"}.`}
       >
         <form onSubmit={handleAddMember} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
@@ -559,25 +596,6 @@ export default function MembersManagementPage() {
                 <option value="">Gestionnaire d&apos;exploitation</option>
               </optgroup>
             </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-foreground mb-1">
-              Mot de passe initial (requis si nouveau compte)
-            </label>
-            <input
-              type="password"
-              minLength={12}
-              maxLength={255}
-              autoComplete="new-password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="12 caractères minimum"
-              className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-xs text-foreground focus:border-primary focus:outline-hidden"
-            />
-            <p className="mt-1 text-[11px] text-muted">
-              Le mot de passe du compte existant reste inchangé. Pour un nouveau compte, choisissez un mot de passe d’au moins 12 caractères.
-            </p>
           </div>
 
           {createError && (

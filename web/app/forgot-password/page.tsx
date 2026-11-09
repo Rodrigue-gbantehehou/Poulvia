@@ -2,31 +2,23 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   Bird,
   Lock,
   Mail,
-  Phone,
   ArrowRight,
   ArrowLeft,
   AlertCircle,
   CheckCircle2,
   KeyRound,
-  Sun,
-  Moon,
   Sparkles,
 } from "lucide-react";
 import { api } from "@/lib/api-client";
-import { useTheme } from "@/context/theme-context";
 
 export default function ForgotPasswordPage() {
-  const router = useRouter();
-  const { theme, toggleTheme } = useTheme();
 
   // Step 1: Request Code | Step 2: Enter Code & New Password | Step 3: Success
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [channel, setChannel] = useState<"email" | "sms">("email");
   const [identifier, setIdentifier] = useState("");
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -41,7 +33,7 @@ export default function ForgotPasswordPage() {
   async function handleRequestCode(e: React.FormEvent) {
     e.preventDefault();
     if (!identifier.trim()) {
-      setError("Veuillez renseigner votre adresse e-mail ou numéro de téléphone.");
+      setError("Veuillez renseigner votre adresse e-mail.");
       return;
     }
 
@@ -50,7 +42,7 @@ export default function ForgotPasswordPage() {
     try {
       const res = await api.auth.forgotPassword({
         identifier: identifier.trim(),
-        channel,
+        channel: "email",
       });
 
       setInfoMessage(res.message);
@@ -132,53 +124,25 @@ export default function ForgotPasswordPage() {
                   Mot de passe oublié ?
                 </h2>
                 <p className="mt-1 text-xs text-muted">
-                  Choisissez comment vous souhaitez recevoir votre code de réinitialisation sécurisé.
+                  Nous vous enverrons un code temporaire à l’adresse e-mail de votre compte.
                 </p>
               </div>
 
-              {/* Canal Email / SMS */}
-              <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-surface-muted border border-border">
-                <button
-                  type="button"
-                  onClick={() => setChannel("email")}
-                  className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-all ${channel === "email"
-                    ? "bg-primary text-white shadow-xs"
-                    : "text-muted hover:text-foreground"
-                    }`}
-                >
-                  <Mail className="h-3.5 w-3.5" />
-                  <span>Par E-mail</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setChannel("sms")}
-                  className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-all ${channel === "sms"
-                    ? "bg-primary text-white shadow-xs"
-                    : "text-muted hover:text-foreground"
-                    }`}
-                >
-                  <Phone className="h-3.5 w-3.5" />
-                  <span>Par SMS</span>
-                </button>
-              </div>
-
-              {/* Champ Identifiant */}
+              {/* Adresse associée au compte */}
               <div>
                 <label className="block text-xs font-semibold text-foreground mb-1.5">
-                  {channel === "email" ? "Votre adresse e-mail" : "Votre numéro de téléphone (WhatsApp / SMS)"}
+                  Votre adresse e-mail
                 </label>
                 <div className="relative">
-                  {channel === "email" ? (
-                    <Mail className="absolute left-3.5 top-3 h-4 w-4 text-muted" />
-                  ) : (
-                    <Phone className="absolute left-3.5 top-3 h-4 w-4 text-muted" />
-                  )}
+                  <Mail className="absolute left-3.5 top-3 h-4 w-4 text-muted" />
                   <input
-                    type={channel === "email" ? "email" : "tel"}
+                    type="email"
                     required
+                    autoComplete="email"
+                    maxLength={180}
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    placeholder={channel === "email" ? "directeur@ferme.bj" : "+229 97 00 00 00"}
+                    placeholder="directeur@ferme.bj"
                     className="w-full rounded-xl border border-border bg-surface-muted py-2.5 pl-10 pr-3.5 text-sm text-foreground placeholder:text-muted/60 focus:border-primary focus:bg-surface focus:outline-hidden transition-colors"
                   />
                 </div>
@@ -222,6 +186,12 @@ export default function ForgotPasswordPage() {
                   Un code à 6 chiffres a été généré pour <strong>{identifier}</strong>.
                 </p>
               </div>
+
+              {infoMessage && (
+                <p role="status" className="rounded-xl border border-primary/20 bg-primary-soft p-3 text-xs text-foreground">
+                  {infoMessage}
+                </p>
+              )}
 
               {devCodeHint && (
                 <div className="flex items-center justify-between rounded-xl border border-primary/30 bg-primary-soft p-3 text-xs text-primary">

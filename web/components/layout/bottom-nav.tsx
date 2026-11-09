@@ -101,7 +101,7 @@ export function BottomNav({ onOpenMenu }: BottomNavProps) {
       >
         <div className="h-6 w-full bg-gradient-to-t from-background via-background/80 to-transparent" />
         <div
-          className="w-full bg-surface border-t border-border/70"
+          className="w-full bg-[#f8f7f3] border-t border-[#e6e4dd]"
           style={{ height: "calc(4.75rem + env(safe-area-inset-bottom, 0px))" }}
         />
       </div>
@@ -112,7 +112,7 @@ export function BottomNav({ onOpenMenu }: BottomNavProps) {
         className="fixed bottom-2.5 left-1.5 right-1.5 sm:left-1/2 sm:-translate-x-1/2 sm:w-[450px] z-40 lg:hidden pointer-events-none"
         style={{ marginBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
-        <div className="pointer-events-auto flex h-16 items-center justify-between px-1 rounded-card bg-surface border border-border text-foreground shadow-card">
+        <div className="pointer-events-auto flex h-16 items-center justify-between px-1 rounded-card bg-[#f8f7f3] border border-[#e6e4dd] text-[#242820] shadow-card">
           <MobileNavItem href="/" label="Accueil" icon={LayoutDashboard} active={isHomeActive} />
           {(canViewFlocks || canViewBuildings) && (
             <MobileNavItem href={canViewFlocks ? "/flocks" : "/buildings"} label="Élevage" icon={Bird} active={isFlocksActive} />
@@ -306,15 +306,15 @@ function MobileNavItem({
       aria-current={active ? "page" : undefined}
       className={cn(
         "group relative flex min-w-0 flex-1 flex-col items-center justify-center py-1.5 transition-colors",
-        active ? "text-primary" : "text-muted hover:text-foreground",
+        active ? "text-[#242820]" : "text-[#777970] hover:text-[#242820]",
       )}
     >
       <span
         className={cn(
           "flex h-8 w-8 items-center justify-center rounded-control transition-colors",
           active
-            ? "bg-primary-soft text-primary"
-            : "bg-transparent text-muted group-hover:bg-surface-hover group-hover:text-foreground",
+            ? "bg-transparent text-[#242820]"
+            : "bg-transparent text-[#777970] group-hover:text-[#242820]",
         )}
       >
         <Icon className="h-5 w-5" aria-hidden="true" />
@@ -322,12 +322,11 @@ function MobileNavItem({
       <span
         className={cn(
           "max-w-full truncate text-caption leading-none mt-1",
-          active ? "font-semibold text-primary" : "font-medium text-muted",
+          active ? "font-semibold text-[#242820]" : "font-medium text-[#777970]",
         )}
       >
         {label}
       </span>
-      {active && <span className="h-1 w-1 rounded-full bg-primary mt-0.5" />}
     </Link>
   );
 }

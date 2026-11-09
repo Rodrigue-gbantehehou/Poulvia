@@ -53,7 +53,7 @@ class AuthService
             throw new EmailAlreadyExistsException($normalizedEmail);
         }
 
-        return $this->entityManager->wrapInTransaction(function () use ($dto, $normalizedEmail): array {
+        $registration = $this->entityManager->wrapInTransaction(function () use ($dto, $normalizedEmail): array {
             // 1. Création de l'utilisateur
             $user = new User($normalizedEmail, $dto->firstName, $dto->lastName);
             $user->setPhone($dto->phone);
@@ -100,6 +100,22 @@ class AuthService
                 'farm' => $farm,
             ];
         });
+
+        try {
+            $this->emailSender->sendTemplate(
+                $normalizedEmail,
+                'Bienvenue sur Poulvia',
+                'emails/welcome.html.twig',
+                ['firstName' => $registration['user']->getFirstName()],
+            );
+        } catch (\Throwable $exception) {
+            // La livraison d'un message ne doit pas annuler une inscription déjà créée.
+            $this->logger->warning('Échec de livraison du courriel de bienvenue.', [
+                'exceptionClass' => $exception::class,
+            ]);
+        }
+
+        return $registration;
     }
 
     /**

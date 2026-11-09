@@ -102,6 +102,7 @@ export interface FarmMember {
   roleDefinition?: FarmRole | null;
   permissions: string[];
   isActive: boolean;
+  invitationPending?: boolean;
   isOwner: boolean;
   createdAt: string;
 }
