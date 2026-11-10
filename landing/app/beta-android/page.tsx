@@ -1,65 +1,181 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowLeft, ArrowRight, Check, Download, ExternalLink, Info, Smartphone } from "lucide-react";
+import Image from "next/image";
+import {
+  ArrowRight,
+  Bird,
+  Download,
+  Egg,
+  ExternalLink,
+  Info,
+  Smartphone,
+  Stethoscope,
+} from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 
 export const metadata: Metadata = {
   title: "Bêta Android | Poulvia",
-  description: "Découvrez la bêta Android de Poulvia et les étapes à connaître avant son installation.",
+  description: "Découvrez les fonctions de Poulvia sur Android et les étapes pour installer la version bêta.",
   alternates: { canonical: "/beta-android" },
 };
 
 const apkUrl = process.env.NEXT_PUBLIC_ANDROID_APK_URL;
 
+const features = [
+  {
+    icon: Bird,
+    title: "Vos bandes",
+    text: "Consultez les effectifs et retrouvez les mouvements de vos lots.",
+  },
+  {
+    icon: Egg,
+    title: "Vos collectes",
+    text: "Enregistrez la production et suivez les œufs par journée.",
+  },
+  {
+    icon: Stethoscope,
+    title: "Vos opérations",
+    text: "Retrouvez les outils de suivi des stocks et des soins de la ferme.",
+  },
+];
+
+const installSteps = [
+  ["01", "Téléchargez le fichier", "Utilisez le lien officiel Poulvia lorsque le fichier APK sera disponible."],
+  ["02", "Ouvrez le fichier APK", "Retrouvez-le dans les téléchargements de votre téléphone Android."],
+  ["03", "Confirmez l’installation", "Si Android le demande, autorisez temporairement l’installation depuis votre navigateur."],
+];
+
 export default function AndroidBetaPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen overflow-hidden bg-background">
       <Navbar />
-      <main className="px-4 pb-20 pt-32 sm:px-6 md:pt-40 lg:px-8">
-        <div className="mx-auto max-w-5xl">
-          <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-muted hover:text-primary"><ArrowLeft className="h-4 w-4" /> Retour à l’accueil</Link>
-          <div className="mt-8 grid gap-12 lg:grid-cols-[1.1fr_.9fr] lg:items-start">
-            <div>
-              <span className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent-soft px-3 py-1.5 text-xs font-bold text-primary"><Smartphone className="h-3.5 w-3.5" /> Version bêta Android</span>
-              <h1 className="mt-6 text-4xl font-semibold leading-tight tracking-[-.04em] text-foreground sm:text-5xl">Poulvia vous accompagne aussi sur Android.</h1>
-              <p className="mt-5 max-w-xl text-base leading-8 text-muted">La version mobile est en bêta. Cette page vous présente son objectif et les étapes d’installation avant de télécharger le fichier Android.</p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <a href="#installation" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-white hover:bg-primary-hover">Voir les étapes d’installation <ArrowRight className="h-4 w-4" /></a>
-                <a href="mailto:contact@poulvia.com?subject=Question%20sur%20la%20b%C3%AAta%20Android%20Poulvia" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-5 text-sm font-semibold text-foreground hover:bg-surface-hover">Contacter l’équipe Poulvia <ArrowRight className="h-4 w-4" /></a>
-              </div>
-              {!apkUrl && <p className="mt-3 text-xs text-muted">Le fichier d’installation n’est pas encore relié à cette page.</p>}
-            </div>
-            <aside className="rounded-3xl border border-border bg-surface p-6 shadow-sm sm:p-8">
-              <p className="text-xs font-bold uppercase tracking-[.18em] text-accent">À quoi sert l’application ?</p>
-              <h2 className="mt-3 text-xl font-semibold text-foreground">Le suivi de votre ferme depuis votre téléphone.</h2>
-              <ul className="mt-6 space-y-4 text-sm text-muted">
-                {["Consulter et enregistrer les opérations de l’exploitation", "Suivre les bandes, les stocks et les soins", "Retrouver les outils adaptés aux élevages de pondeuses, de chair ou mixtes"].map((item) => <li key={item} className="flex gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" /><span className="leading-6">{item}</span></li>)}
-              </ul>
-              <div className="mt-7 rounded-2xl border border-info/20 bg-info-soft p-4"><div className="flex gap-3"><Info className="mt-0.5 h-4 w-4 shrink-0 text-info" /><p className="text-xs leading-5 text-foreground">Une version bêta peut encore évoluer. Certaines fonctions ou présentations peuvent changer au fil des retours.</p></div></div>
-            </aside>
-          </div>
+      <main>
+        <section className="relative px-4 pb-20 pt-32 sm:px-6 md:pb-28 md:pt-40 lg:px-8">
+          <div className="pointer-events-none absolute -right-32 top-20 h-[30rem] w-[30rem] rounded-full bg-accent-soft/70 blur-3xl" />
+          <div className="relative mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1.02fr_.98fr] lg:gap-16">
+            <div className="max-w-2xl">
+              <h1 className="mt-5 text-4xl font-semibold leading-[1.08] tracking-[-.045em] text-foreground sm:text-5xl lg:text-[4.25rem]">
+                Poulvia vous accompagne aussi sur Android.
+              </h1>
+              <p className="mt-6 max-w-xl text-base leading-8 text-muted sm:text-lg">
+                La version mobile Poulvia est en préparation. Découvrez les fonctions prévues et les étapes d’installation avant de télécharger la bêta Android.
+              </p>
 
-          <section id="installation" className="mt-16 scroll-mt-28 border-t border-border pt-12">
-            <p className="text-xs font-bold uppercase tracking-[.18em] text-accent">Installation</p>
-            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-foreground">Comment installer le fichier Android</h2>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-muted">Lorsque le fichier APK sera disponible, vous pourrez l’installer directement sur un appareil Android. L’installation se fera en dehors de Google Play.</p>
-            <div className="mt-8 grid gap-4 sm:grid-cols-3">
-              {[["01", "Téléchargez l’APK", "Utilisez le bouton de téléchargement sur cette page lorsque le fichier sera publié."], ["02", "Ouvrez le fichier", "Depuis les téléchargements de votre téléphone, appuyez sur le fichier Poulvia."], ["03", "Autorisez cette source si besoin", "Android peut demander d’autoriser temporairement l’installation depuis votre navigateur ou gestionnaire de fichiers."]].map(([number, title, text]) => <article key={number} className="rounded-2xl border border-border bg-surface p-5"><span className="font-mono text-xs font-semibold text-accent">{number}</span><h3 className="mt-4 font-semibold text-foreground">{title}</h3><p className="mt-2 text-sm leading-6 text-muted">{text}</p></article>)}
+              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                {apkUrl ? (
+                  <a href={apkUrl} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover">
+                    <Download className="h-4 w-4" /> Télécharger la bêta Android <ExternalLink className="h-4 w-4" />
+                  </a>
+                ) : (
+                  <a href="#telechargement" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover">
+                    Voir l’état du téléchargement <ArrowRight className="h-4 w-4" />
+                  </a>
+                )}
+                <a href="#installation" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-5 text-sm font-semibold text-foreground transition hover:bg-surface-hover">
+                  Comment l’installer ?
+                </a>
+              </div>
+              <p className="mt-4 max-w-xl text-xs leading-5 text-muted">
+                  {apkUrl
+                    ? "Le téléchargement est fourni depuis le lien officiel Poulvia."
+                    : "Le fichier APK n’est pas encore disponible. Cette page indiquera ici quand le téléchargement sera prêt."}
+              </p>
             </div>
-            <p className="mt-5 max-w-3xl text-xs leading-5 text-muted">N’autorisez cette installation que si vous avez obtenu le fichier depuis le lien officiel Poulvia. Les intitulés et réglages Android peuvent varier selon le téléphone.</p>
-            <div className="mt-8 rounded-2xl border border-border bg-surface p-6 sm:flex sm:items-center sm:justify-between sm:gap-6">
-              <div><h3 className="font-semibold text-foreground">Prêt à installer la bêta ?</h3><p className="mt-1 text-sm text-muted">Le téléchargement s’effectuera depuis le lien officiel Poulvia.</p></div>
+
+            <div className="relative mx-auto w-full max-w-[12rem] sm:max-w-[14rem] lg:max-w-[16rem]">
+              <div className="pointer-events-none absolute inset-6 rounded-full bg-primary/10 blur-3xl" />
+              <Image
+                src="/images/poulvia-android-mockup-crop.png"
+                alt="Maquette de téléphone affichant l’écran de démarrage Poulvia"
+                width={1687}
+                height={3245}
+                sizes="(max-width: 640px) 224px, (max-width: 1024px) 272px, 320px"
+                priority
+                className="relative h-auto w-full mix-blend-multiply drop-shadow-[0_24px_48px_rgba(21,70,50,.16)]"
+              />
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-surface py-16 sm:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="max-w-2xl">
+              <p className="text-xs font-bold uppercase tracking-[.18em] text-accent">Dans la bêta</p>
+              <h2 className="mt-3 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">Les suivis essentiels, sur votre téléphone.</h2>
+            </div>
+            <div className="mt-9 grid gap-7 sm:grid-cols-3 sm:gap-8">
+              {features.map(({ icon: Icon, title, text }) => (
+                <article key={title} className="pt-2">
+                  <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
+                  <h3 className="mt-4 font-semibold text-foreground">{title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-muted">{text}</p>
+                </article>
+              ))}
+            </div>
+            <div className="mt-8 flex gap-3 text-sm leading-6 text-muted">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-info" aria-hidden="true" />
+              <p>La version bêta évolue encore. Certaines fonctions et présentations peuvent changer au fil des retours.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="installation" className="scroll-mt-24 bg-primary-soft py-16 sm:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="max-w-2xl">
+              <p className="text-xs font-bold uppercase tracking-[.18em] text-accent">Installation</p>
+              <h2 className="mt-3 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">Installer la bêta Android</h2>
+              <p className="mt-3 text-sm leading-7 text-muted">Quand le fichier APK sera disponible, vous pourrez l’installer directement sur votre appareil, en dehors de Google Play.</p>
+            </div>
+            <div className="mt-9 grid gap-7 sm:grid-cols-3 sm:gap-8">
+              {installSteps.map(([number, title, text]) => (
+                <article key={number}>
+                  <span className="font-mono text-2xl font-semibold tracking-tight text-primary/55">{number}</span>
+                  <h3 className="mt-3 font-semibold text-foreground">{title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-muted">{text}</p>
+                </article>
+              ))}
+            </div>
+            <p className="mt-8 max-w-3xl text-xs leading-5 text-muted">
+              Pour votre sécurité, installez uniquement un fichier obtenu depuis un lien officiel Poulvia. Android peut afficher une demande d’autorisation selon le téléphone.
+            </p>
+          </div>
+        </section>
+
+        <section id="telechargement" className="scroll-mt-24 bg-background py-14 sm:py-16">
+          <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col gap-5 pb-8 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[.18em] text-accent">Téléchargement</p>
+                <h2 className="mt-2 text-xl font-semibold text-foreground">{apkUrl ? "La bêta est prête à installer." : "Le fichier APK n’est pas encore disponible."}</h2>
+                <p className="mt-2 max-w-xl text-sm leading-6 text-muted">
+                  {apkUrl
+                    ? "Téléchargez l’application depuis le lien officiel Poulvia, puis suivez les étapes d’installation ci-dessus."
+                    : "Le lien de téléchargement apparaîtra sur cette page dès que le fichier Android sera publié."}
+                </p>
+              </div>
               {apkUrl ? (
-                <a href={apkUrl} className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover sm:mt-0"><Download className="h-4 w-4" /> Télécharger la bêta Android <ExternalLink className="h-4 w-4" /></a>
+                <a href={apkUrl} className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary-hover">
+                  <Download className="h-4 w-4" /> Télécharger l’APK
+                </a>
               ) : (
-                <span aria-disabled="true" className="mt-4 inline-flex min-h-11 cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-primary/55 px-4 text-sm font-semibold text-white sm:mt-0"><Download className="h-4 w-4" /> Téléchargement bientôt disponible</span>
+                <span aria-disabled="true" className="inline-flex min-h-12 shrink-0 cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-primary/55 px-5 text-sm font-semibold text-white">
+                  <Download className="h-4 w-4" /> Téléchargement indisponible
+                </span>
               )}
             </div>
-            {!apkUrl && <p className="mt-3 text-xs text-muted">Le fichier d’installation n’est pas encore relié à cette page.</p>}
-          </section>
-          <div className="mt-12 rounded-2xl bg-primary-soft p-6 sm:flex sm:items-center sm:justify-between sm:gap-6"><div><h2 className="font-semibold text-foreground">Vous préférez commencer sur le web ?</h2><p className="mt-1 text-sm text-muted">Connectez-vous à votre espace Poulvia depuis un navigateur.</p></div><a href={`${process.env.NEXT_PUBLIC_APP_URL || "https://app.poulvia.com"}/login`} className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover sm:mt-0">Accéder à Poulvia <ArrowRight className="h-4 w-4" /></a></div>
-        </div>
+
+            <div className="mt-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="font-semibold text-foreground">Vous pouvez déjà utiliser Poulvia sur le web.</h2>
+                <p className="mt-1 text-sm text-muted">Connectez-vous ou créez votre espace depuis un navigateur.</p>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <a href={`${process.env.NEXT_PUBLIC_APP_URL || "https://app.poulvia.com"}/login`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-foreground hover:bg-surface-hover">Connexion</a>
+                <a href={`${process.env.NEXT_PUBLIC_APP_URL || "https://app.poulvia.com"}/register`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-white hover:bg-primary-hover">Créer un compte <ArrowRight className="h-4 w-4" /></a>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
       <Footer />
     </div>

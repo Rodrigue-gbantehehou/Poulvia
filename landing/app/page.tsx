@@ -3,10 +3,11 @@ import Link from "next/link";
 import {
   ArrowDownRight,
   ArrowRight,
+  Apple,
   Bird,
   Egg,
   HeartPulse,
-  Package,
+  Play,
   Smartphone,
   Wallet,
 } from "lucide-react";
@@ -19,37 +20,23 @@ const capabilities = [
   {
     icon: Bird,
     number: "01",
-    title: "Suivez vos bandes",
-    text: "Retrouvez les effectifs et les mouvements de chaque bande au fil de l’élevage.",
-    tag: "Pondeuses · Chair · Mixte",
-  },
-  {
-    icon: Egg,
-    number: "02",
-    title: "Notez les collectes",
-    text: "Pour les élevages de pondeuses, enregistrez les œufs et retrouvez leur conversion en plateaux de 30.",
-    tag: "Production d’œufs",
-  },
-  {
-    icon: Package,
-    number: "03",
-    title: "Gardez un œil sur les stocks",
-    text: "Suivez les aliments et les intrants disponibles ainsi que leurs mouvements.",
-    tag: "Stocks de la ferme",
+    title: "Suivez bandes et production",
+    text: "Consultez les effectifs et les mouvements de vos bandes, puis enregistrez les collectes d’œufs de vos pondeuses.",
+    tag: "Élevages · Ponte",
   },
   {
     icon: HeartPulse,
-    number: "04",
-    title: "Organisez le suivi sanitaire",
-    text: "Consignez les soins et consultez les éléments sanitaires à venir ou en retard.",
-    tag: "Soins & vaccins",
+    number: "02",
+    title: "Gérez stocks et santé",
+    text: "Suivez les aliments et les intrants disponibles, consignez les soins et repérez les échéances sanitaires.",
+    tag: "Stocks · Soins",
   },
   {
     icon: Wallet,
-    number: "05",
-    title: "Suivez recettes et dépenses",
-    text: "Enregistrez les ventes et les dépenses de l’exploitation en francs CFA.",
-    tag: "Trésorerie en FCFA",
+    number: "03",
+    title: "Suivez vos finances",
+    text: "Enregistrez les ventes et les dépenses pour garder une vue claire sur la trésorerie de l’exploitation.",
+    tag: "Recettes · Dépenses",
   },
 ];
 
@@ -68,7 +55,6 @@ export default function LandingPage() {
           <div className="pointer-events-none absolute -right-32 top-20 h-[30rem] w-[30rem] rounded-full bg-accent-soft/70 blur-3xl" />
           <div className="relative mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1.02fr_.98fr] lg:gap-16">
             <div className="max-w-2xl">
-           
               <h1 className="text-4xl font-semibold leading-[1.08] tracking-[-0.045em] text-foreground sm:text-5xl lg:text-[4.25rem]">
                 Votre élevage, <span className="text-primary">mieux suivi</span> chaque jour.
               </h1>
@@ -76,36 +62,25 @@ export default function LandingPage() {
                 Poulvia rassemble les informations de votre ferme pour vous aider à suivre les bandes, la production, les stocks, les soins et les finances.
               </p>
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-                <Link href="/beta-android" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover">
-                  <Smartphone className="h-4 w-4" /> Découvrir la bêta Android <ArrowRight className="h-4 w-4" />
-                </Link>
-                <a href={`${appUrl}/login`} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-5 text-sm font-semibold text-foreground transition hover:bg-surface-hover">
-                  Accéder à Poulvia sur le web <ArrowRight className="h-4 w-4" />
+                <a href={`${appUrl}/register`} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover">
+                  Créer mon compte <ArrowRight className="h-4 w-4" />
                 </a>
-              </div>
-              <div className="mt-6 flex items-center gap-2 text-xs text-muted">
-                <span className="rounded-full bg-primary-soft px-2.5 py-1 font-semibold text-primary">Pensé pour le terrain</span>
-                Pondeuses, poulets de chair et élevages mixtes
+                <a href={`${appUrl}/login`} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-5 text-sm font-semibold text-foreground transition hover:bg-surface-hover">
+                  Me connecter <ArrowRight className="h-4 w-4" />
+                </a>
               </div>
             </div>
 
-            <div className="relative mx-auto w-full max-w-[34rem]">
-              <div className="absolute -left-5 top-12 z-10 hidden rounded-2xl border border-border bg-surface p-4 shadow-lg sm:block">
-                <span className="block text-[10px] font-semibold uppercase tracking-[.16em] text-muted">Votre activité</span>
-                <span className="mt-1 block text-sm font-semibold text-foreground">Au même endroit</span>
-              </div>
-              <div className="relative aspect-[1.02/1] overflow-hidden rounded-[2rem] border border-white/70 bg-primary shadow-[0_30px_80px_-35px_rgba(21,70,50,.45)]">
-                <Image src="/images/farmer-hero.jpg" alt="Éleveur consultant Poulvia sur son téléphone dans son exploitation" fill priority sizes="(max-width: 1024px) 100vw, 45vw" className="object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-primary/85 via-primary/5 to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 p-6 text-white sm:p-8">
-                  <span className="text-xs font-medium uppercase tracking-[.2em] text-white/75">L’essentiel de la ferme</span>
-                  <p className="mt-2 max-w-sm text-2xl font-semibold leading-tight sm:text-3xl">Des informations utiles, prêtes quand vous en avez besoin.</p>
-                </div>
-              </div>
-              <div className="absolute -bottom-5 right-5 flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-xl sm:right-8">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-soft text-accent"><Egg className="h-5 w-5" /></span>
-                <span><span className="block text-xs font-semibold text-foreground">Une ferme, plusieurs suivis</span><span className="block text-[11px] text-muted">Web · Application Android</span></span>
-              </div>
+            <div className="relative mx-auto w-full max-w-[16rem] sm:max-w-[20rem] lg:max-w-[22rem]">
+              <Image
+                src="/images/poulvia-interface-accent-crop.png"
+                alt="Interfaces de Poulvia sur ordinateur et téléphone, avec le tableau de bord de l’exploitation"
+                width={2738}
+                height={3626}
+                priority
+                sizes="(max-width: 1024px) 100vw, 40vw"
+                className="relative h-auto w-full mix-blend-multiply drop-shadow-[0_18px_28px_rgba(0,0,0,0.14)]"
+              />
             </div>
           </div>
           <a href="#suivi" className="mx-auto mt-20 hidden w-fit items-center gap-2 text-xs font-semibold text-muted hover:text-primary md:flex">Découvrir Poulvia <ArrowDownRight className="h-4 w-4" /></a>
@@ -113,9 +88,21 @@ export default function LandingPage() {
 
         <section id="suivi" className="scroll-mt-20 bg-surface py-20 md:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid gap-8 md:grid-cols-[.8fr_1.2fr] md:items-end">
-              <div><p className="text-xs font-bold uppercase tracking-[.2em] text-accent">Un outil pour vos opérations</p><h2 className="mt-4 max-w-xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Les informations clés de votre ferme, réunies.</h2></div>
-              <p className="max-w-xl text-sm leading-7 text-muted md:justify-self-end">Chaque élevage a son rythme. Poulvia vous aide à consigner les opérations et à retrouver leur historique, depuis votre espace web ou votre téléphone.</p>
+            <div className="grid gap-8 md:grid-cols-[1fr_.9fr] md:items-center">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[.2em] text-accent">Un outil pour vos opérations</p>
+                <h2 className="mt-4 max-w-xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Les informations clés de votre ferme, réunies.</h2>
+                <p className="mt-4 max-w-xl text-sm leading-7 text-muted">Chaque élevage a son rythme. Poulvia vous aide à consigner les opérations et à retrouver leur historique, depuis votre espace web ou votre téléphone.</p>
+              </div>
+              <div className="relative mx-auto aspect-[1.55/1] w-full max-w-[28rem] overflow-hidden rounded-2xl md:justify-self-end">
+                <Image
+                  src="/images/farmer-hero.jpg"
+                  alt="Éleveur utilisant Poulvia sur son téléphone dans son exploitation"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 40vw"
+                  className="object-cover"
+                />
+              </div>
             </div>
             <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {capabilities.map(({ icon: Icon, number, title, text, tag }) => (
@@ -130,32 +117,65 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section id="demarrage" className="scroll-mt-24 py-20 md:py-28">
+        <section aria-labelledby="aperçu-poulvia" className="relative overflow-hidden bg-background py-16 sm:py-20 md:py-24">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="rounded-[2rem] bg-primary px-6 py-12 text-white sm:px-10 md:px-14 md:py-16">
-              <div className="grid gap-10 lg:grid-cols-[.85fr_1.15fr] lg:items-end">
-                <div><p className="text-xs font-bold uppercase tracking-[.2em] text-white/65">Pour commencer</p><h2 className="mt-4 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">Une mise en route simple, à votre rythme.</h2><p className="mt-4 max-w-md text-sm leading-7 text-white/75">Créez l’espace de votre exploitation, ajoutez vos bandes, puis consignez les opérations au fil des journées.</p></div>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  {steps.map(([number, title, text]) => <div key={number} className="rounded-2xl border border-white/15 bg-white/[.07] p-5"><span className="font-mono text-xs text-accent">{number}</span><h3 className="mt-4 text-sm font-semibold">{title}</h3><p className="mt-2 text-xs leading-5 text-white/70">{text}</p></div>)}
-                </div>
-              </div>
+            <div className="mx-auto max-w-3xl text-center">
+              <p className="text-xs font-bold uppercase tracking-[.2em] text-accent">Web & mobile</p>
+              <h2 id="aperçu-poulvia" className="mt-4 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+                Votre exploitation, claire sur chaque écran.
+              </h2>
+              <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-muted">
+                Retrouvez le tableau de bord Poulvia sur ordinateur et sur téléphone : les indicateurs et le suivi de la ponte restent accessibles où que vous soyez.
+              </p>
+            </div>
+            <div className="relative mx-auto mt-10 max-w-5xl sm:mt-14">
+              <div className="pointer-events-none absolute inset-x-12 bottom-4 top-8 rounded-full bg-primary/10 blur-3xl" />
+              <Image
+                src="/images/poulvia-dashboard-devices.png"
+                alt="Aperçu du tableau de bord Poulvia affiché sur ordinateur et téléphone"
+                width={2000}
+                height={1134}
+                sizes="(max-width: 768px) 100vw, 1152px"
+                className="relative h-auto w-full"
+              />
             </div>
           </div>
         </section>
 
-        <section className="border-y border-border bg-[#f2f0e8] py-16 md:py-20">
-          <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
-            <div className="max-w-2xl"><p className="text-xs font-bold uppercase tracking-[.2em] text-accent">Adapté aux pratiques locales</p><h2 className="mt-3 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">Des repères familiers pour gérer au quotidien.</h2><p className="mt-3 text-sm leading-7 text-muted">Plateaux de 30 œufs, aliments en sacs ou en kilogrammes, et suivi financier en francs CFA.</p></div>
+        <section id="demarrage" className="scroll-mt-24 bg-primary py-16 text-white md:py-20">
+          <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[.85fr_1.15fr] lg:items-center lg:px-8">
+            <div><p className="text-xs font-bold uppercase tracking-[.2em] text-white/65">Pour commencer</p><h2 className="mt-4 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">Une mise en route simple, à votre rythme.</h2><p className="mt-4 max-w-md text-sm leading-7 text-white/75">Créez l’espace de votre exploitation, ajoutez vos bandes, puis consignez les opérations au fil des journées.</p></div>
+            <div className="grid gap-7 sm:grid-cols-3 sm:gap-5">
+              {steps.map(([number, title, text]) => <article key={number} className="border-l border-white/25 pl-4"><span className="font-mono text-xs font-semibold text-accent">{number}</span><h3 className="mt-3 text-sm font-semibold">{title}</h3><p className="mt-2 text-xs leading-5 text-white/70">{text}</p></article>)}
+            </div>
           </div>
         </section>
 
-        <section className="py-20 md:py-28">
-          <div className="mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8">
-            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-soft text-accent"><Smartphone className="h-7 w-7" /></span>
-            <p className="mt-6 text-xs font-bold uppercase tracking-[.2em] text-accent">Poulvia sur Android</p>
-            <h2 className="mx-auto mt-3 max-w-2xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Emportez le suivi de votre ferme avec vous.</h2>
-            <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-muted">La version bêta Android se prépare. Découvrez son fonctionnement et les étapes d’installation avant le téléchargement.</p>
-            <Link href="/beta-android" className="mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary-hover">Découvrir la bêta Android <ArrowRight className="h-4 w-4" /></Link>
+        <section id="application-mobile" className="scroll-mt-24 bg-surface py-16 md:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-8 md:grid-cols-[.8fr_1.2fr] md:items-end">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[.2em] text-accent">Poulvia sur mobile</p>
+                <h2 className="mt-4 max-w-xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Le suivi de votre ferme vous accompagne.</h2>
+              </div>
+              <p className="max-w-xl text-sm leading-7 text-muted md:justify-self-end">La version Android est en bêta. Consultez sa page dédiée pour en savoir plus sur l’installation et vérifier la disponibilité du fichier.</p>
+            </div>
+            <div className="mt-8 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+              <Link href="/beta-android" className="inline-flex min-h-12 w-fit items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary-hover">Découvrir la bêta Android <ArrowRight className="h-4 w-4" /></Link>
+              <div>
+                <p className="text-xs font-semibold text-muted">Les stores ne sont pas encore disponibles</p>
+                <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+                <button type="button" disabled aria-disabled="true" className="inline-flex min-h-[60px] cursor-not-allowed items-center justify-center gap-3 rounded-xl border border-border bg-background px-5 text-left opacity-60">
+                  <Apple className="h-6 w-6 shrink-0 text-foreground" />
+                  <span><span className="block text-[10px] text-muted">Bientôt sur</span><span className="block text-sm font-semibold text-foreground">App Store</span></span>
+                </button>
+                <button type="button" disabled aria-disabled="true" className="inline-flex min-h-[60px] cursor-not-allowed items-center justify-center gap-3 rounded-xl border border-border bg-background px-5 text-left opacity-60">
+                  <Play className="h-5 w-5 shrink-0 fill-current text-foreground" />
+                  <span><span className="block text-[10px] text-muted">Bientôt sur</span><span className="block text-sm font-semibold text-foreground">Google Play</span></span>
+                </button>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       </main>

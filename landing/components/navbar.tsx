@@ -12,7 +12,7 @@ export function Navbar() {
   const links = [
     ["Fonctionnalités", "/#suivi"],
     ["Comment ça marche", "/#demarrage"],
-    ["Application Android", "/beta-android"],
+    ["Application mobile", "/#application-mobile"],
   ];
 
   return (

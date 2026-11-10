@@ -220,10 +220,7 @@ export default function FlocksPage() {
 
           </div>
           {flock.code && <span className="text-[10px] font-mono text-muted">{flock.code}</span>}
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground">
-            <span className={`h-1.5 w-1.5 rounded-full ${flock.status === "ACTIVE" ? "bg-success" : "bg-muted"}`} />
-            {flock.status === "ACTIVE" ? "Actif" : "Clôturé"}
-          </span>
+
         </div>
       ),
     },
