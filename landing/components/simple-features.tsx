@@ -1,5 +1,6 @@
 ﻿import React from "react";
-import { Egg, Utensils, HeartPulse, Wallet, Check } from "lucide-react";
+import Image from "next/image";
+import { Egg, Utensils, HeartPulse, Wallet, Check, Bird } from "lucide-react";
 
 export function SimpleFeatures() {
   return (
@@ -12,16 +13,16 @@ export function SimpleFeatures() {
           </div>
 
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-            Les 4 choses simples que Poulvia fait pour vous
+            Les opérations essentielles de votre élevage
           </h2>
 
           <p className="text-sm sm:text-base text-muted">
-            Pas besoin d'être un spécialiste de l'informatique : chaque fonction a été créée pour
-            vous faire gagner du temps et vous éviter les tracas au poulailler.
+            Poulvia rassemble le suivi des bandes, les soins programmés et la gestion quotidienne,
+            avec la production d’œufs pour les fermes qui en font.
           </p>
         </div>
 
-        {/* Feature 1 with Real Egg Trays Photo */}
+        {/* Egg production is relevant to layer and mixed farms. */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center mb-16 rounded-2xl border border-border bg-background p-6 sm:p-8">
           <div className="lg:col-span-6 space-y-4">
             <div className="h-10 w-10 rounded-xl bg-accent-soft flex items-center justify-center text-accent">
@@ -29,13 +30,12 @@ export function SimpleFeatures() {
             </div>
 
             <h3 className="text-xl font-bold text-foreground">
-              1. Notez vos œufs, l'application compte vos plateaux de 30
+              Pour les pondeuses : suivez les œufs ramassés
             </h3>
 
             <p className="text-sm text-muted leading-relaxed">
-              Après le ramassage du matin ou du soir, entrez simplement le nombre d'œufs ramassés.
-              Poulvia calcule automatiquement le nombre de plateaux de 30 alvéoles complets et
-              les œufs restants en vrac.
+              Dans une ferme de pondeuses ou mixte, enregistrez la collecte. Poulvia calcule le
+              nombre de plateaux de 30 et les œufs restants en vrac.
             </p>
 
             <ul className="space-y-2 text-xs text-foreground">
@@ -49,24 +49,26 @@ export function SimpleFeatures() {
               </li>
               <li className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-primary shrink-0 stroke-[2.5]" />
-                <span>Évitez les pertes et les erreurs lors des livraisons</span>
+                <span>Retrouvez les quantités collectées par jour</span>
               </li>
             </ul>
           </div>
 
           <div className="lg:col-span-6">
             <div className="rounded-xl overflow-hidden border border-border shadow-xs aspect-[4/3] relative">
-              <img
+              <Image
                 src="/images/egg-trays.jpg"
                 alt="Rangement des œufs dans les plateaux alvéolés de 30 œufs"
+                fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
                 className="w-full h-full object-cover"
               />
             </div>
           </div>
         </div>
 
-        {/* 3 Other Core Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Other core operations apply to layer, broiler and mixed farms. */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
           {/* Feature 2: Feed */}
           <div className="rounded-2xl border border-border bg-background p-6 space-y-3.5">
             <div className="h-10 w-10 rounded-xl bg-warning-soft flex items-center justify-center text-warning">
@@ -74,13 +76,27 @@ export function SimpleFeatures() {
             </div>
 
             <h3 className="text-base font-bold text-foreground">
-              2. Suivez vos sacs d'aliments
+              2. Suivez vos sacs d’aliments
             </h3>
 
             <p className="text-xs sm:text-sm text-muted leading-relaxed">
-              Quand vous ouvrez un sac de provende pour nourrir la bande, notez-le en un clic. Vous
-              savez toujours combien de sacs il vous reste dans votre magasin pour ne jamais être en
-              panne d'aliment.
+              Enregistrez les aliments et intrants disponibles, puis notez les distributions pour
+              suivre les mouvements de stock.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-background p-6 space-y-3.5">
+            <div className="h-10 w-10 rounded-xl bg-primary-soft flex items-center justify-center text-primary">
+              <Bird className="h-5 w-5" />
+            </div>
+
+            <h3 className="text-base font-bold text-foreground">
+              Suivez vos bandes et leurs effectifs
+            </h3>
+
+            <p className="text-xs sm:text-sm text-muted leading-relaxed">
+              Enregistrez les mouvements et les mortalités pour garder un historique des effectifs
+              de vos bandes.
             </p>
           </div>
 
@@ -91,13 +107,12 @@ export function SimpleFeatures() {
             </div>
 
             <h3 className="text-base font-bold text-foreground">
-              3. N'oubliez aucun vaccin
+              Consultez vos soins programmés
             </h3>
 
             <p className="text-xs sm:text-sm text-muted leading-relaxed">
-              L'application vous rappelle les soins et vaccins programmés selon l'âge de vos sujets.
-              Quand vous donnez l'eau de boisson, vous pouvez valider le vaccin du jour en une seule
-              seconde.
+              Ajoutez les soins et vaccins à votre suivi sanitaire, puis consultez les éléments à
+              venir ou en retard dans l’application.
             </p>
           </div>
 
@@ -112,9 +127,8 @@ export function SimpleFeatures() {
             </h3>
 
             <p className="text-xs sm:text-sm text-muted leading-relaxed">
-              Enregistrez vos ventes d'œufs et vos dépenses en Francs CFA. Gardez les sous bien
-              séparés : ce qui est entré sur votre compte MTN Mobile Money, Moov Money et ce qui est
-              dans la caisse en espèces.
+              Enregistrez les recettes de vos ventes et les dépenses de l’exploitation en Francs
+              CFA.
             </p>
           </div>
         </div>

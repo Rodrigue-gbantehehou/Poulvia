@@ -6,6 +6,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
+  Briefcase,
   Bird,
   Warehouse,
   Egg,
@@ -90,7 +91,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       icon: HeartPulse,
       show: canViewHealth,
     },
-    { name: "Gestion", href: "/management", icon: Settings, show: canViewManagement },
+    { name: "Gestion", href: "/management", icon: Briefcase, show: canViewManagement },
   ];
 
   return (

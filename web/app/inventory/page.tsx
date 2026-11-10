@@ -1022,7 +1022,7 @@ export default function InventoryPage() {
               onClick={() => setMoveType("OUT")}
               className={`rounded-xl border py-2 text-xs font-bold ${
                 moveType === "OUT"
-                  ? "border-accent bg-accent text-white"
+                  ? "border-primary bg-primary text-white"
                   : "border-border bg-surface text-muted"
               }`}
             >

@@ -111,7 +111,7 @@ export default function RegisterPage() {
 
               <div>
                 <label className="block text-xs font-semibold text-foreground mb-1.5">
-                  Téléphone (MoMo / WhatsApp)
+                  Téléphone
                 </label>
                 <div className="relative">
                   <Phone className="absolute left-3.5 top-3 h-4 w-4 text-muted" />

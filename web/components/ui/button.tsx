@@ -39,7 +39,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       ghost: "hover:bg-white/10 text-white/80 hover:text-white",
       link: "text-primary underline-offset-4 hover:underline p-0 h-auto",
       accent:
-        "bg-accent text-white hover:bg-accent-hover shadow-xs active:scale-[0.99]",
+        "bg-primary text-white hover:bg-primary-hover shadow-xs active:scale-[0.99]",
     };
 
     const sizeStyles = {

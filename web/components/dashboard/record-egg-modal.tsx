@@ -171,7 +171,7 @@ export function RecordEggModal({
                 onClick={() => setEggSession(session)}
                 className={`rounded-xl border py-2 text-xs font-bold transition-colors ${
                   eggSession === session
-                    ? "border-accent bg-accent text-white shadow-xs"
+                    ? "border-primary bg-primary text-white shadow-xs"
                     : "border-border bg-surface text-muted hover:bg-surface-hover"
                 }`}
               >
@@ -304,7 +304,7 @@ export function RecordEggModal({
           <button
             type="submit"
             disabled={submittingEgg}
-            className="rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-accent-hover"
+            className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-primary-hover"
           >
             {submittingEgg
               ? "Enregistrement..."

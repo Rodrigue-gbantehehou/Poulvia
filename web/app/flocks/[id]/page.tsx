@@ -12,7 +12,6 @@ import {
   Egg,
   HeartPulse,
   Wallet,
-  Plus,
   RefreshCw,
   Edit2,
   TrendingDown,
@@ -87,7 +86,8 @@ function FlockDetailContent() {
   }>({ totalIncome: 0, totalExpense: 0, grossMargin: 0, currency: "XOF" });
 
   const [buildings, setBuildings] = useState<Building[]>([]);
-  const [activeTab, setActiveTab] = useState<"movements" | "feeding" | "eggs" | "health" | "finance" | "details">("movements");
+  const [activeTab, setActiveTab] = useState<"tracking" | "details">("tracking");
+  const [historyFilter, setHistoryFilter] = useState<"recent" | "movements" | "feeding" | "eggs" | "health" | "finance">("recent");
   const [feedingMovements, setFeedingMovements] = useState<StockMovement[]>([]);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [feedingModalOpen, setFeedingModalOpen] = useState(false);
@@ -324,6 +324,55 @@ function FlockDetailContent() {
       totalTrays,
     };
   }, [flock, eggProductions]);
+
+  const recentActivity = useMemo(() => {
+    const activity = [
+      ...movements.map((movement) => ({
+        id: `movement-${movement.id}`,
+        date: movement.date,
+        title: MOVEMENT_LABELS[movement.type]?.label || "Mouvement d'effectif",
+        detail: `${formatNumber(movement.quantity)} sujets${movement.reason ? ` · ${movement.reason}` : ""}`,
+        icon: <Bird className="h-4 w-4" />,
+        color: "text-primary bg-primary/10",
+      })),
+      ...feedingMovements.map((movement) => ({
+        id: `feeding-${movement.id}`,
+        date: movement.date,
+        title: "Alimentation enregistrée",
+        detail: `${movement.itemName || "Aliment"} · ${formatNumber(movement.quantity)} ${movement.unitShortLabel || movement.unit || ""}`,
+        icon: <Utensils className="h-4 w-4" />,
+        color: "text-amber-700 bg-amber-500/10 dark:text-amber-400",
+      })),
+      ...eggProductions.map((production) => ({
+        id: `egg-${production.id}`,
+        date: production.date,
+        title: "Collecte d'œufs",
+        detail: `${formatNumber(production.goodEggs)} œufs conformes`,
+        icon: <Egg className="h-4 w-4" />,
+        color: "text-amber-700 bg-amber-500/10 dark:text-amber-400",
+      })),
+      ...treatments.map((treatment) => ({
+        id: `health-${treatment.id}`,
+        date: treatment.administeredDate || treatment.scheduledDate,
+        title: treatment.title,
+        detail: treatment.statusLabel,
+        icon: <HeartPulse className="h-4 w-4" />,
+        color: "text-rose-700 bg-rose-500/10 dark:text-rose-400",
+      })),
+      ...transactions.map((transaction) => ({
+        id: `finance-${transaction.id}`,
+        date: transaction.date,
+        title: transaction.category || (transaction.type === "INCOME" ? "Recette" : "Dépense"),
+        detail: `${transaction.type === "INCOME" ? "Recette" : "Dépense"} · ${formatFcfa(transaction.amountFcfa)}`,
+        icon: <Wallet className="h-4 w-4" />,
+        color: transaction.type === "INCOME" ? "text-success bg-success/10" : "text-danger bg-danger/10",
+      })),
+    ];
+
+    return activity
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 6);
+  }, [movements, feedingMovements, eggProductions, treatments, transactions]);
 
   // Colonnes Alimentation & Rations
   const feedingColumns: ColumnDef<StockMovement>[] = [
@@ -609,6 +658,7 @@ function FlockDetailContent() {
   const canCreateFinance = hasModule("finance") && (hasPermission("finance:create") || isOwner);
   const canViewHealth = hasModule("health") && (hasPermission("health:view") || hasPermission("health:read") || isOwner);
   const canManageHealth = hasModule("health") && (hasPermission("health:manage") || hasPermission("health:create") || isOwner);
+  const canFeed = hasModule("inventory") && (hasPermission("inventory:movement") || hasPermission("flock:update") || isOwner);
   const canUpdateFlock = hasPermission("flock:update") || isOwner;
 
   return (
@@ -617,44 +667,15 @@ function FlockDetailContent() {
         <PageHeader
           backHref="/flocks"
           title={flock.name}
+          inlineOnMobile
           subtitle={
             <div className="flex items-center gap-1.5 flex-wrap">
               {flock.code && <span className="font-mono text-[10px] text-muted">{flock.code}</span>}
-              <span>•</span>
-              <span>{flock.strain || flock.breed}</span>
-              {flock.ageInWeeks !== undefined && (
-                <>
-                  <span>•</span>
-                  <span>Sem. {flock.ageInWeeks}</span>
-                </>
-              )}
             </div>
           }
           icon={<Bird className="h-4 w-4" />}
           actions={
             <div className="flex items-center gap-1.5">
-              {flock.status === "ACTIVE" && canRecordMovement && (
-                <button
-                  type="button"
-                  onClick={() => setMovementModalOpen(true)}
-                  className="inline-flex h-8 items-center justify-center gap-1 rounded-full bg-danger-soft px-2.5 text-xs font-bold text-danger hover:bg-danger/15 active:scale-95 transition-all cursor-pointer"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>Mouvement</span>
-                </button>
-              )}
-
-              {flock.status === "ACTIVE" && canCreateEgg && (
-                <button
-                  type="button"
-                  onClick={() => setEggModalOpen(true)}
-                  className="inline-flex h-8 items-center justify-center gap-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20 px-2.5 text-xs font-bold hover:bg-amber-500/25 active:scale-95 transition-all cursor-pointer"
-                >
-                  <Egg className="h-3.5 w-3.5" />
-                  <span>Collecte</span>
-                </button>
-              )}
-
               {canUpdateFlock && (
                 <button
                   type="button"
@@ -680,12 +701,6 @@ function FlockDetailContent() {
 
         {/* Badges bar */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar -mt-3">
-          <Badge variant={flock.status === "ACTIVE" ? "success" : "neutral"} size="sm">
-            {flock.status === "ACTIVE" ? "En cours" : flock.status === "SOLD" ? "Vendue" : "Clôturée"}
-          </Badge>
-          <Badge variant={flock.type === "LAYER" ? "warning" : flock.type === "BROILER" ? "info" : "neutral"} size="sm">
-            {flock.type === "LAYER" ? "Pondeuses" : flock.type === "BROILER" ? "Poulets de chair" : "Mixte"}
-          </Badge>
           <span className="text-[11px] text-muted font-medium whitespace-nowrap">
             Bâtiment : <strong className="text-foreground">{flock.buildingName || "Non affecté"}</strong>
           </span>
@@ -694,8 +709,8 @@ function FlockDetailContent() {
           </span>
         </div>
 
-        {/* 4 Indicateurs Zootechniques & Performances */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {/* Indicateurs principaux de la bande */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <StatCard
             title="Effectif vivant"
             value={formatNumber(stats.current)}
@@ -712,32 +727,27 @@ function FlockDetailContent() {
             accent={stats.mortalityRate > 5 ? "rose" : "zinc"}
           />
 
+          <StatCard
+            title="Âge du lot"
+            value={flock.ageInDays !== undefined && flock.ageInDays < 7
+              ? `J${flock.ageInDays}`
+              : `S${flock.ageInWeeks ?? "—"}`}
+            subtitle={flock.ageInDays !== undefined ? `${flock.ageInDays} jour${flock.ageInDays > 1 ? "s" : ""}` : "Âge non renseigné"}
+            icon={<Clock className="h-5 w-5" />}
+            accent="sky"
+          />
+
           {canViewEgg ? (
             <StatCard
               title="Ponte cumulée"
-              value={`${formatNumber(stats.totalTrays)} pl.`}
-              subtitle={`${formatNumber(stats.totalEggs)} œufs`}
+              value={eggProductions.length > 0 ? `${formatNumber(stats.totalTrays)} pl.` : "—"}
+              subtitle={eggProductions.length > 0 ? `${formatNumber(stats.totalEggs)} œufs` : "Aucune collecte enregistrée"}
               icon={<Egg className="h-5 w-5" />}
               accent="amber"
             />
-          ) : (
-            <StatCard
-              title="Âge du lot"
-              value={`J${flock.ageInDays || 1}`}
-              subtitle={`Semaine ${flock.ageInWeeks || 1}`}
-              icon={<Clock className="h-5 w-5" />}
-              accent="sky"
-            />
-          )}
+          ) : null}
 
-          {canViewFinance ? (
-            <StatCard
-              title="Marge brute"
-              value={formatFcfa(financialSummary.grossMargin)}
-              accent={financialSummary.grossMargin >= 0 ? "primary" : "rose"}
-              icon={<Wallet className="h-5 w-5" />}
-            />
-          ) : (
+          {!canViewEgg ? (
             <StatCard
               title="Taux de survie"
               value={`${stats.survivalRate.toFixed(1)}%`}
@@ -745,82 +755,25 @@ function FlockDetailContent() {
               accent="primary"
               icon={<CheckCircle2 className="h-5 w-5" />}
             />
-          )}
+          ) : null}
         </div>
 
-        {/* Onglets de Consultation Approfondie */}
+        {/* Navigation principale de la fiche */}
         <div className="space-y-4">
           <div className="border-b border-border">
-            <nav className="flex space-x-6 overflow-x-auto pb-px scrollbar-none">
+            <nav className="flex gap-6 overflow-x-auto pb-px scrollbar-none">
               <button
-                onClick={() => setActiveTab("movements")}
+                type="button"
+                onClick={() => setActiveTab("tracking")}
                 className={`py-3 text-xs font-bold border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 cursor-pointer ${
-                  activeTab === "movements"
+                  activeTab === "tracking"
                     ? "border-primary text-primary"
                     : "border-transparent text-muted hover:text-foreground"
                 }`}
               >
                 <Bird className="h-4 w-4" />
-                Mouvements d&apos;effectif ({movements.length})
+                Suivi
               </button>
-
-              {hasModule("inventory") && (
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("feeding")}
-                  className={`py-3 text-xs font-bold border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 cursor-pointer ${
-                    activeTab === "feeding"
-                      ? "border-primary text-primary"
-                      : "border-transparent text-muted hover:text-foreground"
-                  }`}
-                >
-                  <Utensils className="h-4 w-4" />
-                  Alimentation & Rations ({feedingMovements.length})
-                </button>
-              )}
-
-              {canViewEgg && (
-                <button
-                  onClick={() => setActiveTab("eggs")}
-                  className={`py-3 text-xs font-bold border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 cursor-pointer ${
-                    activeTab === "eggs"
-                      ? "border-primary text-primary"
-                      : "border-transparent text-muted hover:text-foreground"
-                  }`}
-                >
-                  <Egg className="h-4 w-4" />
-                  Ponte & Collectes ({eggProductions.length})
-                </button>
-              )}
-
-              {canViewHealth && (
-                <button
-                  onClick={() => setActiveTab("health")}
-                  className={`py-3 text-xs font-bold border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 cursor-pointer ${
-                    activeTab === "health"
-                      ? "border-primary text-primary"
-                      : "border-transparent text-muted hover:text-foreground"
-                  }`}
-                >
-                  <HeartPulse className="h-4 w-4" />
-                  Santé & Vaccinations ({treatments.length})
-                </button>
-              )}
-
-              {canViewFinance && (
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("finance")}
-                  className={`py-3 text-xs font-bold border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 cursor-pointer ${
-                    activeTab === "finance"
-                      ? "border-primary text-primary"
-                      : "border-transparent text-muted hover:text-foreground"
-                  }`}
-                >
-                  <Wallet className="h-4 w-4" />
-                  Finances & Marge ({transactions.length})
-                </button>
-              )}
 
               <button
                 type="button"
@@ -832,14 +785,82 @@ function FlockDetailContent() {
                 }`}
               >
                 <Info className="h-4 w-4" />
-                Fiche technique & Paramètres
+                Informations
               </button>
             </nav>
           </div>
 
           {/* Contenu des Onglets */}
           <div>
-            {activeTab === "movements" && (
+            {activeTab === "tracking" && (
+              <div className="space-y-4">
+                {flock.status === "ACTIVE" && (canFeed || canRecordMovement || canCreateEgg) && (
+                  <section className="rounded-xl border border-border bg-surface p-3 sm:p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="mr-1 text-xs font-semibold text-muted">Actions rapides</span>
+                    {canFeed && (
+                      <button type="button" onClick={() => setFeedingModalOpen(true)} className="inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-xs font-semibold text-foreground hover:bg-surface-hover">
+                        <Utensils className="h-4 w-4 text-primary" /> Nourrir
+                      </button>
+                    )}
+                    {canRecordMovement && (
+                      <button type="button" onClick={() => setMovementModalOpen(true)} className="inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-xs font-semibold text-foreground hover:bg-surface-hover">
+                        <Bird className="h-4 w-4 text-primary" /> Perte / vente
+                      </button>
+                    )}
+                    {canCreateEgg && (
+                      <button type="button" onClick={() => setEggModalOpen(true)} className="inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-xs font-semibold text-foreground hover:bg-surface-hover">
+                        <Egg className="h-4 w-4 text-primary" /> Collecte d&apos;œufs
+                      </button>
+                    )}
+                  </div>
+                  </section>
+                )}
+
+                <section className="overflow-hidden rounded-xl border border-border bg-surface">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
+                    <div>
+                      <h2 className="text-sm font-bold text-foreground">Historique de la bande</h2>
+                      <p className="mt-0.5 text-xs text-muted">Consultez les opérations enregistrées.</p>
+                    </div>
+                    <label className="flex items-center gap-2 text-xs font-medium text-muted">
+                      <span className="sr-only">Type d&apos;opération</span>
+                      <select
+                        value={historyFilter}
+                        onChange={(event) => setHistoryFilter(event.target.value as typeof historyFilter)}
+                        className="h-9 rounded-lg border border-border bg-surface px-3 text-xs font-semibold text-foreground outline-none focus:border-primary"
+                      >
+                        <option value="recent">Activité récente</option>
+                        <option value="movements">Pertes et sorties</option>
+                        {hasModule("inventory") && <option value="feeding">Alimentation</option>}
+                        {canViewEgg && <option value="eggs">Ponte</option>}
+                        {canViewHealth && <option value="health">Santé</option>}
+                        {canViewFinance && <option value="finance">Finances</option>}
+                      </select>
+                    </label>
+                  </div>
+
+                  <div className="p-3 sm:p-4">
+                    {historyFilter === "recent" && (
+                      recentActivity.length > 0 ? (
+                        <ul className="divide-y divide-border">
+                          {recentActivity.map((item) => (
+                            <li key={item.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${item.color}`}>{item.icon}</span>
+                              <span className="min-w-0 flex-1"><span className="block truncate text-xs font-semibold text-foreground">{item.title}</span><span className="mt-0.5 block truncate text-[11px] text-muted">{item.detail}</span></span>
+                              <time className="shrink-0 text-[10px] text-muted">{formatDate(item.date)}</time>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <div className="py-10 text-center">
+                          <p className="text-sm font-semibold text-foreground">Aucune activité enregistrée</p>
+                          <p className="mt-1 text-xs text-muted">Les opérations de cette bande apparaîtront ici.</p>
+                        </div>
+                      )
+                    )}
+
+            {activeTab === "tracking" && historyFilter === "movements" && (
               movements.length === 0 ? (
                 <EmptyState
                   icon={<Bird className="h-6 w-6" />}
@@ -853,30 +874,8 @@ function FlockDetailContent() {
               )
             )}
 
-            {activeTab === "feeding" && hasModule("inventory") && (
+            {activeTab === "tracking" && historyFilter === "feeding" && hasModule("inventory") && (
               <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl border border-border bg-surface">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-accent/10 text-accent flex items-center justify-center font-bold">
-                      <Utensils className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-foreground">Bilan de nutrition & consommations</h3>
-                      <p className="text-xs text-muted">
-                        Total rations enregistrées : {feedingMovements.length} distribution(s)
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setFeedingModalOpen(true)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-primary rounded-xl hover:bg-primary-hover shadow-xs transition-colors cursor-pointer"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Nourrir ce lot
-                  </button>
-                </div>
-
                 {feedingMovements.length === 0 ? (
                   <EmptyState
                     icon={<Utensils className="h-6 w-6" />}
@@ -891,7 +890,7 @@ function FlockDetailContent() {
               </div>
             )}
 
-            {activeTab === "eggs" && canViewEgg && (
+            {activeTab === "tracking" && historyFilter === "eggs" && canViewEgg && (
               eggProductions.length === 0 ? (
                 <EmptyState
                   icon={<Egg className="h-6 w-6" />}
@@ -905,7 +904,7 @@ function FlockDetailContent() {
               )
             )}
 
-            {activeTab === "health" && canViewHealth && (
+            {activeTab === "tracking" && historyFilter === "health" && canViewHealth && (
               treatments.length === 0 ? (
                 <EmptyState
                   icon={<HeartPulse className="h-6 w-6" />}
@@ -919,7 +918,7 @@ function FlockDetailContent() {
               )
             )}
 
-            {activeTab === "finance" && canViewFinance && (
+            {activeTab === "tracking" && historyFilter === "finance" && canViewFinance && (
               transactions.length === 0 ? (
                 <EmptyState
                   icon={<Wallet className="h-6 w-6" />}
@@ -931,6 +930,11 @@ function FlockDetailContent() {
               ) : (
                 <DataTable data={transactions} columns={txColumns} pageSize={10} />
               )
+            )}
+
+                  </div>
+                </section>
+              </div>
             )}
 
             {activeTab === "details" && (
@@ -996,9 +1000,11 @@ function FlockDetailContent() {
                       <dt className="text-muted">Âge actuel du lot :</dt>
                       <dd className="font-bold text-primary flex items-center gap-1.5">
                         <Clock className="h-3.5 w-3.5" />
-                        {flock.ageInWeeks !== undefined
-                          ? `Semaine ${flock.ageInWeeks} (${flock.ageInDays} jours)`
-                          : "—"}
+                        {flock.ageInDays !== undefined && flock.ageInDays < 7
+                          ? `${flock.ageInDays} jour${flock.ageInDays > 1 ? "s" : ""}`
+                          : flock.ageInWeeks !== undefined
+                            ? `Semaine ${flock.ageInWeeks} (${flock.ageInDays ?? "—"} jours)`
+                            : "—"}
                       </dd>
                     </div>
 
@@ -1060,45 +1066,6 @@ function FlockDetailContent() {
                     )}
                   </div>
 
-                  <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-xs">
-                    <h2 className="text-sm font-bold text-foreground flex items-center gap-2 mb-3 border-b border-border pb-3">
-                      <Bird className="h-4 w-4 text-primary" />
-                      <span>Actions & Administration</span>
-                    </h2>
-                    <p className="text-xs text-muted mb-4">
-                      Opérations de gestion, d&apos;édition des paramètres et génération de rapports pour ce lot.
-                    </p>
-                    <div className="flex flex-wrap gap-3">
-                      <button
-                        type="button"
-                        onClick={openEditModal}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-soft px-4 py-2 text-xs font-bold text-primary hover:bg-primary/20 transition-colors"
-                      >
-                        <Edit2 className="h-3.5 w-3.5" />
-                        <span>Modifier la fiche</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setReportModalOpen(true)}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-surface border border-border px-4 py-2 text-xs font-bold text-foreground hover:bg-surface-hover transition-colors"
-                      >
-                        <Printer className="h-3.5 w-3.5 text-primary" />
-                        <span>Bilan imprimable (PDF)</span>
-                      </button>
-
-                      {flock.status === "ACTIVE" && (
-                        <button
-                          type="button"
-                          onClick={() => setMovementModalOpen(true)}
-                          className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-danger-soft px-4 py-2 text-xs font-bold text-danger hover:bg-danger/20 transition-colors"
-                        >
-                          <Plus className="h-3.5 w-3.5" />
-                          <span>Noter une perte ou vente</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
                 </div>
               </div>
             )}

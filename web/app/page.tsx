@@ -522,9 +522,7 @@ export default function DashboardPage() {
                           </div>
                         </div>
 
-                        <Badge variant={flock.type === "LAYER" ? "warning" : "info"} size="sm">
-                          {flock.type === "LAYER" ? "Ponte" : "Chair"}
-                        </Badge>
+                
                       </div>
 
                       {/* Métriques clés en pastilles */}

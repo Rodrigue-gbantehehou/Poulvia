@@ -3,11 +3,6 @@
 import React, { useState } from "react";
 import {
   Egg,
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle2,
-  Package,
-  Layers,
   Sparkles,
   ArrowRight,
 } from "lucide-react";
@@ -45,7 +40,7 @@ export function InteractivePreview() {
             <span className="text-accent-hover">plateaux de 30</span>
           </h2>
           <p className="text-sm sm:text-base text-muted leading-relaxed">
-            Modifiez le nombre d'œufs récoltés ci-dessous pour voir comment Poulvia
+            Modifiez le nombre d’œufs récoltés ci-dessous pour voir comment Poulvia
             convertit instantanément vos chiffres et calcule votre taux de ponte.
           </p>
         </div>

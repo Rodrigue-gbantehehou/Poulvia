@@ -60,7 +60,7 @@ const PLAN_ACCENT: Record<string, { tier: string; ring: string; cta: string }> =
   STANDARD: {
     tier: "text-info",
     ring: "border-info/30",
-    cta: "bg-info/10 hover:bg-info/20 text-info border border-info/30",
+    cta: "bg-primary hover:bg-primary-hover text-white",
   },
   PRO: {
     tier: "text-primary",
@@ -112,7 +112,7 @@ function PlanCard({ plan, currentSku, billingCycle, onSelect }: PlanCardProps) {
       )}
       {plan.isRecommended && !isCurrent && (
         <div className="absolute -top-3 left-4">
-          <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2.5 py-0.5 text-[10px] font-bold text-white shadow-xs">
+          <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2.5 py-0.5 text-[10px] font-bold text-primary shadow-xs">
             <Star className="h-2.5 w-2.5" />
             Recommandé
           </span>

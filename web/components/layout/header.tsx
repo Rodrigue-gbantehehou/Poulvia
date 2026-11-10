@@ -9,22 +9,16 @@ import {
   ChevronDown,
   LogOut,
   Check,
-  Users,
+  UserRound,
   Plus,
-  Settings,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { useTheme } from "@/context/theme-context";
 import { CreateFarmModal } from "@/components/farms/create-farm-modal";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 
-interface HeaderProps {
-  onToggleSidebar?: () => void;
-}
-
-export function Header({ onToggleSidebar }: HeaderProps = {}) {
-  const { user, activeFarm, farms, switchFarm, logout, role } = useAuth();
+export function Header() {
+  const { user, activeFarm, farms, switchFarm, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
   const [farmDropdownOpen, setFarmDropdownOpen] = useState(false);
@@ -55,11 +49,8 @@ export function Header({ onToggleSidebar }: HeaderProps = {}) {
       className="sticky top-0 z-30 flex h-14 sm:h-16 w-full items-center justify-between border-b border-[#e6e4dd] bg-[#f8f7f3] px-3 sm:px-6 text-[#242820]"
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
-      {/* Left section: SidebarTrigger (desktop/mobile) + Brand Icon + Farm Selector */}
+      {/* Logo et sélecteur d'exploitation */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Déclencheur sidebar / drawer (mobile et desktop) */}
-        <SidebarTrigger className="flex text-[#686b64] hover:bg-[#eeede8] hover:text-[#242820] lg:hidden" />
-
         <Link
           href="/"
           className="flex items-center gap-2 rounded-xl p-1 hover:opacity-90 transition-opacity lg:hidden"
@@ -151,7 +142,7 @@ export function Header({ onToggleSidebar }: HeaderProps = {}) {
                   className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-[#80652f] hover:bg-[#f7f2e7] transition-colors cursor-pointer"
                 >
                   <Plus className="h-4 w-4" />
-                  <span>+ Créer une nouvelle ferme</span>
+                  <span>Créer une nouvelle ferme</span>
                 </button>
               </div>
             </div>
@@ -202,27 +193,15 @@ export function Header({ onToggleSidebar }: HeaderProps = {}) {
                 <p className="text-caption text-muted truncate">
                   {user?.email}
                 </p>
-                <div className="mt-1 text-caption font-medium text-[#6f715f]">
-                  {role?.name || "Rôle standard"}
-                </div>
               </div>
 
               <Link
-                href="/settings"
+                href="/account"
                 onClick={() => setUserDropdownOpen(false)}
                 className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-[#41443e] hover:bg-[#f4f3ef] transition-colors mb-1"
               >
-                <Settings className="h-4 w-4 text-[#80652f]" />
-                Paramètres
-              </Link>
-
-              <Link
-                href="/settings/members"
-                onClick={() => setUserDropdownOpen(false)}
-                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-[#41443e] hover:bg-[#f4f3ef] transition-colors mb-1"
-              >
-                <Users className="h-4 w-4 text-[#80652f]" />
-                Utilisateurs &amp; Employés
+                <UserRound className="h-4 w-4 text-[#80652f]" />
+                Mon compte
               </Link>
 
               <button

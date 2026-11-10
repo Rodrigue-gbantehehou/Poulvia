@@ -65,6 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         id: res.id,
         email: res.email,
         fullName: res.fullName || `${res.firstName} ${res.lastName}`,
+        phone: res.phone || null,
         roles: res.roles || [],
       };
       setUser(mappedUser);
