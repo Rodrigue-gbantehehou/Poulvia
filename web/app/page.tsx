@@ -334,8 +334,14 @@ export default function DashboardPage() {
             ) : (
               <StatCard
                 title="Âge"
-                value={flocks.length > 0 ? `S${flocks[0].ageInWeeks || "?"}` : "—"}
-                subtitle={flocks.length > 0 ? `J${flocks[0].ageInDays || "?"}` : "0 lot"}
+                value={
+                  flocks.length > 0
+                    ? flocks[0].ageInDays !== undefined && flocks[0].ageInDays < 7
+                      ? `J${flocks[0].ageInDays}`
+                      : `S${flocks[0].ageInWeeks ?? "?"}`
+                    : "—"
+                }
+                subtitle={flocks.length > 0 ? `J${flocks[0].ageInDays ?? "?"}` : "0 lot"}
                 accent="sky"
                 icon={<Clock className="h-4 w-4" />}
               />
@@ -404,10 +410,6 @@ export default function DashboardPage() {
               />
             )}
           </div>
-
-          {canViewEgg && kpi?.hasEggAccess !== false && (
-            <EggProductionChart points={kpi?.eggProductionChart ?? []} isLoading={showDashboardLoading} error={kpi?.dashboardError} startDate={kpi?.eggChartStartDate} endDate={kpi?.eggChartEndDate} title="Tendance de ponte" />
-          )}
 
           {/* 3. Alertes (si stock bas ou vaccin en retard) */}
           {((canViewInventory && computedLowStock > 0) || (canViewHealth && overdueHealthCount > 0)) && (
@@ -536,7 +538,9 @@ export default function DashboardPage() {
                         <div>
                           <div className="text-[10px] text-muted">Âge</div>
                           <div className="text-xs font-bold text-foreground font-mono">
-                            S{flock.ageInWeeks || "?"}
+                            {flock.ageInDays !== undefined && flock.ageInDays < 7
+                              ? `J${flock.ageInDays}`
+                              : `S${flock.ageInWeeks ?? "?"}`}
                           </div>
                         </div>
                         <div>
@@ -655,12 +659,16 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+
+          {canViewEgg && kpi?.hasEggAccess !== false && (
+            <EggProductionChart points={kpi?.eggProductionChart ?? []} isLoading={showDashboardLoading} error={kpi?.dashboardError} startDate={kpi?.eggChartStartDate} endDate={kpi?.eggChartEndDate} title="Tendance de ponte" />
+          )}
         </div>
       )}
 
       {/* MODALES DASHBOARD FONCTIONNELLES */}
       <RecordEggModal
-        key={`${eggModalOpen}-${editingEgg?.id ?? "new"}-${selectedFlockId}`}
+        key={`egg-${eggModalOpen}-${editingEgg?.id ?? "new"}-${selectedFlockId}`}
         isOpen={eggModalOpen}
         onClose={() => {
           setEggModalOpen(false);
@@ -674,7 +682,7 @@ export default function DashboardPage() {
       />
 
       <RecordMovementModal
-        key={`${movementModalOpen}-${selectedFlockId}`}
+        key={`movement-${movementModalOpen}-${selectedFlockId}`}
         isOpen={movementModalOpen}
         onClose={() => setMovementModalOpen(false)}
         onSuccess={loadDashboardData}
@@ -683,7 +691,7 @@ export default function DashboardPage() {
       />
 
       <RecordFeedingModal
-        key={`${feedingModalOpen}-${selectedFlockId}`}
+        key={`feeding-${feedingModalOpen}-${selectedFlockId}`}
         isOpen={feedingModalOpen}
         onClose={() => setFeedingModalOpen(false)}
         onSuccess={loadDashboardData}
@@ -694,7 +702,7 @@ export default function DashboardPage() {
       />
 
       <RecordTransactionModal
-        key={`${financeModalOpen}-${financeTxType}`}
+        key={`transaction-${financeModalOpen}-${financeTxType}`}
         isOpen={financeModalOpen}
         onClose={() => setFinanceModalOpen(false)}
         onSuccess={loadDashboardData}
@@ -708,7 +716,7 @@ export default function DashboardPage() {
       />
 
       <CreateFlockModal
-        key={String(createFlockModalOpen)}
+        key={`create-flock-${createFlockModalOpen}`}
         isOpen={createFlockModalOpen}
         onClose={() => setCreateFlockModalOpen(false)}
         onSuccess={loadDashboardData}

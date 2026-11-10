@@ -400,6 +400,8 @@ export default function EggsPage() {
       {/* En-tête mobile natif */}
       <PageHeader
         title="Production d'œufs"
+        mobileTitle="Production"
+        inlineOnMobile
         subtitle={loadError ? "Données momentanément indisponibles" : `${formatNumber(summary.totalEggsToday)} œuf(s) récolté(s) aujourd'hui`}
         icon={<Egg className="h-4 w-4 text-accent" />}
         actions={
@@ -407,7 +409,7 @@ export default function EggsPage() {
             <button
               type="button"
               onClick={openCreateModal}
-              className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 sm:px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-accent-hover active:scale-95 transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 sm:px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-primary-hover active:scale-95 transition-all cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>Ramassage</span>
@@ -449,11 +451,6 @@ export default function EggsPage() {
         />
       </div>}
 
-      {!loadError && <div className="mt-5 sm:mt-7">
-        <EggProductionChart points={summary.chart} isLoading={showLoading} error={summary.chartError} startDate={summary.chartStartDate} endDate={summary.chartEndDate} title="Évolution de la production" />
-      </div>}
-
-
       {/* Production History Table & Mobile Cards */}
       {!loadError && <div className="mt-6 sm:mt-8">
         <DataTable<EggProduction>
@@ -463,11 +460,13 @@ export default function EggsPage() {
           periodFilter={true}
           dateAccessor={(p) => p.date}
           searchable={true}
+          collapsibleFilters={true}
           searchPlaceholder="Rechercher par bande, session..."
           searchAccessor={(p) => `${p.flockName || ""} ${p.session} ${p.notes || ""}`}
           pageSize={15}
           initialSort={{ key: "date", direction: "desc" }}
           isLoading={showLoading}
+          activeFilterCount={sessionFilter !== "ALL" ? 1 : 0}
           secondaryFilter={
             <div className="flex items-center gap-1.5 shrink-0">
               {[
@@ -631,6 +630,10 @@ export default function EggsPage() {
         />
       </div>}
 
+      {!loadError && <div className="mt-5 sm:mt-7">
+        <EggProductionChart points={summary.chart} isLoading={showLoading} error={summary.chartError} startDate={summary.chartStartDate} endDate={summary.chartEndDate} title="Évolution de la production" />
+      </div>}
+
       {/* COLLECTION MODAL (Bottom Sheet sur smartphone) */}
       <Modal
         isOpen={modalOpen}
@@ -732,7 +735,7 @@ export default function EggsPage() {
                     onClick={() => setSession(s.id as EggSession)}
                     className={`flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-xs font-bold transition-all active:scale-95 ${
                       isSelected
-                        ? "border-accent bg-accent text-white shadow-xs"
+                        ? "border-primary bg-primary text-white shadow-xs"
                         : "border-border bg-surface text-muted hover:bg-surface-hover"
                     }`}
                   >
@@ -967,7 +970,7 @@ export default function EggsPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-xl bg-accent px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-accent-hover active:scale-95 transition-all flex items-center gap-2"
+              className="rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-primary-hover active:scale-95 transition-all flex items-center gap-2"
             >
               {submitting ? (
                 "Enregistrement..."
@@ -984,18 +987,6 @@ export default function EggsPage() {
         </form>
       </Modal>
 
-      {/* Floating Action Button (FAB) Mobile — Toujours sous le pouce */}
-      {hasPermission("egg:create") && (
-        <button
-          type="button"
-          onClick={openCreateModal}
-          aria-label="Noter un ramassage"
-          className="fixed bottom-20 right-4 z-30 flex items-center gap-2 rounded-full bg-accent px-4 py-3 text-xs font-bold text-white shadow-xl shadow-accent/40 border-2 border-surface active:scale-90 transition-all sm:hidden"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Ramassage</span>
-        </button>
-      )}
     </Shell>
   );
 }

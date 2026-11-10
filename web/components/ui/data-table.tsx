@@ -58,6 +58,8 @@ export interface DataTableProps<T> {
 
   // Filtres complémentaires (ex: sélecteur de type d'élevage, onglets métiers)
   secondaryFilter?: React.ReactNode;
+  collapsibleFilters?: boolean;
+  activeFilterCount?: number;
 
   // Actions d'en-tête (boutons d'ajout, export)
   actions?: React.ReactNode;
@@ -126,6 +128,8 @@ export function DataTable<T>({
   searchAccessor,
   initialSort,
   secondaryFilter,
+  collapsibleFilters = false,
+  activeFilterCount = 0,
   actions,
   viewMode = "table",
   onViewModeChange,
@@ -154,6 +158,7 @@ export function DataTable<T>({
 
   // Recherche
   const [searchQuery, setSearchQuery] = useState("");
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Tri
   const [sortState, setSortState] = useState<{
@@ -274,6 +279,7 @@ export function DataTable<T>({
 
   const hasHeader = Boolean(title || subtitle || actions || (renderGridItem && onViewModeChange));
   const hasFilters = Boolean(periodFilter || secondaryFilter || searchable);
+  const activeMobileFilterCount = activeFilterCount + (periodFilter && selectedPeriod !== defaultPeriod ? 1 : 0);
 
   const renderPagination = () => (
     <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-muted">
@@ -344,7 +350,7 @@ export function DataTable<T>({
 
             {/* Bascule Tableau vs Grille */}
             {renderGridItem && onViewModeChange && (
-              <div className="flex items-center rounded-xl border border-border bg-surface p-0.5 shadow-2xs">
+              <div className="hidden items-center rounded-xl border border-border bg-surface p-0.5 shadow-2xs md:flex">
                 <button
                   type="button"
                   onClick={() => onViewModeChange("table")}
@@ -380,7 +386,7 @@ export function DataTable<T>({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
           {/* Rangée de pastilles de filtres (Scroll horizontal fluide tactile mobile) */}
           {(periodFilter || secondaryFilter) && (
-            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 -mx-1 px-1 touch-pan-x">
+            <div className={`${collapsibleFilters && !mobileFiltersOpen ? "hidden md:flex" : "flex"} items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 -mx-1 px-1 touch-pan-x ${collapsibleFilters ? "rounded-xl border border-border bg-surface p-2 md:rounded-none md:border-0 md:bg-transparent md:p-0" : ""}`}>
               {/* Périodes temporelles en pastilles tactiles */}
               {periodFilter && (
                 <div className="flex items-center gap-1.5 shrink-0">
@@ -411,28 +417,43 @@ export function DataTable<T>({
 
           {/* Barre de Recherche Mobile Arrondie */}
           {searchable && (
-            <div className="relative w-full sm:w-64 shrink-0">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted pointer-events-none" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                placeholder={searchPlaceholder}
-                className="w-full rounded-full border border-border bg-surface pl-9 pr-8 py-1.5 text-xs text-foreground placeholder:text-muted focus:border-primary focus:bg-surface-muted/30 focus:outline-hidden transition-all shadow-2xs"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery("");
+            <div className={collapsibleFilters
+              ? "flex w-full shrink-0 items-center gap-2 sm:w-64 sm:flex-none"
+              : "relative w-full shrink-0 sm:w-64"}>
+              <div className={collapsibleFilters ? "relative min-w-0 flex-1 sm:w-64 sm:flex-none" : "relative w-full"}>
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted pointer-events-none" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-foreground p-0.5 cursor-pointer"
+                  placeholder={searchPlaceholder}
+                  className="w-full rounded-full border border-border bg-surface pl-9 pr-8 py-1.5 text-xs text-foreground placeholder:text-muted focus:border-primary focus:bg-surface-muted/30 focus:outline-hidden transition-all shadow-2xs"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setCurrentPage(1);
+                    }}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-foreground p-0.5 cursor-pointer"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+              {collapsibleFilters && (periodFilter || secondaryFilter) && (
+                <button
+                  type="button"
+                  onClick={() => setMobileFiltersOpen((open) => !open)}
+                  aria-expanded={mobileFiltersOpen}
+                  className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-surface px-3 text-xs font-semibold text-foreground hover:bg-surface-hover md:hidden"
                 >
-                  <X className="h-3 w-3" />
+                  <Filter className="h-3.5 w-3.5 text-primary" />
+                  Filtres{activeMobileFilterCount > 0 ? ` (${activeMobileFilterCount})` : ""}
                 </button>
               )}
             </div>
