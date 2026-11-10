@@ -79,7 +79,7 @@ class SplashScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 18),
                     const Text(
-                      "Le Fermier",
+                      "Poulvia",
                       style: TextStyle(
                         fontSize: 30,
                         fontWeight: FontWeight.w900,

@@ -144,7 +144,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 ),
                                 const SizedBox(height: 5),
                                 const Text(
-                                  "Le Fermier",
+                                  "Poulvia",
                                   style: TextStyle(
                                     fontSize: 22,
                                     fontWeight: FontWeight.w900,

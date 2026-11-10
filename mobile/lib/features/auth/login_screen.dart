@@ -61,7 +61,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Connexion réussie ! Bienvenue sur Le Fermier."),
+          content: Text("Connexion réussie ! Bienvenue sur Poulvia."),
           backgroundColor: AppColors.primary,
           duration: Duration(seconds: 2),
         ),
@@ -164,7 +164,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                                 const SizedBox(height: 6),
                                 const Text(
-                                  "Le Fermier",
+                                  "Poulvia",
                                   style: TextStyle(
                                     fontSize: 22,
                                     fontWeight: FontWeight.w900,

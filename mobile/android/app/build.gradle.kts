@@ -4,6 +4,17 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+val uploadStoreFile = System.getenv("POULVIA_UPLOAD_STORE_FILE")
+val uploadStorePassword = System.getenv("POULVIA_UPLOAD_STORE_PASSWORD")
+val uploadKeyAlias = System.getenv("POULVIA_UPLOAD_KEY_ALIAS")
+val uploadKeyPassword = System.getenv("POULVIA_UPLOAD_KEY_PASSWORD")
+val hasUploadSigning = listOf(
+    uploadStoreFile,
+    uploadStorePassword,
+    uploadKeyAlias,
+    uploadKeyPassword,
+).all { !it.isNullOrBlank() }
+
 android {
     namespace = "com.poulvia.poulvia"
     compileSdk = flutter.compileSdkVersion
@@ -29,11 +40,37 @@ android {
         versionName = flutter.versionName
     }
 
+    if (hasUploadSigning) {
+        signingConfigs {
+            create("release") {
+                storeFile = file(uploadStoreFile!!)
+                storePassword = uploadStorePassword!!
+                keyAlias = uploadKeyAlias!!
+                keyPassword = uploadKeyPassword!!
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            if (hasUploadSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
+    }
+}
+
+// Évite de produire silencieusement un APK/AAB release non signé.
+tasks.configureEach {
+    if (name in setOf("assembleRelease", "bundleRelease", "packageRelease")) {
+        doFirst {
+            if (!hasUploadSigning) {
+                throw GradleException(
+                    "Signature release manquante. Configurez POULVIA_UPLOAD_STORE_FILE, " +
+                        "POULVIA_UPLOAD_STORE_PASSWORD, POULVIA_UPLOAD_KEY_ALIAS et " +
+                        "POULVIA_UPLOAD_KEY_PASSWORD avant de créer la bêta."
+                )
+            }
         }
     }
 }

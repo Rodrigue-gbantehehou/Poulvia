@@ -59,7 +59,7 @@ class PoulviaApp extends ConsumerWidget {
 
     return MaterialApp(
       navigatorKey: appNavigatorKey,
-      title: 'Le Fermier',
+      title: 'Poulvia',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

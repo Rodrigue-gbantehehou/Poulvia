@@ -104,7 +104,7 @@ class WelcomeScreen extends StatelessWidget {
                             ),
                             const SizedBox(width: 8),
                             const Text(
-                              "LE FERMIER",
+                              "POULVIA",
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w800,

@@ -18,7 +18,7 @@ void main() {
       ),
     );
 
-    expect(find.text('LE FERMIER'), findsOneWidget);
+    expect(find.text('POULVIA'), findsOneWidget);
     expect(find.text('Créer mon exploitation'), findsOneWidget);
     expect(find.text("J'ai déjà un compte"), findsOneWidget);
   });
@@ -32,7 +32,7 @@ void main() {
       ),
     );
 
-    expect(find.text('Le Fermier'), findsOneWidget);
+    expect(find.text('Poulvia'), findsOneWidget);
     expect(find.text('Connexion'), findsOneWidget);
     expect(find.text('Se connecter'), findsOneWidget);
   });

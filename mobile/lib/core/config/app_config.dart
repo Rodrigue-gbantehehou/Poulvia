@@ -11,6 +11,7 @@ class AppConfig {
 
   /// URL injectée via variable d'environnement Flutter (--dart-define=API_BASE_URL=...)
   static const String envApiUrl = String.fromEnvironment('API_BASE_URL');
+  static const String productionApiUrl = 'https://api.poulvia.com';
 
   /// Récupère l'URL de base résolue :
   /// 1. Priorité à la configuration personnalisée stockée par l'utilisateur / exploitant
@@ -25,6 +26,11 @@ class AppConfig {
 
     if (envApiUrl.isNotEmpty) {
       return envApiUrl;
+    }
+
+    // Une version distribuée pointe par défaut vers l'API Poulvia.
+    if (kReleaseMode) {
+      return productionApiUrl;
     }
 
     // Détection dynamique selon la plateforme d'exécution en mode développement
