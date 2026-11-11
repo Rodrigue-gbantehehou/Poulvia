@@ -113,52 +113,6 @@ export default function HealthPage() {
   const [completeDeductStock, setCompleteDeductStock] = useState(true);
   const [submittingComplete, setSubmittingComplete] = useState(false);
 
-  // Suggestions rapides pour le formulaire
-  const PRESET_TREATMENTS = [
-    {
-      title: "Vaccin Gumboro 1ère dose (IBD)",
-      type: "VACCINATION" as HealthTreatmentType,
-      method: "DRINKING_WATER" as AdministrationMethod,
-      age: 7,
-    },
-    {
-      title: "Vaccin Newcastle (HB1 / Clone 30)",
-      type: "VACCINATION" as HealthTreatmentType,
-      method: "OCULAR_NASAL" as AdministrationMethod,
-      age: 10,
-    },
-    {
-      title: "Vaccin Gumboro 2ème dose (rappel)",
-      type: "VACCINATION" as HealthTreatmentType,
-      method: "DRINKING_WATER" as AdministrationMethod,
-      age: 14,
-    },
-    {
-      title: "Traitement préventif Anticoccidien",
-      type: "TREATMENT" as HealthTreatmentType,
-      method: "DRINKING_WATER" as AdministrationMethod,
-      age: 18,
-    },
-    {
-      title: "Vaccin Newcastle (LaSota)",
-      type: "VACCINATION" as HealthTreatmentType,
-      method: "DRINKING_WATER" as AdministrationMethod,
-      age: 21,
-    },
-    {
-      title: "Vermifugation / Déparasitage interne",
-      type: "DEWORMING" as HealthTreatmentType,
-      method: "DRINKING_WATER" as AdministrationMethod,
-      age: 28,
-    },
-    {
-      title: "Solution réhydratante & Anti-stress",
-      type: "VITAMIN" as HealthTreatmentType,
-      method: "DRINKING_WATER" as AdministrationMethod,
-      age: 1,
-    },
-  ];
-
   useEffect(() => {
     if (activeFarm?.id && canViewHealth) {
       loadData();
@@ -213,20 +167,6 @@ export default function HealthPage() {
       setCreateFlockId(flocks[0].id);
     }
     setCreateModalOpen(true);
-  }
-
-  function applyPreset(preset: typeof PRESET_TREATMENTS[0]) {
-    setCreateTitle(preset.title);
-    setCreateType(preset.type);
-    setCreateMethod(preset.method);
-    setCreateTargetAgeDays(preset.age);
-
-    const flock = flocks.find((f) => f.id === createFlockId);
-    if (flock?.startDate) {
-      const start = new Date(flock.startDate);
-      start.setDate(start.getDate() + Math.max(0, preset.age - (flock.initialQuantity ? 1 : 1)));
-      setCreateScheduledDate(start.toISOString().split("T")[0]);
-    }
   }
 
   async function handleCreateTreatment(e: React.FormEvent) {
@@ -703,25 +643,6 @@ export default function HealthPage() {
         maxWidth="lg"
       >
         <form onSubmit={handleCreateTreatment} className="space-y-3.5">
-          {/* Puces de presets rapides */}
-          <div>
-            <label className="text-xs font-semibold text-muted block mb-1.5">
-              Modèles rapides :
-            </label>
-            <div className="flex flex-wrap gap-1.5">
-              {PRESET_TREATMENTS.map((p, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => applyPreset(p)}
-                  className="rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-medium text-foreground hover:border-primary hover:text-primary transition-colors"
-                >
-                  {p.title.split(":")[0]} (J{p.age})
-                </button>
-              ))}
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label className="text-xs font-semibold text-foreground block mb-1">

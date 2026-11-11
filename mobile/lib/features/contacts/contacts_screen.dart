@@ -497,8 +497,6 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
     final notesController = TextEditingController(text: contact?.notes ?? "");
     String selectedType = contact?.type.code ?? "CLIENT";
 
-    final presets = ["Cotonou", "Abomey-Calavi", "Porto-Novo", "Parakou", "Bohicon"];
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -616,26 +614,6 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                     ],
                   ),
                   const SizedBox(height: 8),
-
-                  // Suggestions de villes rapides
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: presets.map((city) {
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 6),
-                          child: ActionChip(
-                            label: Text(city, style: const TextStyle(fontSize: 11)),
-                            onPressed: () {
-                              cityController.text = city;
-                              setModalState(() {});
-                            },
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
 
                   // Email
                   TextField(

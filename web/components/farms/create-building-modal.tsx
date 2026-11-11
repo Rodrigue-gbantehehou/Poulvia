@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Warehouse, Sparkles, Building2, Box } from "lucide-react";
+import { Plus, Warehouse, Building2, Box } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { api } from "@/lib/api-client";
 import { Building } from "@/lib/types";
@@ -30,15 +30,6 @@ export function CreateBuildingModal({
   const [surfaceArea, setSurfaceArea] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const quickNameSuggestions = [
-    "Poulailler 1",
-    "Poulailler 2",
-    "Bâtiment A",
-    "Bâtiment B",
-    "Poussinière 1",
-    "Hangar Stockage",
-  ];
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -84,35 +75,6 @@ export function CreateBuildingModal({
             {error}
           </div>
         )}
-
-        {/* Suggestions rapides */}
-        <div>
-          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted mb-1.5">
-            <Sparkles className="h-3 w-3 text-primary" />
-            <span>Suggestions :</span>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {quickNameSuggestions.map((sug) => (
-              <button
-                key={sug}
-                type="button"
-                onClick={() => {
-                  setName(sug);
-                  if (sug.includes("Poussinière")) setType("BROODER");
-                  else if (sug.includes("Stockage")) setType("STORAGE");
-                  else setType("POULTRY_HOUSE");
-                }}
-                className={`rounded-lg border px-2 py-1 text-[11px] font-medium transition-colors ${
-                  name === sug
-                    ? "border-primary bg-primary/10 text-primary font-bold"
-                    : "border-border bg-surface-muted text-muted hover:border-border-hover hover:text-foreground"
-                }`}
-              >
-                {sug}
-              </button>
-            ))}
-          </div>
-        </div>
 
         {/* Nom du bâtiment */}
         <div>

@@ -1228,9 +1228,6 @@ function FlockDetailContent() {
                   }}
                   className="w-full px-3 py-2 text-sm font-mono font-bold bg-background border border-border rounded-lg text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 />
-                <div className="mt-1 text-xs font-semibold text-primary">
-                  {calcEggTrays(Number(goodEggs) || 0).text}
-                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

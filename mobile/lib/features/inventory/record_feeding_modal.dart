@@ -557,37 +557,6 @@ class _RecordFeedingModalState extends ConsumerState<RecordFeedingModal> {
                             ),
                           const SizedBox(height: 8),
 
-                          // Raccourcis rapides adaptés à l'unité
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: _feedUnit == "KG"
-                                  ? [
-                                      _buildQuickQtyChip("+5 kg", 5),
-                                      const SizedBox(width: 5),
-                                      _buildQuickQtyChip("+10 kg", 10),
-                                      const SizedBox(width: 5),
-                                      _buildQuickQtyChip("+25 kg (1/2 sac)", 25),
-                                      const SizedBox(width: 5),
-                                      _buildQuickQtyChip("+50 kg (1 sac)", 50),
-                                    ]
-                                  : _feedUnit.startsWith("BAG")
-                                      ? [
-                                          _buildQuickQtyChip("+0.5 sac", 0.5),
-                                          const SizedBox(width: 5),
-                                          _buildQuickQtyChip("+1 sac", 1.0),
-                                          const SizedBox(width: 5),
-                                          _buildQuickQtyChip("+2 sacs", 2.0),
-                                        ]
-                                      : [
-                                          _buildQuickQtyChip("+100 g", 100),
-                                          const SizedBox(width: 5),
-                                          _buildQuickQtyChip("+250 g", 250),
-                                          const SizedBox(width: 5),
-                                          _buildQuickQtyChip("+500 g", 500),
-                                        ],
-                            ),
-                          ),
                         ],
                       );
                     }(),
@@ -967,28 +936,6 @@ class _RecordFeedingModalState extends ConsumerState<RecordFeedingModal> {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickQtyChip(String label, double addAmount) {
-    return InkWell(
-      onTap: () {
-        final cur = double.tryParse(_feedQtyController.text) ?? 0.0;
-        setState(() => _feedQtyController.text = (cur + addAmount).toStringAsFixed(0));
-      },
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: Theme.of(context).brightness == Brightness.dark ? AppColors.surfaceDark : Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.accent),
         ),
       ),
     );

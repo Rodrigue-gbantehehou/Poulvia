@@ -1096,7 +1096,7 @@ function InventoryItemDetailContent() {
             </div>
           )}
 
-          {/* Motif / Remarque avec suggestions discrètes */}
+          {/* Motif / Remarque */}
           <div>
             <label className="block text-xs font-semibold text-foreground mb-1">
               Motif / Remarque
@@ -1108,22 +1108,6 @@ function InventoryItemDetailContent() {
               placeholder={isFeed ? "ex. Ration matin, distribution repas..." : "ex. Traitement eau de boisson, vitamines..."}
               className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-xs text-foreground focus:border-primary focus:outline-hidden"
             />
-            <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
-              <span className="text-[10px] text-muted">Suggestions :</span>
-              {(isFeed
-                ? ["Ration matin", "Ration midi", "Ration soir", "Réassort"]
-                : ["Traitement eau", "Vitamines", "Soins", "Approvisionnement"]
-              ).map((sug) => (
-                <button
-                  key={sug}
-                  type="button"
-                  onClick={() => setMoveReason(sug)}
-                  className="text-[10px] px-2 py-0.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-muted hover:text-foreground transition-colors cursor-pointer"
-                >
-                  {sug}
-                </button>
-              ))}
-            </div>
           </div>
 
           {moveError && (

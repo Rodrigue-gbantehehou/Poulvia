@@ -536,44 +536,6 @@ class _RecordTransactionModalState extends ConsumerState<RecordTransactionModal>
             ),
             const SizedBox(height: 14),
 
-            // Raccourcis de montants
-            Row(
-              children: [
-                _AmountTag(
-                  label: "+5 000",
-                  onTap: () {
-                    final cur = int.tryParse(_amountController.text.replaceAll(' ', '')) ?? 0;
-                    setState(() => _amountController.text = "${cur + 5000}");
-                  },
-                ),
-                const SizedBox(width: 6),
-                _AmountTag(
-                  label: "+10 000",
-                  onTap: () {
-                    final cur = int.tryParse(_amountController.text.replaceAll(' ', '')) ?? 0;
-                    setState(() => _amountController.text = "${cur + 10000}");
-                  },
-                ),
-                const SizedBox(width: 6),
-                _AmountTag(
-                  label: "+25 000",
-                  onTap: () {
-                    final cur = int.tryParse(_amountController.text.replaceAll(' ', '')) ?? 0;
-                    setState(() => _amountController.text = "${cur + 25000}");
-                  },
-                ),
-                const SizedBox(width: 6),
-                _AmountTag(
-                  label: "+50 000",
-                  onTap: () {
-                    final cur = int.tryParse(_amountController.text.replaceAll(' ', '')) ?? 0;
-                    setState(() => _amountController.text = "${cur + 50000}");
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-
             // Mode d'encaissement / Crédit client (Uniquement pour les recettes)
             if (_showAdvancedReceivables && _type == "INCOME") ...[
               const Text("Statut d'encaissement (Comptant vs Crédit) *",
@@ -904,36 +866,6 @@ class _RecordTransactionModalState extends ConsumerState<RecordTransactionModal>
               ],
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AmountTag extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-
-  const _AmountTag({required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary),
-          ),
         ),
       ),
     );

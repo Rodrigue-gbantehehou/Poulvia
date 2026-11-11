@@ -13,7 +13,6 @@ import {
   Sun,
   Moon,
   Calendar,
-  RotateCcw,
   Sparkles,
   Check,
 } from "lucide-react";
@@ -70,28 +69,6 @@ export default function EggsPage() {
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [editingEggId, setEditingEggId] = useState<string | null>(null);
-
-  // Quick helper for numeric adjustments
-  function addGoodEggs(amount: number) {
-    setGoodEggs((prev) => {
-      const current = typeof prev === "number" ? prev : parseInt(prev) || 0;
-      return Math.max(0, current + amount);
-    });
-  }
-
-  function addBrokenEggs(amount: number) {
-    setBrokenEggs((prev) => {
-      const current = typeof prev === "number" ? prev : parseInt(prev) || 0;
-      return Math.max(0, current + amount);
-    });
-  }
-
-  function addAbnormalEggs(amount: number) {
-    setAbnormalEggs((prev) => {
-      const current = typeof prev === "number" ? prev : parseInt(prev) || 0;
-      return Math.max(0, current + amount);
-    });
-  }
 
   function setToday() {
     setCollectionDate(new Date().toISOString().split("T")[0]);
@@ -211,7 +188,6 @@ export default function EggsPage() {
     }
   }
 
-  const trayCalc = calcEggTrays(Number(goodEggs));
   const selectedFlock = flocks.find((f) => f.id === selectedFlockId);
   const currentLayingRate =
     selectedFlock && selectedFlock.currentQuantity > 0
@@ -747,8 +723,8 @@ export default function EggsPage() {
             </div>
           </div>
 
-          {/* Bons Œufs avec pavé tactile de saisie rapide (+30, +60, +150, etc.) */}
-          <div className="rounded-2xl border border-success/30 bg-success/5 p-3.5 space-y-2.5">
+          {/* Saisie libre du nombre de bons œufs */}
+          <div className="space-y-2.5">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-success flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
@@ -778,66 +754,6 @@ export default function EggsPage() {
               className="w-full rounded-xl border border-success/40 bg-surface p-3 text-lg font-extrabold font-mono text-foreground focus:border-success focus:outline-hidden text-center"
             />
 
-            {/* Raccourcis tactiles pour les plateaux africains (30 œufs par plateau) */}
-            <div>
-              <div className="text-[10px] font-semibold text-muted mb-1">
-                Plateaux (30 œufs) :
-              </div>
-              <div className="grid grid-cols-4 gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => addGoodEggs(30)}
-                  className="rounded-lg border border-success/30 bg-surface py-1.5 text-xs font-bold text-success hover:bg-success/10 active:scale-95 transition-all"
-                >
-                  +1 pl. (30)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => addGoodEggs(60)}
-                  className="rounded-lg border border-success/30 bg-surface py-1.5 text-xs font-bold text-success hover:bg-success/10 active:scale-95 transition-all"
-                >
-                  +2 pl. (60)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => addGoodEggs(150)}
-                  className="rounded-lg border border-success/30 bg-surface py-1.5 text-xs font-bold text-success hover:bg-success/10 active:scale-95 transition-all"
-                >
-                  +5 pl. (150)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => addGoodEggs(300)}
-                  className="rounded-lg border border-success/30 bg-surface py-1.5 text-xs font-bold text-success hover:bg-success/10 active:scale-95 transition-all"
-                >
-                  +10 pl. (300)
-                </button>
-              </div>
-
-              <div className="grid grid-cols-3 gap-1.5 mt-1.5">
-                <button
-                  type="button"
-                  onClick={() => addGoodEggs(1)}
-                  className="rounded-lg border border-border bg-surface py-1 text-xs font-bold text-foreground hover:bg-surface-hover active:scale-95 transition-all"
-                >
-                  +1 œuf
-                </button>
-                <button
-                  type="button"
-                  onClick={() => addGoodEggs(5)}
-                  className="rounded-lg border border-border bg-surface py-1 text-xs font-bold text-foreground hover:bg-surface-hover active:scale-95 transition-all"
-                >
-                  +5 œufs
-                </button>
-                <button
-                  type="button"
-                  onClick={() => addGoodEggs(-1)}
-                  className="rounded-lg border border-border bg-surface py-1 text-xs font-bold text-muted hover:text-danger active:scale-95 transition-all"
-                >
-                  -1 œuf
-                </button>
-              </div>
-            </div>
           </div>
 
           {/* Déclassés : Cassés et Anormaux */}
@@ -847,22 +763,6 @@ export default function EggsPage() {
                 <label className="text-[11px] font-bold text-danger">
                   Cassés / Fêlés
                 </label>
-                <div className="flex gap-1">
-                  <button
-                    type="button"
-                    onClick={() => addBrokenEggs(1)}
-                    className="rounded bg-surface border border-danger/30 px-1.5 py-0.5 text-[10px] font-bold text-danger"
-                  >
-                    +1
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => addBrokenEggs(5)}
-                    className="rounded bg-surface border border-danger/30 px-1.5 py-0.5 text-[10px] font-bold text-danger"
-                  >
-                    +5
-                  </button>
-                </div>
               </div>
               <input
                 type="number"
@@ -883,22 +783,6 @@ export default function EggsPage() {
                 <label className="text-[11px] font-bold text-warning">
                   Anormaux / Petits
                 </label>
-                <div className="flex gap-1">
-                  <button
-                    type="button"
-                    onClick={() => addAbnormalEggs(1)}
-                    className="rounded bg-surface border border-warning/30 px-1.5 py-0.5 text-[10px] font-bold text-warning"
-                  >
-                    +1
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => addAbnormalEggs(5)}
-                    className="rounded bg-surface border border-warning/30 px-1.5 py-0.5 text-[10px] font-bold text-warning"
-                  >
-                    +5
-                  </button>
-                </div>
               </div>
               <input
                 type="number"
@@ -915,24 +799,9 @@ export default function EggsPage() {
             </div>
           </div>
 
-          {/* Live Plateaux & Rendement Display */}
-          <div className="rounded-xl bg-accent-soft p-3.5 text-xs text-accent border border-accent/20">
-            <div className="flex items-center justify-between font-bold">
-              <span>Équivalence :</span>
-              <span className="text-sm font-mono font-extrabold">{trayCalc.text}</span>
-            </div>
-            <div className="mt-1 flex items-center justify-between text-[11px] opacity-80">
-              <span>
-                Total :{" "}
-                {Number(goodEggs || 0) + Number(brokenEggs || 0) + Number(abnormalEggs || 0)} œufs
-              </span>
-              {currentLayingRate && (
-                <span className="font-semibold text-accent">
-                  Taux : {currentLayingRate}%
-                </span>
-              )}
-            </div>
-          </div>
+          {currentLayingRate && (
+            <p className="text-right text-[11px] text-muted">Taux de ponte estimé : {currentLayingRate}%</p>
+          )}
 
           {/* Notes */}
           <div>

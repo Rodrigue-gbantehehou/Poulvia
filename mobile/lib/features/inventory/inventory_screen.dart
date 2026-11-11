@@ -236,55 +236,6 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                     ),
                   ],
 
-                  const SizedBox(height: 8),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _QuickQtyBtn(
-                          label: "+5",
-                          onTap: () {
-                            final cur = double.tryParse(qtyController.text) ?? 0.0;
-                            setModalState(() => qtyController.text = (cur + 5).toStringAsFixed(0));
-                          },
-                        ),
-                        const SizedBox(width: 6),
-                        _QuickQtyBtn(
-                          label: "+10",
-                          onTap: () {
-                            final cur = double.tryParse(qtyController.text) ?? 0.0;
-                            setModalState(() => qtyController.text = (cur + 10).toStringAsFixed(0));
-                          },
-                        ),
-                        const SizedBox(width: 6),
-                        _QuickQtyBtn(
-                          label: "+20",
-                          onTap: () {
-                            final cur = double.tryParse(qtyController.text) ?? 0.0;
-                            setModalState(() => qtyController.text = (cur + 20).toStringAsFixed(0));
-                          },
-                        ),
-                        const SizedBox(width: 6),
-                        _QuickQtyBtn(
-                          label: "+50",
-                          onTap: () {
-                            final cur = double.tryParse(qtyController.text) ?? 0.0;
-                            setModalState(() => qtyController.text = (cur + 50).toStringAsFixed(0));
-                          },
-                        ),
-                        const SizedBox(width: 6),
-                        _QuickQtyBtn(
-                          label: "+100",
-                          onTap: () {
-                            final cur = double.tryParse(qtyController.text) ?? 0.0;
-                            setModalState(() => qtyController.text = (cur + 100).toStringAsFixed(0));
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-
                   // Prix unitaire d'achat
                   Row(
                     children: [
@@ -664,16 +615,6 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              _QuickQtyBtn(
-                                label: "50 kg",
-                                onTap: () => setModalState(() => packageWeightController.text = "50"),
-                              ),
-                              const SizedBox(width: 4),
-                              _QuickQtyBtn(
-                                label: "25 kg",
-                                onTap: () => setModalState(() => packageWeightController.text = "25"),
                               ),
                             ],
                           ),
@@ -1690,41 +1631,6 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                         )),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-}
-
-class _QuickQtyBtn extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-
-  const _QuickQtyBtn({
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: AppColors.primarySoft,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            color: AppColors.primary,
-          ),
         ),
       ),
     );

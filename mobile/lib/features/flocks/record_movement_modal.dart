@@ -221,32 +221,6 @@ class _RecordMovementModalState extends ConsumerState<RecordMovementModal> {
               ),
               const SizedBox(height: 14),
 
-              // Suggestions rapides de causes
-              const Text("Causes fréquentes :", style: TextStyle(fontSize: 11, color: AppColors.textMutedLight)),
-              const SizedBox(height: 6),
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: [
-                  "Coup de chaleur",
-                  "Maladie / Faiblesse",
-                  "Étouffement",
-                  "Picage",
-                  "Autopsie requise",
-                ].map((cause) {
-                  return ActionChip(
-                    visualDensity: VisualDensity.compact,
-                    label: Text(cause, style: const TextStyle(fontSize: 11)),
-                    onPressed: () {
-                      setState(() {
-                        _reasonController.text = cause;
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 10),
-
               // 4. Motif / Cause
               TextField(
                 controller: _reasonController,

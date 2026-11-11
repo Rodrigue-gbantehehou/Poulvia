@@ -58,7 +58,6 @@ const TYPE_CONFIG: Record<
   },
 };
 
-const CITY_PRESETS = ["Cotonou", "Abomey-Calavi", "Allada", "Porto-Novo", "Bohicon", "Parakou", "Ouidah", "Zè"];
 
 export default function ContactsPage() {
   const { activeFarm, hasPermission, hasModule, isOwner } = useAuth();
@@ -654,18 +653,6 @@ export default function ContactsPage() {
                   onChange={(e) => setCity(e.target.value)}
                   className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 />
-                <div className="flex flex-wrap gap-1 mt-1.5">
-                  {CITY_PRESETS.slice(0, 5).map((preset) => (
-                    <button
-                      type="button"
-                      key={preset}
-                      onClick={() => setCity(preset)}
-                      className="px-1.5 py-0.5 text-[11px] font-medium rounded bg-muted/10 text-muted hover:text-foreground hover:bg-muted/20 transition-colors"
-                    >
-                      {preset}
-                    </button>
-                  ))}
-                </div>
               </div>
 
               <div>
