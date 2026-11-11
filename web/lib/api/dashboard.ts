@@ -92,7 +92,12 @@ export const dashboardApi = {
           ? raw.eggProduction.chart.flatMap((point: unknown) => {
               if (typeof point !== "object" || point === null) return [];
               const item = point as Record<string, unknown>;
-              return [{ date: String(item.date ?? ""), goodEggs: Number(item.goodEggs ?? 0) }];
+              return [{
+                date: String(item.date ?? ""),
+                goodEggs: Number(item.goodEggs ?? 0),
+                crackedEggs: Number(item.crackedEggs ?? 0),
+                abnormalEggs: Number(item.dirtyEggs ?? 0) + Number(item.deformedEggs ?? 0),
+              }];
             })
           : [],
         eggChartStartDate: raw?.period?.startDate,

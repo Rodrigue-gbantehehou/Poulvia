@@ -208,12 +208,12 @@ export function Header({ onToggleSidebar }: HeaderProps = {}) {
               </div>
 
               <Link
-                href="/settings/farm"
+                href="/settings"
                 onClick={() => setUserDropdownOpen(false)}
                 className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-[#41443e] hover:bg-[#f4f3ef] transition-colors mb-1"
               >
                 <Settings className="h-4 w-4 text-[#80652f]" />
-                Paramètres de la ferme
+                Paramètres
               </Link>
 
               <Link
