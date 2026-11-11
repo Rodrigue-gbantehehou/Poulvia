@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/flock.dart';
+import '../../core/design_system/app_modal_surface.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/egg_calculator.dart';
 import '../dashboard/dashboard_provider.dart';
@@ -62,7 +63,6 @@ class _RecordEggModalState extends ConsumerState<RecordEggModal> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surfaceColor = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
     final eggState = ref.watch(eggProvider);
     final flockState = ref.watch(flockProvider);
@@ -81,18 +81,7 @@ class _RecordEggModalState extends ConsumerState<RecordEggModal> {
 
     final trayInfo = EggCalculator.calculate(_goodEggs);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border.all(color: borderColor),
-      ),
-      padding: EdgeInsets.fromLTRB(
-        20,
-        12,
-        20,
-        MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 20,
-      ),
+    return AppModalSurface(
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -165,7 +154,7 @@ class _RecordEggModalState extends ConsumerState<RecordEggModal> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
+                    color: isDark ? AppColors.surfaceDark : AppColors.inputFillLight,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: borderColor),
                   ),
@@ -594,7 +583,9 @@ class _EggQualityRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade900 : Colors.grey.shade100,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.surfaceDark
+            : AppColors.inputFillLight,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(

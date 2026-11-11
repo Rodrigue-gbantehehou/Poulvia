@@ -165,14 +165,14 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 : IconButton(
                     icon: const Icon(Icons.menu_rounded),
                     tooltip: "Menu",
-                    onPressed: widget.onOpenMenu ?? () => Scaffold.of(context).openDrawer(),
+                    onPressed: widget.onOpenMenu ?? () => Scaffold.maybeOf(context)?.openDrawer(),
                   )),
         title: const Text("Partage & Rapports"),
         actions: [
           IconButton(
             icon: Icon(
               isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-              color: isDark ? AppColors.accent : null,
+              color: isDark ? AppColors.primaryLight : null,
               size: 20,
             ),
             tooltip: isDark ? "Activer le mode clair" : "Activer le mode sombre",
@@ -336,7 +336,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
+                color: isDark ? AppColors.surfaceDark : AppColors.inputFillLight,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
                   color: isDark ? AppColors.borderDark : AppColors.borderLight,

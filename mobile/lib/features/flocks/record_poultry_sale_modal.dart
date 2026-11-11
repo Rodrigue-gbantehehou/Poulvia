@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/design_system/app_modal_surface.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../dashboard/dashboard_provider.dart';
@@ -82,7 +83,6 @@ class _RecordPoultrySaleModalState extends ConsumerState<RecordPoultrySaleModal>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surfaceColor = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
 
     final flockState = ref.watch(flockProvider);
@@ -97,18 +97,7 @@ class _RecordPoultrySaleModalState extends ConsumerState<RecordPoultrySaleModal>
     final selectedFlock = flocks.where((f) => f.id == _selectedFlockId).firstOrNull;
     final availableQuantity = selectedFlock?.currentQuantity ?? 0;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border.all(color: borderColor),
-      ),
-      padding: EdgeInsets.fromLTRB(
-        20,
-        12,
-        20,
-        MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 20,
-      ),
+    return AppModalSurface(
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -168,7 +157,7 @@ class _RecordPoultrySaleModalState extends ConsumerState<RecordPoultrySaleModal>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
+                  color: isDark ? AppColors.surfaceDark : AppColors.inputFillLight,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: borderColor),
                 ),
@@ -212,7 +201,7 @@ class _RecordPoultrySaleModalState extends ConsumerState<RecordPoultrySaleModal>
                         decoration: BoxDecoration(
                           color: _category == "MEAT_POULTRY_SALE"
                               ? AppColors.success.withValues(alpha: 0.15)
-                              : (isDark ? Colors.grey.shade900 : Colors.grey.shade100),
+                              : (isDark ? AppColors.surfaceDark : AppColors.inputFillLight),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: _category == "MEAT_POULTRY_SALE" ? AppColors.success : borderColor,
@@ -245,7 +234,7 @@ class _RecordPoultrySaleModalState extends ConsumerState<RecordPoultrySaleModal>
                         decoration: BoxDecoration(
                           color: _category == "LAYER_CULL_SALE"
                               ? AppColors.accent.withValues(alpha: 0.15)
-                              : (isDark ? Colors.grey.shade900 : Colors.grey.shade100),
+                              : (isDark ? AppColors.surfaceDark : AppColors.inputFillLight),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: _category == "LAYER_CULL_SALE" ? AppColors.accent : borderColor,
@@ -281,7 +270,7 @@ class _RecordPoultrySaleModalState extends ConsumerState<RecordPoultrySaleModal>
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                           decoration: BoxDecoration(
-                            color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
+                            color: isDark ? AppColors.surfaceDark : AppColors.inputFillLight,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: borderColor),
                           ),
@@ -378,7 +367,7 @@ class _RecordPoultrySaleModalState extends ConsumerState<RecordPoultrySaleModal>
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10),
                           decoration: BoxDecoration(
-                            color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
+                            color: isDark ? AppColors.surfaceDark : AppColors.inputFillLight,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: borderColor),
                           ),
@@ -411,7 +400,7 @@ class _RecordPoultrySaleModalState extends ConsumerState<RecordPoultrySaleModal>
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10),
                           decoration: BoxDecoration(
-                            color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
+                            color: isDark ? AppColors.surfaceDark : AppColors.inputFillLight,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: borderColor),
                           ),
@@ -443,7 +432,7 @@ class _RecordPoultrySaleModalState extends ConsumerState<RecordPoultrySaleModal>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
+                    color: isDark ? AppColors.surfaceDark : AppColors.inputFillLight,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: borderColor),
                   ),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/config/app_config.dart';
 import '../../core/theme/app_theme.dart';
 import '../navigation/bottom_nav_scaffold.dart';
 import 'auth_provider.dart';
@@ -20,36 +19,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _serverUrlController = TextEditingController();
-
   bool _obscurePassword = true;
-  bool _showServerSettings = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCurrentServerUrl();
-  }
-
-  Future<void> _loadCurrentServerUrl() async {
-    final resolved = await AppConfig.resolveApiBaseUrl();
-    _serverUrlController.text = resolved;
-  }
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _serverUrlController.dispose();
     super.dispose();
   }
 
   Future<void> _submitLogin() async {
     if (!_loginFormKey.currentState!.validate()) return;
-
-    if (_showServerSettings && _serverUrlController.text.trim().isNotEmpty) {
-      await AppConfig.setCustomApiBaseUrl(_serverUrlController.text.trim());
-    }
 
     final success = await ref.read(authProvider.notifier).login(
       _emailController.text,
@@ -222,25 +202,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                             ),
                             const SizedBox(width: 12),
-                            const Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Connexion",
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: -0.3,
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Connexion",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: -0.3,
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  "Accédez à votre exploitation",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.textMutedLight,
+                                  Text(
+                                    "Accédez à votre exploitation",
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.textMutedLight,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -372,8 +356,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                         ),
                         const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             Text(
                               "Pas encore de compte ?",
@@ -402,102 +387,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ],
                     ),
                   ),
-
-                  const SizedBox(height: 12),
-
-                  // Paramètres de serveur avancés (Repliable)
-                  Center(
-                    child: TextButton.icon(
-                      onPressed: () {
-                        setState(() => _showServerSettings = !_showServerSettings);
-                      },
-                      icon: Icon(
-                        _showServerSettings ? Icons.settings_rounded : Icons.dns_rounded,
-                        size: 15,
-                        color: isDark ? AppColors.textMutedDark : AppColors.textMutedLight,
-                      ),
-                      label: Text(
-                        _showServerSettings ? "Masquer configuration serveur" : "Serveur API",
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          color: isDark ? AppColors.textMutedDark : AppColors.textMutedLight,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  if (_showServerSettings)
-                    Container(
-                      margin: const EdgeInsets.only(top: 8),
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: surfaceColor,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: borderColor),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const Text(
-                            "Adresse du serveur API",
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 6),
-                          TextFormField(
-                            controller: _serverUrlController,
-                            style: const TextStyle(fontSize: 13),
-                            decoration: const InputDecoration(
-                              hintText: "https://votre-domaine.com/api",
-                              prefixIcon: Icon(Icons.link_rounded, size: 18),
-                              isDense: true,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              TextButton(
-                                onPressed: () async {
-                                  await AppConfig.setCustomApiBaseUrl(null);
-                                  final reset = await AppConfig.resolveApiBaseUrl();
-                                  _serverUrlController.text = reset;
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text("URL réinitialisée par défaut"),
-                                        duration: Duration(seconds: 1),
-                                      ),
-                                    );
-                                  }
-                                },
-                                child: const Text("Réinitialiser", style: TextStyle(fontSize: 12)),
-                              ),
-                              const SizedBox(width: 8),
-                              ElevatedButton(
-                                onPressed: () async {
-                                  await AppConfig.setCustomApiBaseUrl(_serverUrlController.text.trim());
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text("URL sauvegardée"),
-                                        backgroundColor: AppColors.primary,
-                                        duration: Duration(seconds: 1),
-                                      ),
-                                    );
-                                  }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                ),
-                                child: const Text("Appliquer", style: TextStyle(fontSize: 12)),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
                 ],
               ),
             ),

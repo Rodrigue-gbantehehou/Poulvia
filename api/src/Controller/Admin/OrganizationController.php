@@ -122,6 +122,52 @@ class OrganizationController extends AbstractController
         ]);
     }
 
+    /**
+     * Configure la durée d'essai d'une organisation précise.
+     * PUT /api/admin/organizations/{id}/trial
+     * Body: { "trialDays": 14 }
+     */
+    #[Route('/{id}/trial', name: 'trial', methods: ['PUT'])]
+    #[IsGranted(AdminPermission::SUBSCRIPTIONS_MANAGE)]
+    public function updateTrial(string $id, Request $request): JsonResponse
+    {
+        $organization = $this->findOrganizationOrFail($id);
+        if ($organization instanceof JsonResponse) {
+            return $organization;
+        }
+
+        $body = $request->toArray();
+        $trialDays = filter_var($body['trialDays'] ?? null, FILTER_VALIDATE_INT);
+        if ($trialDays === false || $trialDays < 0 || $trialDays > 3650) {
+            return $this->json([
+                'status' => 'error',
+                'message' => 'trialDays doit être un entier entre 0 et 3650.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $endsAt = (new \DateTimeImmutable())->modify(sprintf('+%d days', $trialDays));
+        $organization
+            ->setSubscriptionTrialEndsAt($endsAt)
+            ->setStatus(OrganizationStatus::TRIAL);
+
+        $this->auditService->log(
+            action: 'ORGANIZATION_TRIAL_UPDATED',
+            label: 'Durée d’essai modifiée',
+            targetType: 'ORGANIZATION',
+            targetId: $organization->getId()?->toBase32() ?? $id,
+            targetName: $organization->getName(),
+            details: sprintf('Essai de %d jour(s), échéance %s.', $trialDays, $endsAt->format(\DateTimeInterface::ATOM)),
+        );
+
+        $this->organizationService->saveOrganization($organization);
+
+        return $this->json([
+            'status' => 'success',
+            'message' => 'Période d’essai mise à jour.',
+            'data' => $this->organizationService->serializeOrganization($organization),
+        ]);
+    }
+
     private function findOrganizationOrFail(string $id): Organization|JsonResponse
     {
         $organization = $this->organizationService->findOrganization($id);

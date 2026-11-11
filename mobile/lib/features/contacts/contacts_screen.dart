@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/contact.dart';
+import '../../core/design_system/app_card.dart';
+import '../../core/design_system/app_modal_surface.dart';
+import '../../core/design_system/app_segmented_filter.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_provider.dart';
 import '../../core/widgets/brand_loader.dart';
@@ -120,7 +123,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
           IconButton(
             icon: Icon(
               isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-              color: isDark ? AppColors.accent : null,
+              color: isDark ? AppColors.primaryLight : null,
               size: 20,
             ),
             tooltip: isDark ? "Activer le mode clair" : "Activer le mode sombre",
@@ -153,80 +156,14 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // En-tête descriptif
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "CARNET D'ADRESSES",
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 1.1,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                "Clients & Fournisseurs",
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                "Gérez votre réseau commercial et reliez vos ventes ou approvisionnements.",
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: isDark ? Colors.grey[400] : Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                    Text(
+                      "${state.contacts.length} contacts · ${state.clientsCount} clients · ${state.suppliersCount} fournisseurs",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? AppColors.textMutedDark : AppColors.textMutedLight,
+                      ),
                     ),
-                    const SizedBox(height: 16),
-
-                    // Compteurs statistiques
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildStatCard(
-                            context: context,
-                            title: "Clients",
-                            count: state.clientsCount,
-                            icon: Icons.person_rounded,
-                            color: AppColors.success,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _buildStatCard(
-                            context: context,
-                            title: "Fournisseurs",
-                            count: state.suppliersCount,
-                            icon: Icons.local_shipping_rounded,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _buildStatCard(
-                            context: context,
-                            title: "Total",
-                            count: state.contacts.length,
-                            icon: Icons.contacts_rounded,
-                            color: AppColors.accent,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 14),
 
                     // Barre de recherche
                     TextField(
@@ -245,17 +182,17 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                               )
                             : null,
                         filled: true,
-                        fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                        fillColor: isDark ? AppColors.surfaceDark : AppColors.inputFillLight,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+                            color: isDark ? AppColors.borderDark : AppColors.borderLight,
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+                            color: isDark ? AppColors.borderDark : AppColors.borderLight,
                           ),
                         ),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -267,30 +204,15 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                     ),
                     const SizedBox(height: 14),
 
-                    // Filtres par onglets / segments
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          _buildFilterChip(
-                            label: "Tous (${state.contacts.length})",
-                            isSelected: state.typeFilter == null,
-                            onTap: () => ref.read(contactsProvider.notifier).setFilter(null),
-                          ),
-                          const SizedBox(width: 8),
-                          _buildFilterChip(
-                            label: "Clients (${state.clientsCount})",
-                            isSelected: state.typeFilter == 'CLIENT',
-                            onTap: () => ref.read(contactsProvider.notifier).setFilter('CLIENT'),
-                          ),
-                          const SizedBox(width: 8),
-                          _buildFilterChip(
-                            label: "Fournisseurs (${state.suppliersCount})",
-                            isSelected: state.typeFilter == 'SUPPLIER',
-                            onTap: () => ref.read(contactsProvider.notifier).setFilter('SUPPLIER'),
-                          ),
-                        ],
-                      ),
+                    AppSegmentedFilter<String?>(
+                      selectedValue: state.typeFilter,
+                      isDark: isDark,
+                      options: [
+                        AppSegmentedFilterOption(value: null, label: "Tous", badge: "${state.contacts.length}"),
+                        AppSegmentedFilterOption(value: 'CLIENT', label: "Clients", badge: "${state.clientsCount}"),
+                        AppSegmentedFilterOption(value: 'SUPPLIER', label: "Fournisseurs", badge: "${state.suppliersCount}"),
+                      ],
+                      onChanged: (value) => ref.read(contactsProvider.notifier).setFilter(value),
                     ),
                     const SizedBox(height: 16),
 
@@ -315,122 +237,24 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
     );
   }
 
-  Widget _buildStatCard({
-    required BuildContext context,
-    required String title,
-    required int count,
-    required IconData icon,
-    required Color color,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  count.toString(),
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: isDark ? Colors.grey[400] : Colors.grey[600],
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterChip({
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : Colors.grey[400]!,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            color: isSelected ? Colors.white : null,
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildContactCard(BuildContext context, Contact contact, bool isDark, bool canCreate) {
-    Color badgeColor;
+    const badgeColor = AppColors.primary;
     String badgeLabel;
     switch (contact.type) {
       case ContactType.client:
-        badgeColor = AppColors.success;
         badgeLabel = "Client";
         break;
       case ContactType.supplier:
-        badgeColor = AppColors.primary;
         badgeLabel = "Fournisseur";
         break;
       case ContactType.both:
-        badgeColor = AppColors.accent;
         badgeLabel = "Client & Fournisseur";
         break;
     }
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(
-          color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
-        ),
-      ),
-      color: isDark ? const Color(0xFF1E293B) : Colors.white,
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
+    return AppCard(
+      padding: const EdgeInsets.all(14),
+      child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -440,7 +264,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                   backgroundColor: badgeColor.withValues(alpha: 0.15),
                   child: Text(
                     contact.name.isNotEmpty ? contact.name[0].toUpperCase() : "?",
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: badgeColor,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -470,7 +294,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                             ),
                             child: Text(
                               badgeLabel,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
                                 color: badgeColor,
@@ -482,14 +306,14 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                             Icon(
                               Icons.location_on_rounded,
                               size: 13,
-                              color: isDark ? Colors.grey[400] : Colors.grey[500],
+                              color: isDark ? AppColors.textMutedDark : AppColors.textMutedLight,
                             ),
                             const SizedBox(width: 2),
                             Text(
                               contact.city!,
                               style: TextStyle(
                                 fontSize: 11,
-                                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                color: isDark ? AppColors.textMutedDark : AppColors.textMutedLight,
                               ),
                             ),
                           ],
@@ -564,7 +388,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                       style: TextStyle(
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
-                        color: isDark ? Colors.grey[500] : Colors.grey[400],
+                        color: isDark ? AppColors.textMutedDark : AppColors.textMutedLight,
                       ),
                     ),
                   ),
@@ -574,7 +398,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                   Icon(
                     Icons.email_outlined,
                     size: 15,
-                    color: isDark ? Colors.grey[400] : Colors.grey[500],
+                    color: isDark ? AppColors.textMutedDark : AppColors.textMutedLight,
                   ),
                   const SizedBox(width: 4),
                   Flexible(
@@ -582,7 +406,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                       contact.email!,
                       style: TextStyle(
                         fontSize: 12,
-                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        color: isDark ? AppColors.textMutedDark : AppColors.textMutedLight,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -599,12 +423,11 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                 style: TextStyle(
                   fontSize: 11,
                   fontStyle: FontStyle.italic,
-                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  color: isDark ? AppColors.textMutedDark : AppColors.textMutedLight,
                 ),
               ),
             ],
           ],
-        ),
       ),
     );
   }
@@ -618,7 +441,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
           Icon(
             Icons.contact_phone_outlined,
             size: 60,
-            color: isDark ? Colors.grey[700] : Colors.grey[300],
+            color: AppColors.primary.withValues(alpha: isDark ? 0.30 : 0.20),
           ),
           const SizedBox(height: 14),
           Text(
@@ -636,7 +459,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12,
-              color: isDark ? Colors.grey[400] : Colors.grey[600],
+              color: isDark ? AppColors.textMutedDark : AppColors.textMutedLight,
             ),
           ),
           const SizedBox(height: 18),
@@ -685,18 +508,11 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
           final isDarkModal = Theme.of(modalCtx).brightness == Brightness.dark;
           final contactState = ref.watch(contactsProvider);
 
-          return Container(
-            margin: EdgeInsets.only(
-              top: MediaQuery.of(modalCtx).padding.top + 20,
-              bottom: MediaQuery.of(modalCtx).viewInsets.bottom,
-            ),
-            decoration: BoxDecoration(
-              color: isDarkModal ? const Color(0xFF0F172A) : Colors.white,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-              child: Column(
+          return Padding(
+            padding: EdgeInsets.only(top: MediaQuery.of(modalCtx).padding.top + 20),
+            child: AppModalSurface(
+              child: SingleChildScrollView(
+                child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -705,7 +521,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.grey[400],
+                        color: isDarkModal ? AppColors.borderDark : AppColors.borderLight,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -716,14 +532,6 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    "Renseignez les coordonnées de votre partenaire d'exploitation.",
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDarkModal ? Colors.grey[400] : Colors.grey[600],
                     ),
                   ),
                   const SizedBox(height: 18),
@@ -949,6 +757,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                     ],
                   ),
                 ],
+                ),
               ),
             ),
           );

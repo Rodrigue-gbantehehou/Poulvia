@@ -60,9 +60,9 @@ class EggTrendChart extends StatelessWidget {
     }
 
     final series = <_EggSeries>[
-      _EggSeries('Œufs normaux', AppColors.primary, (point) => point.goodEggs),
-      _EggSeries('Œufs fêlés', AppColors.danger, (point) => point.crackedEggs),
-      _EggSeries('Autres œufs anormaux', AppColors.accent, (point) => point.abnormalEggs),
+      _EggSeries('Normaux', AppColors.primary, (point) => point.goodEggs),
+      _EggSeries('Fêlés', AppColors.danger, (point) => point.crackedEggs),
+      _EggSeries('Autres', AppColors.accent, (point) => point.abnormalEggs),
     ];
     final maxValue = points.fold<int>(0, (max, point) {
       final values = [point.goodEggs, point.crackedEggs, point.abnormalEggs];
@@ -79,14 +79,7 @@ class EggTrendChart extends StatelessWidget {
         border: Border.all(color: border),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('Évolution de la ponte', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 3),
-        Text('Production quotidienne par qualité d’œuf', style: TextStyle(fontSize: 11, color: muted)),
-        if (cachedAt != null) ...[
-          const SizedBox(height: 5),
-          Text('Données synchronisées le ${DateFormat('dd/MM à HH:mm').format(cachedAt!)}', style: TextStyle(fontSize: 10, color: muted)),
-          Text('Les saisies hors ligne apparaîtront après synchronisation.', style: TextStyle(fontSize: 10, color: muted)),
-        ],
+        const Text('Tendance de ponte', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
         const SizedBox(height: 12),
         Wrap(
           spacing: 12,

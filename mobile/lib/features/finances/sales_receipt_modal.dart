@@ -6,6 +6,7 @@ import '../../core/api/api_client.dart';
 import '../../core/api/api_endpoints.dart';
 import '../../core/models/farm.dart';
 import '../../core/models/transaction.dart';
+import '../../core/design_system/app_modal_surface.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/pdf_helper.dart';
@@ -124,7 +125,6 @@ class _SalesReceiptModalState extends ConsumerState<SalesReceiptModal> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surfaceColor = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
     final authState = ref.watch(authProvider);
     final farm = widget.farm ?? authState.activeFarm ?? const Farm(id: "", name: "Exploitation Avicole");
@@ -137,17 +137,7 @@ class _SalesReceiptModalState extends ConsumerState<SalesReceiptModal> {
         ? AppColors.success
         : (tx.isPartial ? AppColors.warning : AppColors.danger);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      padding: EdgeInsets.fromLTRB(
-        20,
-        12,
-        20,
-        MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 20,
-      ),
+    return AppModalSurface(
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -210,7 +200,7 @@ class _SalesReceiptModalState extends ConsumerState<SalesReceiptModal> {
             // Ticket de caisse numérique
             Container(
               decoration: BoxDecoration(
-                color: isDark ? AppColors.backgroundDark : const Color(0xFFF9FAFB),
+                color: isDark ? AppColors.backgroundDark : AppColors.surfaceLight,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: borderColor, width: 1.5),
               ),

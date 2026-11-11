@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_provider.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../../core/design_system/app_segmented_filter.dart';
 import '../../core/models/inventory_item.dart';
 import '../auth/auth_provider.dart';
 import '../../core/widgets/brand_loader.dart';
@@ -885,14 +886,14 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                 : IconButton(
                     icon: const Icon(Icons.menu_rounded),
                     tooltip: "Menu",
-                    onPressed: widget.onOpenMenu ?? () => Scaffold.of(context).openDrawer(),
+                    onPressed: widget.onOpenMenu ?? () => Scaffold.maybeOf(context)?.openDrawer(),
                   )),
         title: const Text("Stocks & Intrants"),
         actions: [
           IconButton(
             icon: Icon(
               isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-              color: isDark ? AppColors.accent : null,
+              color: isDark ? AppColors.primaryLight : null,
               size: 20,
             ),
             tooltip: isDark ? "Activer le mode clair" : "Activer le mode sombre",
@@ -1107,22 +1108,18 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                               ),
                               const SizedBox(height: 10),
 
-                              // Filtres par catégorie
-                              SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  children: [
-                                    _buildCategoryTab(null, "Tous", isDark, invState.selectedCategory),
-                                    const SizedBox(width: 6),
-                                    _buildCategoryTab("FEED", "Aliments complets", isDark, invState.selectedCategory),
-                                    const SizedBox(width: 6),
-                                    _buildCategoryTab("RAW_MATERIAL", "Matières premières", isDark, invState.selectedCategory),
-                                    const SizedBox(width: 6),
-                                    _buildCategoryTab("MEDICINE", "Santé / Soins", isDark, invState.selectedCategory),
-                                    const SizedBox(width: 6),
-                                    _buildCategoryTab("EQUIPMENT", "Matériel", isDark, invState.selectedCategory),
-                                  ],
-                                ),
+                              AppSegmentedFilter<String?>(
+                                selectedValue: invState.selectedCategory,
+                                isDark: isDark,
+                                scrollable: true,
+                                options: const [
+                                  AppSegmentedFilterOption(value: null, label: "Tous"),
+                                  AppSegmentedFilterOption(value: "FEED", label: "Aliments complets"),
+                                  AppSegmentedFilterOption(value: "RAW_MATERIAL", label: "Matières premières"),
+                                  AppSegmentedFilterOption(value: "MEDICINE", label: "Santé / Soins"),
+                                  AppSegmentedFilterOption(value: "EQUIPMENT", label: "Matériel"),
+                                ],
+                                onChanged: (value) => ref.read(inventoryProvider.notifier).setCategoryFilter(value),
                               ),
                               const SizedBox(height: 14),
 
@@ -1418,43 +1415,32 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                               ),
                               const SizedBox(height: 10),
 
-                              // Filtres par type de flux (Tous, Approvisionnements (+), Consommations (-), Pertes)
-                              SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  children: [
-                                    _buildMovementTypeFilterChip(
-                                      null,
-                                      "Tous (${invState.movements.length})",
-                                      isDark,
-                                      invState.movementTypeFilter,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    _buildMovementTypeFilterChip(
-                                      "INCOMING",
-                                      "Approvisionnements (+) (${invState.movements.where((m) => m.isIncoming).length})",
-                                      isDark,
-                                      invState.movementTypeFilter,
-                                      activeColor: AppColors.success,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    _buildMovementTypeFilterChip(
-                                      "FEEDING",
-                                      "Consommations (-) (${invState.movements.where((m) => m.isFeeding).length})",
-                                      isDark,
-                                      invState.movementTypeFilter,
-                                      activeColor: AppColors.accent,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    _buildMovementTypeFilterChip(
-                                      "LOSS",
-                                      "Pertes & Avaries (${invState.movements.where((m) => m.isLoss).length})",
-                                      isDark,
-                                      invState.movementTypeFilter,
-                                      activeColor: AppColors.danger,
-                                    ),
-                                  ],
-                                ),
+                              AppSegmentedFilter<String?>(
+                                selectedValue: invState.movementTypeFilter,
+                                isDark: isDark,
+                                scrollable: true,
+                                options: [
+                                  AppSegmentedFilterOption(
+                                    value: null,
+                                    label: "Tous (${invState.movements.length})",
+                                  ),
+                                  AppSegmentedFilterOption(
+                                    value: "INCOMING",
+                                    label: "Entrées (${invState.movements.where((m) => m.isIncoming).length})",
+                                    selectedColor: AppColors.success,
+                                  ),
+                                  AppSegmentedFilterOption(
+                                    value: "FEEDING",
+                                    label: "Consommations (${invState.movements.where((m) => m.isFeeding).length})",
+                                    selectedColor: AppColors.accent,
+                                  ),
+                                  AppSegmentedFilterOption(
+                                    value: "LOSS",
+                                    label: "Pertes (${invState.movements.where((m) => m.isLoss).length})",
+                                    selectedColor: AppColors.danger,
+                                  ),
+                                ],
+                                onChanged: (value) => ref.read(inventoryProvider.notifier).setMovementTypeFilter(value),
                               ),
                               const SizedBox(height: 14),
 
@@ -1709,65 +1695,6 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     );
   }
 
-  Widget _buildCategoryTab(String? code, String label, bool isDark, String? currentSelected) {
-    final isSelected = currentSelected == code;
-    return InkWell(
-      onTap: () => ref.read(inventoryProvider.notifier).setCategoryFilter(code),
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary
-              : (isDark ? AppColors.surfaceDark : AppColors.inputFillLight),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : (isDark ? AppColors.borderDark : AppColors.borderLight),
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-            color: isSelected ? Colors.white : (isDark ? AppColors.textMutedDark : AppColors.textMutedLight),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMovementTypeFilterChip(
-    String? type,
-    String label,
-    bool isDark,
-    String? currentFilter, {
-    Color activeColor = AppColors.primary,
-  }) {
-    final isSelected = currentFilter == type;
-    return InkWell(
-      onTap: () => ref.read(inventoryProvider.notifier).setMovementTypeFilter(type),
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? activeColor : (isDark ? AppColors.surfaceDark : AppColors.surfaceLight),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? activeColor : (isDark ? AppColors.borderDark : AppColors.borderLight),
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-            color: isSelected ? Colors.white : (isDark ? AppColors.textMutedDark : AppColors.textMutedLight),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _QuickQtyBtn extends StatelessWidget {

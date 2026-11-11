@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../core/models/flock.dart';
+import '../../core/design_system/app_modal_surface.dart';
 import '../../core/theme/app_theme.dart';
 import 'flock_provider.dart';
 
@@ -104,21 +105,10 @@ class _CloseFlockModalState extends ConsumerState<CloseFlockModal> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surfaceColor = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
     final dateFmt = DateFormat('dd/MM/yyyy');
 
-    return Container(
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      padding: EdgeInsets.fromLTRB(
-        20,
-        12,
-        20,
-        MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 20,
-      ),
+    return AppModalSurface(
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -182,7 +172,7 @@ class _CloseFlockModalState extends ConsumerState<CloseFlockModal> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.backgroundDark : const Color(0xFFF9FAFB),
+                color: isDark ? AppColors.backgroundDark : AppColors.surfaceLight,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: borderColor),
               ),
@@ -286,7 +276,7 @@ class _CloseFlockModalState extends ConsumerState<CloseFlockModal> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: borderColor),
-                  color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
+                  color: isDark ? AppColors.surfaceDark : AppColors.inputFillLight,
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -314,7 +304,7 @@ class _CloseFlockModalState extends ConsumerState<CloseFlockModal> {
               decoration: InputDecoration(
                 hintText: "Ex : Vente totale des sujets, réforme fin de ponte...",
                 filled: true,
-                fillColor: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
+                fillColor: isDark ? AppColors.surfaceDark : AppColors.inputFillLight,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),

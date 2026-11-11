@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../core/models/health_treatment.dart';
 import '../../core/models/inventory_item.dart';
+import '../../core/design_system/app_modal_surface.dart';
 import '../../core/theme/app_theme.dart';
 import '../dashboard/dashboard_provider.dart';
 import '../flocks/flock_provider.dart';
@@ -183,18 +184,7 @@ class _RecordFeedingModalState extends ConsumerState<RecordFeedingModal> {
     final suggestedTreatment = relevantTreatments.where((t) => t.administrationMethod == "DRINKING_WATER").firstOrNull ??
         relevantTreatments.firstOrNull;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border.all(color: borderColor),
-      ),
-      padding: EdgeInsets.fromLTRB(
-        20,
-        12,
-        20,
-        MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 20,
-      ),
+    return AppModalSurface(
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -366,9 +356,9 @@ class _RecordFeedingModalState extends ConsumerState<RecordFeedingModal> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.kpiEggBgDark : AppColors.accentSoft,
+                color: isDark ? AppColors.surfaceDark : AppColors.inputFillLight,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: isDark ? AppColors.kpiEggBorderDark : AppColors.accentWarm),
+                border: Border.all(color: borderColor),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -611,9 +601,9 @@ class _RecordFeedingModalState extends ConsumerState<RecordFeedingModal> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.kpiRateBgDark : AppColors.kpiRateBgLight,
+                color: isDark ? AppColors.surfaceDark : AppColors.inputFillLight,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: isDark ? AppColors.kpiRateBorderDark : AppColors.kpiRateBorderLight),
+                border: Border.all(color: borderColor),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -623,11 +613,11 @@ class _RecordFeedingModalState extends ConsumerState<RecordFeedingModal> {
                     children: [
                       const Row(
                         children: [
-                          Icon(Icons.water_drop_rounded, color: AppColors.kpiRateBadge, size: 16),
+                          Icon(Icons.water_drop_rounded, color: AppColors.primary, size: 16),
                           SizedBox(width: 6),
                           Text(
                             "2. Abreuvement",
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.kpiRateBadge),
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary),
                           ),
                         ],
                       ),
@@ -797,7 +787,7 @@ class _RecordFeedingModalState extends ConsumerState<RecordFeedingModal> {
                             labelText: "Volume d'eau préparé (Litres)",
                             hintText: "50",
                             suffixText: "L",
-                            suffixStyle: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.kpiRateBadge),
+                            suffixStyle: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           ),

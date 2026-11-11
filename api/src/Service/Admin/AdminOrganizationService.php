@@ -137,6 +137,12 @@ class AdminOrganizationService
         return $organization;
     }
 
+    public function saveOrganization(Organization $organization): Organization
+    {
+        $this->entityManager->flush();
+        return $organization;
+    }
+
     /**
      * Sérialise une organisation pour l'affichage dans le back-office.
      *
@@ -165,6 +171,9 @@ class AdminOrganizationService
             'name' => $organization->getName(),
             'slug' => $organization->getSlug(),
             'subscriptionPlan' => $organization->getSubscriptionPlan(),
+            'subscriptionBillingCycle' => $organization->getSubscriptionBillingCycle(),
+            'subscriptionTrialEndsAt' => $organization->getSubscriptionTrialEndsAt()?->format(\DateTimeInterface::ATOM),
+            'subscriptionRenewalDate' => $organization->getSubscriptionRenewalDate()?->format(\DateTimeInterface::ATOM),
             'status' => $organization->getStatus()->value,
             'farmsCount' => count($farms),
             'farms' => $farms,

@@ -11,7 +11,6 @@ import 'record_egg_modal.dart';
 import '../auth/auth_provider.dart';
 import '../finances/record_transaction_modal.dart';
 
-
 class EggsScreen extends ConsumerStatefulWidget {
   final VoidCallback? onBack;
   final VoidCallback? onOpenMenu;
@@ -34,7 +33,8 @@ class _EggsScreenState extends ConsumerState<EggsScreen> {
     if (layerFlocks.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Aucun lot de pondeuses actif trouvé pour cette ferme."),
+          content:
+              Text("Aucun lot de pondeuses actif trouvé pour cette ferme."),
           backgroundColor: AppColors.danger,
         ),
       );
@@ -43,13 +43,16 @@ class _EggsScreenState extends ConsumerState<EggsScreen> {
     RecordEggModal.show(
       context,
       defaultFlockId: defaultFlockId,
-      onSaved: () => ref.read(eggProvider.notifier).loadData(showLoading: false),
+      onSaved: () =>
+          ref.read(eggProvider.notifier).loadData(showLoading: false),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final mutedColor =
+        isDark ? AppColors.textMutedDark : AppColors.textMutedLight;
     final eggState = ref.watch(eggProvider);
     final summary = eggState.summary;
     final dashboardState = ref.watch(dashboardProvider);
@@ -74,13 +77,15 @@ class _EggsScreenState extends ConsumerState<EggsScreen> {
                   : IconButton(
                       icon: const Icon(Icons.menu_rounded),
                       tooltip: "Menu",
-                      onPressed: widget.onOpenMenu ?? () => Scaffold.of(context).openDrawer(),
+                      onPressed: widget.onOpenMenu ??
+                          () => Scaffold.maybeOf(context)?.openDrawer(),
                     )),
           title: const Text("Production d'œufs"),
         ),
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -111,7 +116,7 @@ class _EggsScreenState extends ConsumerState<EggsScreen> {
                   "Cette exploitation est configurée pour l'élevage de chair (sans production d'œufs de ponte). Le suivi de vos lots, pesées et ventes s'effectue dans l'espace Élevage.",
                   style: TextStyle(
                     fontSize: 13,
-                    color: isDark ? Colors.white60 : AppColors.textMutedLight,
+                    color: mutedColor,
                     height: 1.4,
                   ),
                   textAlign: TextAlign.center,
@@ -140,18 +145,21 @@ class _EggsScreenState extends ConsumerState<EggsScreen> {
                 : IconButton(
                     icon: const Icon(Icons.menu_rounded),
                     tooltip: "Menu",
-                    onPressed: widget.onOpenMenu ?? () => Scaffold.of(context).openDrawer(),
+                    onPressed: widget.onOpenMenu ??
+                        () => Scaffold.maybeOf(context)?.openDrawer(),
                   )),
         title: const Text("Ramassage d'œufs"),
         actions: [
           IconButton(
             icon: Icon(
               isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-              color: isDark ? AppColors.accent : Colors.white,
+              color: isDark ? AppColors.primaryLight : Colors.white,
               size: 20,
             ),
-            tooltip: isDark ? "Activer le mode clair" : "Activer le mode sombre",
-            onPressed: () => ref.read(themeModeProvider.notifier).toggleTheme(context),
+            tooltip:
+                isDark ? "Activer le mode clair" : "Activer le mode sombre",
+            onPressed: () =>
+                ref.read(themeModeProvider.notifier).toggleTheme(context),
           ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded, color: Colors.white),
@@ -161,9 +169,11 @@ class _EggsScreenState extends ConsumerState<EggsScreen> {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => ref.read(eggProvider.notifier).loadData(showLoading: false),
+        onRefresh: () =>
+            ref.read(eggProvider.notifier).loadData(showLoading: false),
         child: eggState.isLoading
-            ? const Center(child: BrandLoader(message: "Chargement des pontes..."))
+            ? const Center(
+                child: BrandLoader(message: "Chargement des pontes..."))
             : SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 90),
@@ -193,7 +203,9 @@ class _EggsScreenState extends ConsumerState<EggsScreen> {
                                   const SizedBox(width: 4),
                                   const Text(
                                     "plateaux",
-                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                                    style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold),
                                   ),
                                   if (summary.totalLooseEggs > 0) ...[
                                     const SizedBox(width: 6),
@@ -209,8 +221,9 @@ class _EggsScreenState extends ConsumerState<EggsScreen> {
                                 ],
                               ),
                               Text(
-                                "${summary.totalGoodEggs} œufs • ${summary.collectionsCount} saisie(s) • Taux: ${summary.averageLayingRate.toStringAsFixed(1)}%",
-                                style: const TextStyle(fontSize: 11, color: AppColors.textMutedLight),
+                                "Taux moyen : ${summary.averageLayingRate.toStringAsFixed(1)} %",
+                                style:
+                                    TextStyle(fontSize: 11, color: mutedColor),
                               ),
                             ],
                           ),
@@ -223,26 +236,37 @@ class _EggsScreenState extends ConsumerState<EggsScreen> {
                                     initialType: "INCOME",
                                     initialCategory: "EGG_SALE",
                                   ),
-                                  icon: const Icon(Icons.point_of_sale_rounded, size: 15),
-                                  label: const Text("Vendre", style: TextStyle(fontSize: 12)),
+                                  icon: const Icon(Icons.point_of_sale_rounded,
+                                      size: 15),
+                                  label: const Text("Vendre",
+                                      style: TextStyle(fontSize: 12)),
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: AppColors.success,
-                                    side: const BorderSide(color: AppColors.success),
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                    side: const BorderSide(
+                                        color: AppColors.success),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 8),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10)),
                                   ),
                                 ),
                                 const SizedBox(width: 8),
                               ],
                               ElevatedButton.icon(
-                                onPressed: () => _openRecordEggDialog(eggState.layerFlocks, eggState.selectedFlockId),
+                                onPressed: () => _openRecordEggDialog(
+                                    eggState.layerFlocks,
+                                    eggState.selectedFlockId),
                                 icon: const Icon(Icons.add_rounded, size: 15),
-                                label: const Text("Ramassage", style: TextStyle(fontSize: 12)),
+                                label: const Text("Ramassage",
+                                    style: TextStyle(fontSize: 12)),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.accent,
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 8),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10)),
                                 ),
                               ),
                             ],
@@ -254,26 +278,35 @@ class _EggsScreenState extends ConsumerState<EggsScreen> {
                     // Sélecteur de bande compact si plusieurs bandes
                     if (eggState.layerFlocks.length > 1) ...[
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
-                          color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: isDark ? AppColors.borderDark : AppColors.borderLight),
+                          color: isDark
+                              ? AppColors.surfaceDark
+                              : AppColors.inputFillLight,
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.filter_list_rounded, size: 18, color: AppColors.accent),
+                            const Icon(Icons.filter_list_rounded,
+                                size: 18, color: AppColors.primary),
                             const SizedBox(width: 10),
                             Expanded(
                               child: DropdownButtonHideUnderline(
                                 child: DropdownButton<String?>(
                                   value: eggState.selectedFlockId,
                                   isExpanded: true,
-                                  hint: const Text("Toutes les bandes de pondeuses", style: TextStyle(fontSize: 13)),
+                                  hint: const Text(
+                                      "Toutes les bandes de pondeuses",
+                                      style: TextStyle(fontSize: 13)),
                                   items: [
                                     const DropdownMenuItem<String?>(
                                       value: null,
-                                      child: Text("Toutes les bandes de pondeuses", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                      child: Text(
+                                          "Toutes les bandes de pondeuses",
+                                          style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.bold)),
                                     ),
                                     ...eggState.layerFlocks.map((flock) {
                                       return DropdownMenuItem<String?>(
@@ -285,7 +318,9 @@ class _EggsScreenState extends ConsumerState<EggsScreen> {
                                       );
                                     }),
                                   ],
-                                  onChanged: (val) => ref.read(eggProvider.notifier).filterByFlock(val),
+                                  onChanged: (val) => ref
+                                      .read(eggProvider.notifier)
+                                      .filterByFlock(val),
                                 ),
                               ),
                             ),
@@ -311,11 +346,12 @@ class _EggsScreenState extends ConsumerState<EggsScreen> {
                       children: [
                         const Text(
                           "Historique des collectes",
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          "${eggState.productions.length} enregistrée(s)",
-                          style: const TextStyle(fontSize: 12, color: AppColors.textMutedLight),
+                          "${eggState.productions.length} collectes",
+                          style: TextStyle(fontSize: 12, color: mutedColor),
                         ),
                       ],
                     ),
@@ -327,29 +363,38 @@ class _EggsScreenState extends ConsumerState<EggsScreen> {
                         padding: const EdgeInsets.all(28),
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+                          color: isDark
+                              ? AppColors.surfaceDark
+                              : AppColors.surfaceLight,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                            color: isDark
+                                ? AppColors.borderDark
+                                : AppColors.borderLight,
                           ),
                         ),
                         child: Column(
                           children: [
-                            Icon(Icons.egg_outlined, size: 48, color: AppColors.accent.withValues(alpha: 0.6)),
+                            Icon(Icons.egg_outlined,
+                                size: 48,
+                                color: AppColors.accent.withValues(alpha: 0.6)),
                             const SizedBox(height: 12),
                             const Text(
                               "Aucune collecte enregistrée",
-                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                  fontSize: 15, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 6),
-                            const Text(
-                              "Appuyez sur le bouton ci-dessous pour saisir le premier ramassage d'œufs de la journée.",
+                            Text(
+                              "Enregistrez une collecte pour commencer.",
                               textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 12, color: AppColors.textMutedLight),
+                              style: TextStyle(fontSize: 12, color: mutedColor),
                             ),
                             const SizedBox(height: 16),
                             ElevatedButton.icon(
-                              onPressed: () => _openRecordEggDialog(eggState.layerFlocks, eggState.selectedFlockId),
+                              onPressed: () => _openRecordEggDialog(
+                                  eggState.layerFlocks,
+                                  eggState.selectedFlockId),
                               icon: const Icon(Icons.add, size: 18),
                               label: const Text("Enregistrer une collecte"),
                               style: ElevatedButton.styleFrom(
@@ -377,30 +422,25 @@ class _EggsScreenState extends ConsumerState<EggsScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Expanded(
                                         child: Text(
-                                          prod.flockName ?? "Bande de pondeuses",
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                          prod.flockName ??
+                                              "Bande de pondeuses",
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.accentSoft,
-                                          borderRadius: BorderRadius.circular(6),
-                                        ),
-                                        child: Text(
-                                          "${prod.date} • ${prod.sessionLabel}",
-                                          style: const TextStyle(
+                                      Text(
+                                        "${prod.date} • ${prod.sessionLabel}",
+                                        style: const TextStyle(
                                             fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppColors.accent,
-                                          ),
-                                        ),
+                                            fontWeight: FontWeight.w600),
                                       ),
                                     ],
                                   ),
@@ -416,42 +456,27 @@ class _EggsScreenState extends ConsumerState<EggsScreen> {
                                         ),
                                       ),
                                       const SizedBox(width: 8),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.primarySoft,
-                                          borderRadius: BorderRadius.circular(6),
-                                        ),
-                                        child: Text(
-                                          tray.text,
-                                          style: const TextStyle(
+                                      Text(
+                                        tray.text,
+                                        style: const TextStyle(
                                             fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppColors.primary,
-                                          ),
-                                        ),
+                                            fontWeight: FontWeight.w600),
                                       ),
-                                      if (prod.layingRate != null && prod.layingRate! > 0) ...[
+                                      if (prod.layingRate != null &&
+                                          prod.layingRate! > 0) ...[
                                         const Spacer(),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.primarySoft,
-                                            borderRadius: BorderRadius.circular(6),
-                                          ),
-                                          child: Text(
-                                            "${prod.layingRate!.toStringAsFixed(1)}% ponte",
-                                            style: const TextStyle(
+                                        Text(
+                                          "${prod.layingRate!.toStringAsFixed(1)}% ponte",
+                                          style: const TextStyle(
                                               fontSize: 11,
-                                              fontWeight: FontWeight.bold,
-                                              color: AppColors.primary,
-                                            ),
-                                          ),
+                                              fontWeight: FontWeight.w600),
                                         ),
                                       ],
                                     ],
                                   ),
-                                  if (prod.crackedEggs > 0 || prod.dirtyEggs > 0 || prod.deformedEggs > 0) ...[
+                                  if (prod.crackedEggs > 0 ||
+                                      prod.dirtyEggs > 0 ||
+                                      prod.deformedEggs > 0) ...[
                                     const SizedBox(height: 8),
                                     Wrap(
                                       spacing: 6,
@@ -459,30 +484,30 @@ class _EggsScreenState extends ConsumerState<EggsScreen> {
                                       children: [
                                         if (prod.crackedEggs > 0)
                                           _QualityBadge(
-                                            text: "${prod.crackedEggs} fêlé(s)/cassé(s)",
-                                            color: AppColors.danger,
-                                          ),
+                                              text:
+                                                  "${prod.crackedEggs} fêlé(s)/cassé(s)"),
                                         if (prod.dirtyEggs > 0)
                                           _QualityBadge(
-                                            text: "${prod.dirtyEggs} sale(s)",
-                                            color: AppColors.textMutedLight,
-                                          ),
+                                              text:
+                                                  "${prod.dirtyEggs} sale(s)"),
                                         if (prod.deformedEggs > 0)
                                           _QualityBadge(
-                                            text: "${prod.deformedEggs} anormal(aux)",
-                                            color: AppColors.accent,
-                                          ),
+                                              text:
+                                                  "${prod.deformedEggs} anormal(aux)"),
                                       ],
                                     ),
                                   ],
-                                  if (prod.notes != null && prod.notes!.isNotEmpty) ...[
+                                  if (prod.notes != null &&
+                                      prod.notes!.isNotEmpty) ...[
                                     const SizedBox(height: 6),
                                     Text(
                                       prod.notes!,
                                       style: TextStyle(
                                         fontSize: 11,
                                         fontStyle: FontStyle.italic,
-                                        color: isDark ? AppColors.textMutedDark : AppColors.textMutedLight,
+                                        color: isDark
+                                            ? AppColors.textMutedDark
+                                            : AppColors.textMutedLight,
                                       ),
                                     ),
                                   ],
@@ -500,26 +525,16 @@ class _EggsScreenState extends ConsumerState<EggsScreen> {
   }
 }
 
-
 class _QualityBadge extends StatelessWidget {
   final String text;
-  final Color color;
 
-  const _QualityBadge({required this.text, required this.color});
+  const _QualityBadge({required this.text});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color),
-      ),
+    return Text(
+      text,
+      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
     );
   }
 }

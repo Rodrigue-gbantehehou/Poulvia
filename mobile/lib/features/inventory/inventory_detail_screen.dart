@@ -12,7 +12,8 @@ import 'inventory_provider.dart';
 
 class InventoryDetailScreen extends ConsumerStatefulWidget {
   final InventoryItem item;
-  final Function(List<InventoryItem> items, {String? preselectedItemId})? onOpenProcurement;
+  final Function(List<InventoryItem> items, {String? preselectedItemId})?
+      onOpenProcurement;
 
   const InventoryDetailScreen({
     super.key,
@@ -21,7 +22,8 @@ class InventoryDetailScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<InventoryDetailScreen> createState() => _InventoryDetailScreenState();
+  ConsumerState<InventoryDetailScreen> createState() =>
+      _InventoryDetailScreenState();
 }
 
 class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
@@ -91,16 +93,20 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surfaceColor = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+    final surfaceColor =
+        isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
     final activeFarm = ref.watch(authProvider).activeFarm;
     final canViewStockValuation = _showAdvancedStockValuation &&
         (activeFarm?.modules.contains('inventory_valuation') ?? false);
 
-    final isBag = _item.unit == "BAG" || _item.unit == "BAG_50KG" || _item.unit == "BAG_25KG";
+    final isBag = _item.unit == "BAG" ||
+        _item.unit == "BAG_50KG" ||
+        _item.unit == "BAG_25KG";
     final bagWeight = _item.packageWeightKg ?? 50.0;
     final totalKg = isBag ? (_item.currentStock * bagWeight) : null;
-    final totalStockValue = ((_item.currentStock) * (_item.unitPrice ?? 0)).toInt();
+    final totalStockValue =
+        ((_item.currentStock) * (_item.unitPrice ?? 0)).toInt();
 
     return Scaffold(
       appBar: AppBar(
@@ -158,27 +164,10 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                             ],
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: _item.isLowStock
-                                ? AppColors.danger.withValues(alpha: 0.12)
-                                : AppColors.success.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: _item.isLowStock
-                                  ? AppColors.danger.withValues(alpha: 0.3)
-                                  : AppColors.success.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: Text(
-                            _item.isLowStock ? "Seuil critique" : "En stock",
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: _item.isLowStock ? AppColors.danger : AppColors.success,
-                            ),
-                          ),
+                        Text(
+                          _item.isLowStock ? "Seuil critique" : "En stock",
+                          style: const TextStyle(
+                              fontSize: 11, fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
@@ -190,9 +179,11 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                         Expanded(
                           child: _ProductKpiCard(
                             label: "QUANTITÉ EN RÉSERVE",
-                            value: "${_item.currentStock.toStringAsFixed(_item.currentStock % 1 == 0 ? 0 : 1)} ${_item.unitShortLabel}",
-                            sub: totalKg != null ? "= ${totalKg.toStringAsFixed(0)} kg réels" : "Stock disponible",
-                            color: _item.isLowStock ? AppColors.danger : AppColors.primary,
+                            value:
+                                "${_item.currentStock.toStringAsFixed(_item.currentStock % 1 == 0 ? 0 : 1)} ${_item.unitShortLabel}",
+                            sub: totalKg != null
+                                ? "= ${totalKg.toStringAsFixed(0)} kg réels"
+                                : "Stock disponible",
                           ),
                         ),
                         if (canViewStockValuation) ...[
@@ -200,9 +191,10 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                           Expanded(
                             child: _ProductKpiCard(
                               label: "VALEUR DU STOCK",
-                              value: CurrencyFormatter.formatFcfa(totalStockValue),
-                              sub: "À ${_item.unitPrice != null ? CurrencyFormatter.formatFcfa(_item.unitPrice!) : '0 FCFA'} / ${_item.unitShortLabel}",
-                              color: AppColors.success,
+                              value:
+                                  CurrencyFormatter.formatFcfa(totalStockValue),
+                              sub:
+                                  "À ${_item.unitPrice != null ? CurrencyFormatter.formatFcfa(_item.unitPrice!) : '0 FCFA'} / ${_item.unitShortLabel}",
                             ),
                           ),
                         ],
@@ -214,18 +206,19 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                         Expanded(
                           child: _ProductKpiCard(
                             label: "SEUIL D'ALERTE",
-                            value: "${_item.alertThreshold != null ? _item.alertThreshold!.toStringAsFixed(0) : '0'} ${_item.unitShortLabel}",
+                            value:
+                                "${_item.alertThreshold != null ? _item.alertThreshold!.toStringAsFixed(0) : '0'} ${_item.unitShortLabel}",
                             sub: "Alerte de réapprovisionnement",
-                            color: AppColors.warning,
                           ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: _ProductKpiCard(
                             label: "CONSOMMATION TOTALE",
-                            value: "-${_totalOut.toStringAsFixed(0)} ${_item.unitShortLabel}",
-                            sub: "+${_totalIn.toStringAsFixed(0)} approvisionnés",
-                            color: AppColors.accent,
+                            value:
+                                "-${_totalOut.toStringAsFixed(0)} ${_item.unitShortLabel}",
+                            sub:
+                                "+${_totalIn.toStringAsFixed(0)} approvisionnés",
                           ),
                         ),
                       ],
@@ -245,7 +238,8 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                   ),
                   Text(
                     "${_filteredMovements.length}/${_movements.length} saisie(s)",
-                    style: const TextStyle(fontSize: 12, color: AppColors.textMutedLight),
+                    style: const TextStyle(
+                        fontSize: 12, color: AppColors.textMutedLight),
                   ),
                 ],
               ),
@@ -257,7 +251,8 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _buildFilterChip(null, "Tous (${_movements.length})", isDark),
+                      _buildFilterChip(
+                          null, "Tous (${_movements.length})", isDark),
                       const SizedBox(width: 6),
                       _buildFilterChip(
                         "INCOMING",
@@ -290,7 +285,8 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                 const Center(
                   child: Padding(
                     padding: EdgeInsets.all(32),
-                    child: BrandLoader(message: "Chargement de l'historique..."),
+                    child:
+                        BrandLoader(message: "Chargement de l'historique..."),
                   ),
                 )
               else if (_filteredMovements.isEmpty)
@@ -305,11 +301,17 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                   ),
                   child: Column(
                     children: [
-                      Icon(Icons.inventory_2_outlined, size: 48, color: AppColors.textMutedLight.withValues(alpha: 0.5)),
+                      Icon(Icons.inventory_2_outlined,
+                          size: 48,
+                          color:
+                              AppColors.textMutedLight.withValues(alpha: 0.5)),
                       const SizedBox(height: 12),
                       Text(
-                        _movements.isEmpty ? "Aucun mouvement pour ce produit" : "Aucun mouvement dans ce filtre",
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        _movements.isEmpty
+                            ? "Aucun mouvement pour ce produit"
+                            : "Aucun mouvement dans ce filtre",
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 14),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -317,7 +319,8 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                             ? "Les approvisionnements et les consommations par les bandes apparaîtront ici."
                             : "Changez de filtre pour afficher les autres mouvements.",
                         textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 12, color: AppColors.textMutedLight),
+                        style: const TextStyle(
+                            fontSize: 12, color: AppColors.textMutedLight),
                       ),
                     ],
                   ),
@@ -356,7 +359,9 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                             child: Icon(
                               isIncoming
                                   ? Icons.add_shopping_cart_rounded
-                                  : (isFeeding ? Icons.restaurant_rounded : Icons.remove_circle_outline),
+                                  : (isFeeding
+                                      ? Icons.restaurant_rounded
+                                      : Icons.remove_circle_outline),
                               color: color,
                               size: 18,
                             ),
@@ -367,11 +372,14 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
                                       m.typeLabel,
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13),
                                     ),
                                     Text(
                                       "${isIncoming ? '+' : '-'}${m.quantity.toStringAsFixed(m.quantity % 1 == 0 ? 0 : 1)} ${m.unitShortLabel}",
@@ -392,35 +400,39 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                                   children: [
                                     Text(
                                       m.movementDate,
-                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textMutedLight),
+                                      style: const TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.textMutedLight),
                                     ),
-                                    if (m.flockName != null && m.flockName!.isNotEmpty)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.primarySoft,
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
-                                        child: Text(
-                                          "Lot : ${m.flockName}",
-                                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primary),
-                                        ),
+                                    if (m.flockName != null &&
+                                        m.flockName!.isNotEmpty)
+                                      Text(
+                                        "Lot : ${m.flockName}",
+                                        style: const TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w600),
                                       ),
                                     if (m.totalCost != null && m.totalCost! > 0)
                                       Text(
                                         "• ${CurrencyFormatter.formatFcfa(m.totalCost!)} FCFA",
-                                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary),
+                                        style: const TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600),
                                       ),
                                   ],
                                 ),
-                                if (m.reason != null && m.reason!.trim().isNotEmpty) ...[
+                                if (m.reason != null &&
+                                    m.reason!.trim().isNotEmpty) ...[
                                   const SizedBox(height: 4),
                                   Text(
                                     m.reason!,
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontStyle: FontStyle.italic,
-                                      color: isDark ? AppColors.textMutedDark : AppColors.textMutedLight,
+                                      color: isDark
+                                          ? AppColors.textMutedDark
+                                          : AppColors.textMutedLight,
                                     ),
                                   ),
                                 ],
@@ -439,7 +451,8 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
     );
   }
 
-  Widget _buildFilterChip(String? type, String label, bool isDark, {Color activeColor = AppColors.primary}) {
+  Widget _buildFilterChip(String? type, String label, bool isDark,
+      {Color activeColor = AppColors.primary}) {
     final isSelected = _movementTypeFilter == type;
     return InkWell(
       onTap: () => setState(() => _movementTypeFilter = type),
@@ -447,10 +460,14 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: isSelected ? activeColor : (isDark ? AppColors.surfaceDark : AppColors.surfaceLight),
+          color: isSelected
+              ? activeColor
+              : (isDark ? AppColors.surfaceDark : AppColors.surfaceLight),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? activeColor : (isDark ? AppColors.borderDark : AppColors.borderLight),
+            color: isSelected
+                ? activeColor
+                : (isDark ? AppColors.borderDark : AppColors.borderLight),
           ),
         ),
         child: Text(
@@ -458,7 +475,9 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
           style: TextStyle(
             fontSize: 11,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-            color: isSelected ? Colors.white : (isDark ? AppColors.textMutedDark : AppColors.textMutedLight),
+            color: isSelected
+                ? Colors.white
+                : (isDark ? AppColors.textMutedDark : AppColors.textMutedLight),
           ),
         ),
       ),
@@ -470,25 +489,17 @@ class _ProductKpiCard extends StatelessWidget {
   final String label;
   final String value;
   final String sub;
-  final Color color;
 
   const _ProductKpiCard({
     required this.label,
     required this.value,
     required this.sub,
-    required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(12),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -498,23 +509,21 @@ class _ProductKpiCard extends StatelessWidget {
               fontSize: 9.5,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.5,
-              color: AppColors.textMutedLight,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w900,
               fontFamily: 'monospace',
-              color: color,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             sub,
-            style: const TextStyle(fontSize: 9.5, color: AppColors.textMutedLight),
+            style: const TextStyle(fontSize: 9.5),
             overflow: TextOverflow.ellipsis,
           ),
         ],

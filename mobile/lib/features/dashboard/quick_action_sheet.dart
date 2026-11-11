@@ -110,7 +110,7 @@ class QuickActionSheet extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      "Opérations autorisées pour votre compte",
+                      "Choisir une opération",
                       style: TextStyle(fontSize: 11, color: AppColors.textMutedLight),
                     ),
                   ],
@@ -134,107 +134,75 @@ class QuickActionSheet extends ConsumerWidget {
                 ),
               )
             else ...[
-              // Grille d'actions filtrées
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 2.2,
-                children: [
-                  // 1. Vente de volailles (Conditionné par gestion de lot ET droit financier)
-                  if (canFinance && canMovement && onRecordPoultrySale != null)
-                    _ActionButton(
-                      icon: Icons.shopping_bag_outlined,
-                      label: "Vente volailles",
-                      subtitle: "Poulets ou réforme",
-                      color: AppColors.success,
-                      onTap: () {
-                        Navigator.pop(context);
-                        onRecordPoultrySale!();
-                      },
-                    ),
-
-                  // 2. Vente d'œufs (Conditionné par ponte ET droit financier)
-                  if (canFinance && canEgg && onRecordEggSale != null)
-                    _ActionButton(
-                      icon: Icons.point_of_sale_rounded,
-                      label: "Vente d'œufs",
-                      subtitle: "Plateaux de table",
-                      color: AppColors.success,
-                      onTap: () {
-                        Navigator.pop(context);
-                        onRecordEggSale!();
-                      },
-                    ),
-
-                  // 3. Ramassage d'œufs (Uniquement si ponte autorisée & non-chair)
-                  if (canEgg)
-                    _ActionButton(
-                      icon: Icons.egg_outlined,
-                      label: "Ponte d'œufs",
-                      subtitle: "Ramassage du lot",
-                      color: AppColors.accent,
-                      onTap: () {
-                        Navigator.pop(context);
-                        onRecordEgg();
-                      },
-                    ),
-
-                  // 4. Nourrir / Distribution d'aliment (Conditionné par gestion de stock/ration)
-                  if (canFeed)
-                    _ActionButton(
-                      icon: Icons.restaurant_outlined,
-                      label: "Nourrir",
-                      subtitle: "Aliment distribué",
-                      color: AppColors.primary,
-                      onTap: () {
-                        Navigator.pop(context);
-                        onRecordFeeding();
-                      },
-                    ),
-
-                  // 5. Autre Recette / Encaissement divers
-                  if (canFinance)
-                    _ActionButton(
-                      icon: Icons.trending_up,
-                      label: "Autre Recette",
-                      subtitle: "Fumier, sacs, divers",
-                      color: AppColors.success,
-                      onTap: () {
-                        Navigator.pop(context);
-                        onRecordIncome();
-                      },
-                    ),
-
-                  // 6. Dépense / Achat (Conditionné par rôle financier)
-                  if (canFinance)
-                    _ActionButton(
-                      icon: Icons.trending_down,
-                      label: "Dépense",
-                      subtitle: "Achat ou charge",
-                      color: AppColors.danger,
-                      onTap: () {
-                        Navigator.pop(context);
-                        onRecordExpense();
-                      },
-                    ),
-
-                  // Déclaration de mortalité
-                  if (canMovement)
-                    _ActionButton(
-                      icon: Icons.heart_broken_rounded,
-                      label: "Mortalité",
-                      subtitle: "Pertes de sujets",
-                      color: AppColors.danger,
-                      onTap: () {
-                        Navigator.pop(context);
-                        onRecordMovement();
-                      },
-                    ),
-                ],
-              ),
+              _actionSection(context, "Élevage & production", [
+                if (canEgg)
+                  _ActionButton(
+                    icon: Icons.egg_outlined,
+                    label: "Collecte d'œufs",
+                    onTap: () {
+                      Navigator.pop(context);
+                      onRecordEgg();
+                    },
+                  ),
+                if (canFeed)
+                  _ActionButton(
+                    icon: Icons.restaurant_outlined,
+                    label: "Nourrir",
+                    onTap: () {
+                      Navigator.pop(context);
+                      onRecordFeeding();
+                    },
+                  ),
+                if (canMovement)
+                  _ActionButton(
+                    icon: Icons.heart_broken_rounded,
+                    label: "Mortalité",
+                    onTap: () {
+                      Navigator.pop(context);
+                      onRecordMovement();
+                    },
+                  ),
+              ]),
+              _actionSection(context, "Ventes", [
+                if (canFinance && canMovement && onRecordPoultrySale != null)
+                  _ActionButton(
+                    icon: Icons.shopping_bag_outlined,
+                    label: "Vente de volailles",
+                    onTap: () {
+                      Navigator.pop(context);
+                      onRecordPoultrySale!();
+                    },
+                  ),
+                if (canFinance && canEgg && onRecordEggSale != null)
+                  _ActionButton(
+                    icon: Icons.point_of_sale_rounded,
+                    label: "Vente d'œufs",
+                    onTap: () {
+                      Navigator.pop(context);
+                      onRecordEggSale!();
+                    },
+                  ),
+              ]),
+              _actionSection(context, "Finances", [
+                if (canFinance)
+                  _ActionButton(
+                    icon: Icons.trending_up,
+                    label: "Autre recette",
+                    onTap: () {
+                      Navigator.pop(context);
+                      onRecordIncome();
+                    },
+                  ),
+                if (canFinance)
+                  _ActionButton(
+                    icon: Icons.trending_down,
+                    label: "Dépense",
+                    onTap: () {
+                      Navigator.pop(context);
+                      onRecordExpense();
+                    },
+                  ),
+              ]),
             ],
           ],
         ),
@@ -242,71 +210,77 @@ class QuickActionSheet extends ConsumerWidget {
     ),
   );
 }
+
+  Widget _actionSection(BuildContext context, String title, List<Widget> actions) {
+    if (actions.isEmpty) return const SizedBox.shrink();
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: isDark ? AppColors.primaryLight : AppColors.primary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          ...actions,
+        ],
+      ),
+    );
+  }
 }
 
 class _ActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
-  final String subtitle;
-  final Color color;
   final VoidCallback onTap;
 
   const _ActionButton({
     required this.icon,
     required this.label,
-    required this.subtitle,
-    required this.color,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final iconColor = isDark ? AppColors.primaryLight : AppColors.primary;
+    final mutedColor = isDark ? AppColors.textMutedDark : AppColors.textMutedLight;
+
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withValues(alpha: 0.25)),
-        ),
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(7),
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(10),
+                color: iconColor.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(9),
               ),
-              child: Icon(icon, color: color, size: 18),
+              child: Icon(icon, color: iconColor, size: 18),
             ),
-            const SizedBox(width: 9),
+            const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                      color: Theme.of(context).textTheme.bodyMedium?.color,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: AppColors.textMutedLight,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                ),
               ),
             ),
+            Icon(Icons.chevron_right_rounded, size: 18, color: mutedColor),
           ],
         ),
       ),

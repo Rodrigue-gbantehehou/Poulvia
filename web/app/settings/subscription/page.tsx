@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   CreditCard,
@@ -169,21 +169,6 @@ function PlanCard({ plan, currentSku, billingCycle, onSelect }: PlanCardProps) {
         ))}
       </div>
 
-      {/* Quotas */}
-      <div className="grid grid-cols-2 gap-1.5 mb-4 text-center">
-        {[
-          { label: "Fermes", val: plan.quotas.maxFarms },
-          { label: "Bandes", val: plan.quotas.maxFlocks },
-          { label: "Membres", val: plan.quotas.maxMembers },
-          { label: "Bâtiments", val: plan.quotas.maxBuildings },
-        ].map(({ label, val }) => (
-          <div key={label} className="rounded-lg border border-border bg-surface-muted px-2 py-1.5">
-            <p className="text-xs font-bold text-foreground">{val >= 9999 ? "∞" : val}</p>
-            <p className="text-[10px] text-muted">{label}</p>
-          </div>
-        ))}
-      </div>
-
       {/* CTA */}
       <button
         onClick={() => onSelect(plan)}
@@ -202,7 +187,7 @@ function PlanCard({ plan, currentSku, billingCycle, onSelect }: PlanCardProps) {
 /* ─── Page principale ─── */
 
 export default function SubscriptionPage() {
-  const { activeFarm, activePlan, isSubscriptionOwner, isLoading: authLoading } = useAuth();
+  const { activeFarm, activePlan, isSubscriptionOwner, isLoading: authLoading, refreshMe } = useAuth();
 
   const [publicPlans, setPublicPlans] = useState<PublicPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -213,18 +198,12 @@ export default function SubscriptionPage() {
   );
 
   const [upgradeTarget, setUpgradeTarget] = useState<PublicPlan | null>(null);
-  const [upgradeMessage, setUpgradeMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [upgradeError, setUpgradeError] = useState<string | null>(null);
+  const [paymentNotice, setPaymentNotice] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isSubscriptionOwner) {
-      fetchPlans();
-    }
-  }, [isSubscriptionOwner, activeFarm?.id, activeFarm?.subscription?.billingCycle]);
-
-  async function fetchPlans() {
+  const fetchPlans = useCallback(async () => {
     try {
       const result = await api.subscriptions.getPlans();
       setError(null);
@@ -244,7 +223,44 @@ export default function SubscriptionPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [activeFarm]);
+
+  useEffect(() => {
+    if (isSubscriptionOwner) window.setTimeout(() => void fetchPlans(), 0);
+  }, [isSubscriptionOwner, fetchPlans]);
+
+  useEffect(() => {
+    const paymentId = new URLSearchParams(window.location.search).get("paymentId");
+    if (!paymentId) return;
+    let stopped = false;
+    let attempts = 0;
+    const checkPayment = async () => {
+      try {
+        const payment = await api.subscriptions.getPayment(paymentId);
+        if (stopped) return;
+        if (payment.status === "PAID") {
+          setPaymentNotice("Paiement confirmé. Votre abonnement est maintenant actif.");
+          setSuccessMsg(null);
+          stopped = true;
+          window.history.replaceState({}, "", window.location.pathname);
+          void fetchPlans();
+          void refreshMe();
+        } else if (payment.status === "FAILED") {
+          setPaymentNotice("Le paiement n’a pas été confirmé. Vous pouvez réessayer.");
+          stopped = true;
+          window.history.replaceState({}, "", window.location.pathname);
+        } else if (++attempts >= 30) {
+          setPaymentNotice("Le paiement est en attente de confirmation. Cette page se mettra à jour dès réception du webhook.");
+          stopped = true;
+        }
+      } catch {
+        if (++attempts >= 30) stopped = true;
+      }
+    };
+    void checkPayment();
+    const timer = window.setInterval(() => { if (!stopped) void checkPayment(); }, 3000);
+    return () => { stopped = true; window.clearInterval(timer); };
+  }, [fetchPlans, refreshMe]);
 
   async function handleRequestUpgrade(e: React.FormEvent) {
     e.preventDefault();
@@ -252,15 +268,13 @@ export default function SubscriptionPage() {
     setIsSending(true);
     setUpgradeError(null);
     try {
-      const res = await api.subscriptions.requestUpgrade({
+      const payment = await api.subscriptions.createCheckout({
         farmId: activeFarm.id,
-        targetPlan: upgradeTarget.sku,
+        plan: upgradeTarget.sku,
         billingCycle,
-        message: upgradeMessage.trim(),
       });
-      setSuccessMsg(res.message || `Demande envoyée pour l’offre Poulvia (${billingCycle === "ANNUALLY" ? "annuelle" : "mensuelle"}).`);
-      setUpgradeTarget(null);
-      setUpgradeMessage("");
+      if (!payment.checkoutUrl) throw new Error("Le lien de paiement n’a pas été créé.");
+      window.location.assign(payment.checkoutUrl);
     } catch (err: unknown) {
       setUpgradeError((err as Error).message || "Erreur lors de l'envoi de la demande.");
     } finally {
@@ -274,6 +288,7 @@ export default function SubscriptionPage() {
   const trialExpired =
     (currentStatus === "TRIAL" || currentStatus === "SUSPENDED") &&
     !!trialEndsAt &&
+    // eslint-disable-next-line react-hooks/purity
     new Date(trialEndsAt).getTime() <= Date.now();
   const singlePaidOffer = publicPlans.filter((plan) => plan.sku === "STANDARD");
   const standardPlan = singlePaidOffer[0];
@@ -297,7 +312,6 @@ export default function SubscriptionPage() {
 
   function openUpgrade(plan: PublicPlan) {
     setUpgradeTarget(plan);
-    setUpgradeMessage("");
     setUpgradeError(null);
     setSuccessMsg(null);
   }
@@ -346,6 +360,12 @@ export default function SubscriptionPage() {
           </div>
         )}
 
+        {paymentNotice && (
+          <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm text-foreground" role="status">
+            {paymentNotice}
+          </div>
+        )}
+
         {currentSku !== "" && currentSku !== "STANDARD" && (
           <div className="rounded-xl border border-border bg-surface-muted p-4 text-xs text-muted">
             {currentSku === "FREE"
@@ -359,7 +379,7 @@ export default function SubscriptionPage() {
           <div className="flex items-start gap-3 rounded-xl border border-success/30 bg-success/5 p-4">
             <CheckCircle2 className="h-5 w-5 text-success mt-0.5 shrink-0" />
             <div className="flex-1">
-              <p className="text-sm font-semibold text-success">Demande envoyée !</p>
+              <p className="text-sm font-semibold text-success">Information</p>
               <p className="text-xs text-muted mt-0.5">{successMsg}</p>
             </div>
             <button
@@ -486,8 +506,7 @@ export default function SubscriptionPage() {
                 Comment fonctionne le changement d&apos;offre ?
               </p>
               <p className="text-xs text-muted mt-1 leading-relaxed">
-                Lorsque vous demandez un changement de formule, une notification est envoyée à l&apos;équipe
-                administratrice de Poulvia. Votre abonnement sera activé sans interruption de vos activités.
+                Le paiement est traité par FedaPay. Poulvia active l’abonnement uniquement après confirmation serveur du paiement.
               </p>
             </div>
           </div>
@@ -502,7 +521,7 @@ export default function SubscriptionPage() {
             <div className="flex items-start justify-between border-b border-border p-5">
               <div>
                 <p className="text-xs text-primary font-medium uppercase tracking-wider mb-0.5">
-                  Changement de formule
+                  Paiement sécurisé
                 </p>
                 <h3 className="text-base font-bold text-foreground">
                   Choisir l&apos;offre{" "}
@@ -553,20 +572,6 @@ export default function SubscriptionPage() {
                 </div>
               </div>
 
-              {/* Message facultatif */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">
-                  Message pour l&apos;administrateur (facultatif)
-                </label>
-                <textarea
-                  value={upgradeMessage}
-                  onChange={(e) => setUpgradeMessage(e.target.value)}
-                  placeholder="Précisez un besoin particulier, date souhaitée, mode de règlement..."
-                  rows={3}
-                  className="w-full rounded-xl border border-border bg-surface-muted px-3 py-2.5 text-xs text-foreground placeholder:text-muted resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                />
-              </div>
-
               <div className="flex gap-3">
                 <button
                   type="button"
@@ -584,7 +589,7 @@ export default function SubscriptionPage() {
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <>
-                      Confirmer la demande
+                  Continuer vers FedaPay
                       <ArrowUpRight className="h-3.5 w-3.5" />
                     </>
                   )}

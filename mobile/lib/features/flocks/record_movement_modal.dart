@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/design_system/app_modal_surface.dart';
 import '../../core/theme/app_theme.dart';
 import '../dashboard/dashboard_provider.dart';
 import 'flock_provider.dart';
@@ -61,7 +62,6 @@ class _RecordMovementModalState extends ConsumerState<RecordMovementModal> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surfaceColor = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
     final flockState = ref.watch(flockProvider);
     final flocks = flockState.flocks;
@@ -70,18 +70,7 @@ class _RecordMovementModalState extends ConsumerState<RecordMovementModal> {
       _selectedFlockId = flocks.first.id;
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border.all(color: borderColor),
-      ),
-      padding: EdgeInsets.fromLTRB(
-        20,
-        12,
-        20,
-        MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 20,
-      ),
+    return AppModalSurface(
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -146,7 +135,7 @@ class _RecordMovementModalState extends ConsumerState<RecordMovementModal> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
+                  color: isDark ? AppColors.surfaceDark : AppColors.inputFillLight,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: borderColor),
                 ),
@@ -199,9 +188,7 @@ class _RecordMovementModalState extends ConsumerState<RecordMovementModal> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.grey.shade900
-                      : Colors.grey.shade100,
+                  color: isDark ? AppColors.surfaceDark : AppColors.inputFillLight,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: borderColor),
                 ),
