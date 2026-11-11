@@ -121,7 +121,8 @@ function FlockDetailContent() {
   const [reportModalOpen, setReportModalOpen] = useState(false);
 
   const canViewEggs = hasModule("eggs");
-  const canViewHealth = Boolean(activeFarm?.id && hasModule("health"));
+  const canViewHealth = Boolean(activeFarm?.id && hasModule("health")) &&
+    (hasPermission("health:view") || hasPermission("health:read") || isOwner);
   const canViewInventory = Boolean(activeFarm?.id && hasModule("inventory"));
   const canViewFinance = hasModule("finance") &&
     (hasPermission("finance:read") || hasPermission("finance:view") || isOwner);
@@ -653,9 +654,7 @@ function FlockDetailContent() {
   const canRecordMovement = hasPermission("flock:movement") || hasPermission("flock:create") || isOwner;
   const canCreateEgg = hasModule("eggs") && isLayer && (hasPermission("egg:create") || isOwner);
   const canViewEgg = hasModule("eggs") && isLayer && (hasPermission("egg:read") || hasPermission("egg:view") || isOwner);
-  const canViewFinance = hasModule("finance") && (hasPermission("finance:read") || hasPermission("finance:view") || isOwner);
   const canCreateFinance = hasModule("finance") && (hasPermission("finance:create") || isOwner);
-  const canViewHealth = hasModule("health") && (hasPermission("health:view") || hasPermission("health:read") || isOwner);
   const canManageHealth = hasModule("health") && (hasPermission("health:manage") || hasPermission("health:create") || isOwner);
   const canFeed = hasModule("inventory") && (hasPermission("inventory:movement") || hasPermission("flock:update") || isOwner);
   const canUpdateFlock = hasPermission("flock:update") || isOwner;
