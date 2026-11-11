@@ -7,14 +7,12 @@ import {
   Search,
   Phone,
   Mail,
-  MapPin,
   Edit2,
   Trash2,
   ShoppingBag,
   Truck,
   Building,
   RefreshCw,
-  ExternalLink,
   Users,
   AlertCircle,
   Lock,
@@ -30,7 +28,6 @@ import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
 import { api } from "@/lib/api-client";
 import { Contact, ContactType } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
 import { ModuleLockedState } from "@/components/ui/module-locked-state";
 import type { LucideIcon } from "lucide-react";
 

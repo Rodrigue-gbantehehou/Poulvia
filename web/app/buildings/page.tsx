@@ -7,8 +7,6 @@ import {
   Plus,
   Edit3,
   Trash2,
-  Building2,
-  Box,
   RefreshCw,
   Users,
   CheckCircle2,
@@ -90,7 +88,6 @@ export default function BuildingsPage() {
   };
 
   const totalCapacity = buildings.reduce((sum, b) => sum + (Number(b.capacity) || 0), 0);
-  const totalPoultryHouses = buildings.filter((b) => b.type === "POULTRY_HOUSE" || b.type === "BROODER").length;
 
   if (!hasModule("buildings")) {
     return (

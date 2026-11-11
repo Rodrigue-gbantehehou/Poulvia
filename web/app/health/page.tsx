@@ -16,13 +16,9 @@ import {
   Sparkles,
   ShieldAlert,
   Trash2,
-  Edit2,
   Check,
-  Building,
-  User,
   Coins,
   AlertCircle,
-  Lock,
 } from "lucide-react";
 import { Shell } from "@/components/layout/shell";
 import { StatCard } from "@/components/ui/stat-card";
@@ -36,7 +32,6 @@ import { api } from "@/lib/api-client";
 import {
   Flock,
   HealthTreatment,
-  HealthTreatmentStatus,
   HealthTreatmentType,
   AdministrationMethod,
   InventoryItem,
