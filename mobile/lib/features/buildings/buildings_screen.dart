@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/building.dart';
 import '../../core/theme/app_theme.dart';
@@ -58,7 +58,7 @@ class _BuildingsScreenState extends ConsumerState<BuildingsScreen> {
           IconButton(
             icon: Icon(
               isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-              color: isDark ? AppColors.accent : null,
+              color: isDark ? AppColors.primaryLight : null,
               size: 20,
             ),
             tooltip: isDark ? "Activer le mode clair" : "Activer le mode sombre",
@@ -1174,7 +1174,7 @@ class _TypeSelectionTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? color.withValues(alpha: 0.15)
-              : (isDark ? Colors.grey.shade900 : Colors.grey.shade100),
+              : (isDark ? AppColors.surfaceDark : AppColors.inputFillLight),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? color : (isDark ? AppColors.borderDark : AppColors.borderLight),

@@ -3,19 +3,19 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Building2,
-  Save,
-  CheckCircle2,
   AlertCircle,
-  Settings,
-  Phone,
-  Mail,
-  FileText,
-  Trash2,
   AlertTriangle,
+  Building2,
+  CheckCircle2,
+  FileText,
+  Mail,
+  MapPin,
+  Phone,
+  Save,
+  Settings,
+  Trash2,
 } from "lucide-react";
 import { Shell } from "@/components/layout/shell";
-import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { PageHeader } from "@/components/ui/page-header";
 import { useAuth } from "@/context/auth-context";
@@ -52,10 +52,56 @@ function getFarmSettingsValues(farm: Farm | null): FarmSettingsValues {
   };
 }
 
+const inputClass =
+  "w-full rounded-xl border border-border bg-surface-muted px-3 py-2.5 text-sm text-foreground placeholder:text-muted/60 focus:border-primary focus:bg-surface focus:outline-hidden transition-colors";
+
+function Field({
+  label,
+  htmlFor,
+  hint,
+  children,
+}: {
+  label: string;
+  htmlFor: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label htmlFor={htmlFor} className="mb-1.5 block text-xs font-semibold text-foreground">
+        {label}
+      </label>
+      {children}
+      {hint && <p className="mt-1.5 text-[11px] leading-5 text-muted">{hint}</p>}
+    </div>
+  );
+}
+
+function SectionHeading({
+  icon,
+  title,
+  description,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="mb-5 flex items-start gap-3 border-b border-border pb-4">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary">
+        {icon}
+      </span>
+      <div>
+        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+        <p className="mt-1 text-xs leading-5 text-muted">{description}</p>
+      </div>
+    </div>
+  );
+}
+
 export default function FarmSettingsPage() {
   const router = useRouter();
   const { activeFarm, refreshMe, isOwner } = useAuth();
-
   const [farmDraft, setFarmDraft] = useState(() => ({
     farmId: activeFarm?.id ?? null,
     values: getFarmSettingsValues(activeFarm),
@@ -77,41 +123,34 @@ export default function FarmSettingsPage() {
     rccm,
     description,
   } = farmValues;
-  function setFarmField<Key extends keyof FarmSettingsValues>(key: Key, value: FarmSettingsValues[Key]) {
+
+  function setFarmField<Key extends keyof FarmSettingsValues>(
+    key: Key,
+    value: FarmSettingsValues[Key],
+  ) {
     setFarmDraft({
       farmId: activeFarm?.id ?? null,
       values: { ...farmValues, [key]: value },
     });
   }
-  const setName = (value: string) => setFarmField("name", value);
-  const setCode = (value: string) => setFarmField("code", value);
-  const setProductionType = (value: FarmSettingsValues["productionType"]) => setFarmField("productionType", value);
-  const setLocationCity = (value: string) => setFarmField("locationCity", value);
-  const setLocationCountry = (value: string) => setFarmField("locationCountry", value);
-  const setPhone = (value: string) => setFarmField("phone", value);
-  const setEmail = (value: string) => setFarmField("email", value);
-  const setAddress = (value: string) => setFarmField("address", value);
-  const setIfu = (value: string) => setFarmField("ifu", value);
-  const setRccm = (value: string) => setFarmField("rccm", value);
-  const setDescription = (value: string) => setFarmField("description", value);
+
+  const setProductionType = (value: FarmSettingsValues["productionType"]) =>
+    setFarmField("productionType", value);
   const [savingFarm, setSavingFarm] = useState(false);
   const [farmSuccessMsg, setFarmSuccessMsg] = useState<string | null>(null);
   const [farmErrorMsg, setFarmErrorMsg] = useState<string | null>(null);
-
-  // Suppression Exploitation
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
   const [deletingFarm, setDeletingFarm] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  async function handleSaveFarm(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSaveFarm(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     if (!activeFarm?.id || !name.trim()) return;
 
     setSavingFarm(true);
     setFarmSuccessMsg(null);
     setFarmErrorMsg(null);
-
     try {
       await api.farms.update(activeFarm.id, {
         name: name.trim(),
@@ -126,12 +165,15 @@ export default function FarmSettingsPage() {
         rccm: rccm.trim() || undefined,
         description: description.trim() || undefined,
       });
-
       await refreshMe();
-      setFarmSuccessMsg("Les informations et coordonnées de l'exploitation ont été enregistrées avec succès !");
+      setFarmSuccessMsg("Les informations de l’exploitation ont été enregistrées.");
       setTimeout(() => setFarmSuccessMsg(null), 4000);
-    } catch (err: unknown) {
-      setFarmErrorMsg(err instanceof Error ? err.message : "Erreur lors de la mise à jour de l'exploitation.");
+    } catch (error) {
+      setFarmErrorMsg(
+        error instanceof Error
+          ? error.message
+          : "Impossible de mettre à jour cette exploitation.",
+      );
     } finally {
       setSavingFarm(false);
     }
@@ -140,7 +182,7 @@ export default function FarmSettingsPage() {
   async function handleDeleteFarm() {
     if (!activeFarm?.id) return;
     if (deleteConfirmName.trim() !== activeFarm.name.trim()) {
-      setDeleteError("Le nom saisi ne correspond pas exactement au nom de l'exploitation.");
+      setDeleteError("Le nom saisi ne correspond pas au nom de l’exploitation.");
       return;
     }
 
@@ -151,8 +193,12 @@ export default function FarmSettingsPage() {
       await refreshMe();
       setDeleteModalOpen(false);
       router.push("/");
-    } catch (err: unknown) {
-      setDeleteError(err instanceof Error ? err.message : "Erreur lors de la suppression de l'exploitation.");
+    } catch (error) {
+      setDeleteError(
+        error instanceof Error
+          ? error.message
+          : "Impossible de supprimer cette exploitation.",
+      );
     } finally {
       setDeletingFarm(false);
     }
@@ -161,278 +207,269 @@ export default function FarmSettingsPage() {
   return (
     <Shell>
       <PageHeader
-        title="Paramètres de l'exploitation"
-        subtitle={activeFarm ? `Ferme active : ${activeFarm.name}` : undefined}
+        title="Paramètres de l’exploitation"
+        subtitle={
+          activeFarm
+            ? `Informations générales de ${activeFarm.name}`
+            : "Configurez les informations de votre ferme."
+        }
         icon={<Settings className="h-4 w-4" />}
+        backHref="/settings"
         actions={
           activeFarm ? (
-            <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary border border-primary/20">
-              {activeFarm.name}
-            </span>
+            <button
+              type="submit"
+              form="farm-settings-form"
+              disabled={savingFarm}
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Save className="h-4 w-4" />
+              {savingFarm ? "Enregistrement…" : "Enregistrer"}
+            </button>
           ) : undefined
         }
       />
 
       {!activeFarm ? (
-        <div className="rounded-2xl border border-border bg-surface p-8 text-center max-w-lg mx-auto">
-          <Building2 className="mx-auto h-12 w-12 text-muted mb-3" />
-          <h2 className="text-base font-bold text-foreground">Aucune exploitation active</h2>
-          <p className="mt-1 text-xs text-muted">
-            Veuillez sélectionner ou créer une ferme depuis l&apos;en-tête pour configurer ses paramètres.
+        <section className="mx-auto max-w-xl border-y border-border py-12 text-center">
+          <Building2 className="mx-auto h-9 w-9 text-muted" />
+          <h2 className="mt-4 text-base font-semibold text-foreground">Aucune exploitation active</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">
+            Sélectionnez ou créez une exploitation depuis le menu en haut de page pour accéder à ses paramètres.
           </p>
-        </div>
+        </section>
       ) : (
-        <div className="max-w-3xl mx-auto space-y-6">
-          <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-xs">
-            <div className="flex items-center justify-between pb-4 border-b border-border mb-5">
-              <div>
-                <h2 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
-                  <Building2 className="h-4 w-4 text-primary" />
-                  <span>Identité & Coordonnées</span>
-                </h2>
+        <div className="mx-auto max-w-6xl space-y-6">
+          <form id="farm-settings-form" onSubmit={handleSaveFarm} className="space-y-5">
+            {(farmSuccessMsg || farmErrorMsg) && (
+              <div
+                role={farmErrorMsg ? "alert" : "status"}
+                className={
+                  farmErrorMsg
+                    ? "flex items-start gap-2.5 rounded-xl border border-danger/20 bg-danger-soft p-3.5 text-sm text-danger"
+                    : "flex items-start gap-2.5 rounded-xl border border-success/20 bg-success-soft p-3.5 text-sm text-success"
+                }
+              >
+                {farmErrorMsg ? (
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                ) : (
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+                )}
+                <span>{farmErrorMsg || farmSuccessMsg}</span>
               </div>
-              <Badge variant="success" size="sm">
-                Exploitation Active
-              </Badge>
+            )}
+
+            <div className="grid gap-5 lg:grid-cols-2">
+              <div className="space-y-5">
+                <section className="rounded-2xl border border-border bg-surface p-5 shadow-xs sm:p-6">
+                  <SectionHeading
+                    icon={<Building2 className="h-4 w-4" />}
+                    title="Identité de l’exploitation"
+                    description="Nom et activité principale de la ferme."
+                  />
+                  <div className="space-y-4">
+                    <Field label="Nom de l’exploitation *" htmlFor="farm-name">
+                      <input
+                        id="farm-name"
+                        type="text"
+                        required
+                        value={name}
+                        onChange={(event) => setFarmField("name", event.target.value)}
+                        placeholder="Ex. Ferme avicole de Calavi"
+                        className={inputClass}
+                      />
+                    </Field>
+                    <Field
+                      label="Activité de l’exploitation"
+                      htmlFor="farm-description"
+                      hint="Ce texte peut apparaître sur les reçus et documents PDF."
+                    >
+                      <input
+                        id="farm-description"
+                        type="text"
+                        value={description}
+                        onChange={(event) => setFarmField("description", event.target.value)}
+                        placeholder="Ex. Production d’œufs et poulets de chair"
+                        className={inputClass}
+                      />
+                    </Field>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <Field
+                        label="Code de la ferme"
+                        htmlFor="farm-code"
+                        hint="Utilisé comme préfixe pour identifier les bandes."
+                      >
+                        <input
+                          id="farm-code"
+                          type="text"
+                          value={code}
+                          onChange={(event) => setFarmField("code", event.target.value)}
+                          placeholder="Ex. FRM-CAL1"
+                          className={`${inputClass} font-mono`}
+                        />
+                      </Field>
+                      <Field label="Type de production" htmlFor="farm-production-type">
+                        <select
+                          id="farm-production-type"
+                          value={productionType}
+                          onChange={(event) => {
+                            const value = event.target.value;
+                            if (value === "LAYER" || value === "BROILER" || value === "MIXED") {
+                              setProductionType(value);
+                            }
+                          }}
+                          className={inputClass}
+                        >
+                          <option value="LAYER">Poules pondeuses</option>
+                          <option value="BROILER">Poulets de chair</option>
+                          <option value="MIXED">Élevage mixte</option>
+                        </select>
+                      </Field>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="rounded-2xl border border-border bg-surface p-5 shadow-xs sm:p-6">
+                  <SectionHeading
+                    icon={<MapPin className="h-4 w-4" />}
+                    title="Localisation"
+                    description="Lieu d’implantation de l’exploitation."
+                  />
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Commune ou ville" htmlFor="farm-city">
+                      <input
+                        id="farm-city"
+                        type="text"
+                        value={locationCity}
+                        onChange={(event) => setFarmField("locationCity", event.target.value)}
+                        placeholder="Ex. Calavi, Allada, Parakou"
+                        className={inputClass}
+                      />
+                    </Field>
+                    <Field label="Pays" htmlFor="farm-country">
+                      <select
+                        id="farm-country"
+                        value={locationCountry}
+                        onChange={(event) => setFarmField("locationCountry", event.target.value)}
+                        className={inputClass}
+                      >
+                        <option value="BJ">Bénin</option>
+                        <option value="TG">Togo</option>
+                        <option value="CI">Côte d’Ivoire</option>
+                        <option value="SN">Sénégal</option>
+                        <option value="NG">Nigeria</option>
+                      </select>
+                    </Field>
+                  </div>
+                </section>
+              </div>
+
+              <div className="space-y-5">
+                <section className="rounded-2xl border border-border bg-surface p-5 shadow-xs sm:p-6">
+                  <SectionHeading
+                    icon={<FileText className="h-4 w-4" />}
+                    title="Coordonnées et documents"
+                    description="Informations qui peuvent figurer sur les reçus et documents officiels."
+                  />
+                  <div className="space-y-4">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <Field label="Téléphone" htmlFor="farm-phone">
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-3 h-4 w-4 text-muted" aria-hidden="true" />
+                          <input
+                            id="farm-phone"
+                            type="tel"
+                            value={phone}
+                            onChange={(event) => setFarmField("phone", event.target.value)}
+                            placeholder="+229 97 00 00 00"
+                            className={`${inputClass} pl-9`}
+                          />
+                        </div>
+                      </Field>
+                      <Field label="E-mail de facturation" htmlFor="farm-email">
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-3 h-4 w-4 text-muted" aria-hidden="true" />
+                          <input
+                            id="farm-email"
+                            type="email"
+                            value={email}
+                            onChange={(event) => setFarmField("email", event.target.value)}
+                            placeholder="contact@ferme.bj"
+                            className={`${inputClass} pl-9`}
+                          />
+                        </div>
+                      </Field>
+                    </div>
+                    <Field label="Adresse physique" htmlFor="farm-address">
+                      <input
+                        id="farm-address"
+                        type="text"
+                        value={address}
+                        onChange={(event) => setFarmField("address", event.target.value)}
+                        placeholder="Quartier, rue ou repère"
+                        className={inputClass}
+                      />
+                    </Field>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <Field label="N° IFU" htmlFor="farm-ifu">
+                        <input
+                          id="farm-ifu"
+                          type="text"
+                          value={ifu}
+                          onChange={(event) => setFarmField("ifu", event.target.value)}
+                          placeholder="Identifiant fiscal unique"
+                          className={`${inputClass} font-mono`}
+                        />
+                      </Field>
+                      <Field label="N° RCCM" htmlFor="farm-rccm">
+                        <input
+                          id="farm-rccm"
+                          type="text"
+                          value={rccm}
+                          onChange={(event) => setFarmField("rccm", event.target.value)}
+                          placeholder="Référence au registre du commerce"
+                          className={`${inputClass} font-mono`}
+                        />
+                      </Field>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="rounded-2xl border border-border bg-surface p-5 shadow-xs sm:p-6">
+                  <h2 className="text-sm font-semibold text-foreground">Devise de référence</h2>
+                  <p className="mt-1 text-xs leading-5 text-muted">Utilisée pour les montants enregistrés dans cette exploitation.</p>
+                  <div className="mt-4 flex items-center justify-between gap-4 border-t border-border pt-4">
+                    <span className="text-sm font-semibold text-foreground">Franc CFA</span>
+                    <span className="rounded-lg bg-surface-muted px-2.5 py-1 font-mono text-xs font-semibold text-muted">XOF</span>
+                  </div>
+                </section>
+              </div>
             </div>
 
-            {farmSuccessMsg && (
-              <div className="mb-4 flex items-center gap-2.5 rounded-xl border border-success/20 bg-success-soft p-3 text-xs text-success font-medium">
-                <CheckCircle2 className="h-4 w-4 shrink-0" />
-                <span>{farmSuccessMsg}</span>
-              </div>
-            )}
+            <div className="flex justify-end border-t border-border pt-4">
+              <button
+                type="submit"
+                disabled={savingFarm}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-white shadow-xs transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Save className="h-4 w-4" />
+                {savingFarm ? "Enregistrement…" : "Enregistrer les modifications"}
+              </button>
+            </div>
+          </form>
 
-            {farmErrorMsg && (
-              <div className="mb-4 flex items-center gap-2.5 rounded-xl border border-danger/20 bg-danger-soft p-3 text-xs text-danger font-medium">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                <span>{farmErrorMsg}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSaveFarm} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-foreground mb-1.5">
-                  Nom de l&apos;exploitation avicole *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="ex. Ferme Avicole Calavi Élite"
-                  className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-xs text-foreground focus:border-primary focus:bg-surface focus:outline-hidden transition-colors"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-foreground mb-1.5">
-                  Slogan & Activité de l&apos;exploitation (visible sur les reçus et PDF)
-                </label>
-                <input
-                  type="text"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="ex. Production Avicole, Vente d'Œufs & Poulets de Chair"
-                  className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-xs text-foreground focus:border-primary focus:bg-surface focus:outline-hidden transition-colors"
-                />
-                <p className="mt-1 text-[11px] text-muted">
-                  Sous-titre et activité imprimés sous le nom de votre ferme sur vos reçus de vente et rapports PDF.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {isOwner && (
+            <section className="border-t border-danger/30 pt-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <label className="block text-xs font-semibold text-foreground mb-1.5">
-                    Code identifiant court
-                  </label>
-                  <input
-                    type="text"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    placeholder="ex. FRM-CAL1"
-                    className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-xs font-mono text-foreground focus:border-primary focus:bg-surface focus:outline-hidden transition-colors"
-                  />
-                  <p className="mt-1 text-[11px] text-muted">
-                    Code court préfixant vos bandes et lots.
+                  <h2 className="flex items-center gap-2 text-sm font-semibold text-danger">
+                    <AlertTriangle className="h-4 w-4" />
+                    Supprimer cette exploitation
+                  </h2>
+                  <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">
+                    La suppression est définitive et efface les données associées à cette ferme.
                   </p>
                 </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-foreground mb-1.5">
-                    Type de production avicole
-                  </label>
-                  <select
-                    value={productionType}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (value === "LAYER" || value === "BROILER" || value === "MIXED") {
-                        setProductionType(value);
-                      }
-                    }}
-                    className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-xs text-foreground focus:border-primary focus:bg-surface focus:outline-hidden transition-colors"
-                  >
-                    <option value="LAYER">Pondeuses (Œufs de table)</option>
-                    <option value="BROILER">Poulets de chair</option>
-                    <option value="MIXED">Mixte / Polyvalente</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-xs font-semibold text-foreground mb-1.5">
-                    Commune / Ville d&apos;implantation
-                  </label>
-                  <input
-                    type="text"
-                    value={locationCity}
-                    onChange={(e) => setLocationCity(e.target.value)}
-                    placeholder="ex. Calavi, Allada, Parakou"
-                    className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-xs text-foreground focus:border-primary focus:bg-surface focus:outline-hidden transition-colors"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-foreground mb-1.5">
-                    Pays
-                  </label>
-                  <select
-                    value={locationCountry}
-                    onChange={(e) => setLocationCountry(e.target.value)}
-                    className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-xs text-foreground focus:border-primary focus:bg-surface focus:outline-hidden transition-colors"
-                  >
-                    <option value="BJ">Bénin (BJ)</option>
-                    <option value="TG">Togo (TG)</option>
-                    <option value="CI">Côte d&apos;Ivoire (CI)</option>
-                    <option value="SN">Sénégal (SN)</option>
-                    <option value="NG">Nigeria (NG)</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Coordonnées & Facturation (visibles sur les reçus de vente) */}
-              <div className="pt-3 border-t border-border/70 space-y-3">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-                  <FileText className="h-4 w-4 text-primary" />
-                  <span>Coordonnées pour les Reçus de Vente & Documents Officiels</span>
-                </div>
-                <p className="text-[11px] text-muted">
-                  Ces coordonnées figureront automatiquement en en-tête des reçus imprimables délivrés aux clients et revendeuses.
-                </p>
-
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-xs font-semibold text-foreground mb-1">
-                      Téléphone
-                    </label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-2.5 h-3.5 w-3.5 text-muted" />
-                      <input
-                        type="text"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="+229 97 00 00 00"
-                        className="w-full rounded-xl border border-border bg-surface-muted pl-8 pr-3 py-2 text-xs text-foreground focus:border-primary focus:bg-surface focus:outline-hidden transition-colors font-mono"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-foreground mb-1">
-                      E-mail de facturation
-                    </label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-2.5 h-3.5 w-3.5 text-muted" />
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="contact@ferme.bj"
-                        className="w-full rounded-xl border border-border bg-surface-muted pl-8 pr-3 py-2 text-xs text-foreground focus:border-primary focus:bg-surface focus:outline-hidden transition-colors"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-foreground mb-1">
-                    Adresse physique
-                  </label>
-                  <input
-                    type="text"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder="Quartier Dowa, Voie Pavée, Face CEG 2, Porto-Novo"
-                    className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-xs text-foreground focus:border-primary focus:bg-surface focus:outline-hidden transition-colors"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-xs font-semibold text-foreground mb-1">
-                      N° IFU (Identifiant Fiscal Unique)
-                    </label>
-                    <input
-                      type="text"
-                      value={ifu}
-                      onChange={(e) => setIfu(e.target.value)}
-                      placeholder="3202012345678"
-                      className="w-full rounded-xl border border-border bg-surface-muted p-2 text-xs font-mono text-foreground focus:border-primary focus:bg-surface focus:outline-hidden transition-colors"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-foreground mb-1">
-                      N° RCCM (Registre du Commerce)
-                    </label>
-                    <input
-                      type="text"
-                      value={rccm}
-                      onChange={(e) => setRccm(e.target.value)}
-                      placeholder="RB/COT/20-B-1234"
-                      className="w-full rounded-xl border border-border bg-surface-muted p-2 text-xs font-mono text-foreground focus:border-primary focus:bg-surface focus:outline-hidden transition-colors"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-foreground mb-1.5">
-                  Devise de référence
-                </label>
-                <div className="flex items-center gap-2 rounded-xl border border-border bg-surface-muted p-2.5 text-xs text-muted">
-                  <span className="font-bold text-foreground">Franc CFA (XOF)</span>
-                  <span className="text-[11px]">— Devise standard UEMOA sans virgule flottante</span>
-                </div>
-              </div>
-
-              <div className="pt-3 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={savingFarm}
-                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-primary-hover transition-colors disabled:opacity-50"
-                >
-                  <Save className="h-4 w-4" />
-                  <span>{savingFarm ? "Enregistrement..." : "Enregistrer les modifications"}</span>
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Zone de Danger : Suppression de l'exploitation (Réservé au Propriétaire) */}
-          {isOwner && (
-            <div className="rounded-2xl border border-danger/30 bg-danger-soft p-5 sm:p-6 space-y-4">
-              <div className="flex items-center gap-2 text-danger">
-                <AlertTriangle className="h-5 w-5" />
-                <h3 className="text-sm font-bold uppercase tracking-wider">
-                  Zone de danger • Suppression définitive
-                </h3>
-              </div>
-              <p className="text-xs text-muted max-w-xl leading-relaxed">
-                La suppression de l&apos;exploitation avicole est irréversible. Toutes les données associées (bandes, ramassages d&apos;œufs, mouvements de stock, finances, soins vétérinaires) seront définitivement effacées.
-              </p>
-              <div>
                 <button
                   type="button"
                   onClick={() => {
@@ -440,51 +477,49 @@ export default function FarmSettingsPage() {
                     setDeleteError(null);
                     setDeleteModalOpen(true);
                   }}
-                  className="inline-flex items-center gap-2 rounded-xl bg-danger px-4 py-2.5 text-xs font-bold text-white hover:bg-danger/90 transition-colors shadow-xs"
+                  className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-danger/30 px-4 text-xs font-semibold text-danger transition hover:bg-danger-soft"
                 >
                   <Trash2 className="h-4 w-4" />
-                  <span>Supprimer cette exploitation</span>
+                  Supprimer l’exploitation
                 </button>
               </div>
-            </div>
+            </section>
           )}
 
-          {/* Modale de Confirmation de Suppression */}
           <Modal
             isOpen={deleteModalOpen}
             onClose={() => setDeleteModalOpen(false)}
-            title="Suppression définitive de l'exploitation"
+            title="Suppression définitive de l’exploitation"
           >
             <div className="space-y-4">
-              <div className="rounded-xl bg-danger/10 p-3.5 border border-danger/20 text-xs text-danger space-y-1">
-                <div className="font-bold flex items-center gap-1.5">
+              <div className="space-y-1 rounded-xl border border-danger/20 bg-danger-soft p-3.5 text-xs text-danger">
+                <p className="flex items-center gap-1.5 font-bold">
                   <AlertTriangle className="h-4 w-4 shrink-0" />
-                  <span>Attention : cette action ne peut pas être annulée.</span>
-                </div>
-                <p className="text-[11px] leading-relaxed text-danger/90">
-                  Pour confirmer la destruction définitive de cette ferme et de toutes ses données, veuillez saisir le nom exact de la ferme : <strong className="font-bold underline">{activeFarm.name}</strong>
+                  Cette action ne peut pas être annulée.
+                </p>
+                <p className="leading-relaxed">
+                  Saisissez le nom exact de l’exploitation pour confirmer sa suppression :{" "}
+                  <strong className="font-bold">{activeFarm.name}</strong>
                 </p>
               </div>
-
               {deleteError && (
-                <div className="rounded-xl bg-danger/10 p-2.5 text-xs text-danger font-medium border border-danger/20">
+                <p role="alert" className="rounded-xl border border-danger/20 bg-danger-soft p-2.5 text-xs text-danger">
                   {deleteError}
-                </div>
+                </p>
               )}
-
               <div>
-                <label className="block text-xs font-semibold text-foreground mb-1">
+                <label htmlFor="delete-farm-name" className="mb-1 block text-xs font-semibold text-foreground">
                   Nom de confirmation
                 </label>
                 <input
+                  id="delete-farm-name"
                   type="text"
                   value={deleteConfirmName}
-                  onChange={(e) => setDeleteConfirmName(e.target.value)}
+                  onChange={(event) => setDeleteConfirmName(event.target.value)}
                   placeholder={activeFarm.name}
-                  className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-xs font-semibold text-foreground focus:border-danger focus:bg-surface focus:outline-hidden transition-colors"
+                  className={`${inputClass} focus:border-danger focus:ring-danger/15`}
                 />
               </div>
-
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
@@ -497,10 +532,10 @@ export default function FarmSettingsPage() {
                   type="button"
                   disabled={deletingFarm || deleteConfirmName.trim() !== activeFarm.name.trim()}
                   onClick={handleDeleteFarm}
-                  className="inline-flex items-center gap-2 rounded-xl bg-danger px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-danger/90 disabled:opacity-50 transition-colors"
+                  className="inline-flex items-center gap-2 rounded-xl bg-danger px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-danger/90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Trash2 className="h-4 w-4" />
-                  <span>{deletingFarm ? "Suppression en cours..." : "Confirmer la suppression"}</span>
+                  {deletingFarm ? "Suppression…" : "Confirmer la suppression"}
                 </button>
               </div>
             </div>

@@ -13,16 +13,16 @@ export function HowItWorks() {
     {
       step: "02",
       icon: <Bird className="h-6 w-6 text-accent" />,
-      title: "Enregistrez vos bandes de poules",
+      title: "Enregistrez vos bandes",
       description:
-        "Précisez la race (Lohmann, Goliath, Cobb...), le type (pondeuses ou chair), l'effectif de départ et la date d'arrivée. Le calendrier vaccinal est automatiquement calculé.",
+        "Indiquez le type d'élevage — pondeuses, chair ou mixte —, l'effectif de départ et la date d'arrivée des sujets.",
     },
     {
       step: "03",
       icon: <CheckCircle className="h-6 w-6 text-success" />,
-      title: "Notez votre journée en 30 secondes",
+      title: "Enregistrez les opérations de la journée",
       description:
-        "Ramassage des œufs du matin, tournée d'aliment pesée au kilo et encaissement des ventes d'œufs. Votre tableau de bord se met à jour en direct sans paperasse.",
+        "Suivez les mortalités, les mouvements et les distributions d'aliments. Pour les pondeuses, enregistrez aussi les collectes et les ventes d'œufs.",
     },
   ];
 
@@ -40,8 +40,8 @@ export function HowItWorks() {
             <span className="text-primary">3 étapes simples</span>
           </h2>
           <p className="text-sm sm:text-base text-muted leading-relaxed">
-            Pas besoin d'être un expert informatique : l'application est conçue pour être
-            utilisée directement depuis votre poulailler sur un simple téléphone.
+            Poulvia accompagne les tâches courantes des élevages de pondeuses, de chair et mixtes.
+            L’application est accessible sur téléphone.
           </p>
         </div>
 
@@ -76,7 +76,7 @@ export function HowItWorks() {
             href={`${appUrl}/register`}
             className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-xs sm:text-sm font-bold text-white shadow-xs hover:bg-primary-hover transition-colors"
           >
-            <span>Démarrer l'enregistrement de ma ferme</span>
+            <span>Démarrer l’enregistrement de ma ferme</span>
             <ArrowRight className="h-4 w-4" />
           </a>
         </div>

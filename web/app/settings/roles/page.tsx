@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Plus, Check, Lock, Save, AlertCircle, Shield } from "lucide-react";
 import { Shell } from "@/components/layout/shell";
 import { Badge } from "@/components/ui/badge";
@@ -31,13 +31,10 @@ export default function RolesMatrixPage() {
   const [newRolePerms, setNewRolePerms] = useState<string[]>([]);
   const [submittingCreate, setSubmittingCreate] = useState(false);
 
-  useEffect(() => {
-    if (activeFarm?.id && hasModule("custom_roles")) {
-      loadData();
-    }
-  }, [activeFarm?.id]);
+  const canViewRoles = hasModule("custom_roles");
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
+    if (!canViewRoles) return;
     try {
       const [permsData, rolesData] = await Promise.all([
         api.roles.getPermissionsCatalog(),
@@ -51,9 +48,13 @@ export default function RolesMatrixPage() {
       }
     } catch (err) {
       console.error(err);
-    } finally {
     }
-  }
+  }, [activeFarm, canViewRoles]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadData(), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadData]);
 
   function handleSelectRole(role: FarmRole) {
     setSelectedRole(role);

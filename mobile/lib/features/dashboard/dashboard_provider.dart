@@ -51,7 +51,13 @@ class DashboardKpiData {
     final rawChart = json['eggProduction']?['chart'] as List<dynamic>? ?? [];
     final eggTrend = rawChart.map((item) {
       final point = item as Map<String, dynamic>;
-      return EggTrendPoint(date: point['date'] as String? ?? '', goodEggs: (point['goodEggs'] as num?)?.toInt() ?? 0);
+      return EggTrendPoint(
+        date: point['date'] as String? ?? '',
+        goodEggs: (point['goodEggs'] as num?)?.toInt() ?? 0,
+        crackedEggs: (point['crackedEggs'] as num?)?.toInt() ?? 0,
+        abnormalEggs: ((point['dirtyEggs'] as num?)?.toInt() ?? 0) +
+            ((point['deformedEggs'] as num?)?.toInt() ?? 0),
+      );
     }).toList();
 
     final transactions = rawRecentTx

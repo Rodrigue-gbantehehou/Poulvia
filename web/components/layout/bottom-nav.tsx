@@ -52,6 +52,13 @@ export function BottomNav() {
   const canRecordMovement = hasPermission("flock:movement") || hasPermission("flock:create") || hasPermission("flock:update") || isOwner;
   const canCreateFinance = hasModule("finance") && (hasPermission("finance:create") || isOwner);
   const canManageHealth = hasModule("health") && (hasPermission("health:manage") || hasPermission("health:create") || isOwner);
+  const isEggsPage = pathname.startsWith("/eggs");
+  const isHealthPage = pathname.startsWith("/health");
+  const isFlockDetailPage = /^\/flocks\/[^/]+$/.test(pathname);
+  const showEggAction = canCreateEgg && !isEggsPage && !isFlockDetailPage;
+  const showFeedAction = canFeed && !isFlockDetailPage;
+  const showMovementAction = canRecordMovement && !isFlockDetailPage;
+  const showHealthAction = canManageHealth && !isHealthPage;
 
   const canViewFlocks =
     hasModule("flocks") &&
@@ -86,7 +93,7 @@ export function BottomNav() {
     pathname.startsWith("/settings/roles");
 
   // Nombre d'actions permises dans la feuille
-  const hasAnyAction = canCreateEgg || canFeed || canRecordMovement || canCreateFinance || canManageHealth;
+  const hasAnyAction = showEggAction || showFeedAction || showMovementAction || canCreateFinance || showHealthAction;
 
   return (
     <>
@@ -122,8 +129,8 @@ export function BottomNav() {
             aria-label={sheetOpen ? "Fermer les actions" : "Enregistrer une opération"}
             aria-expanded={sheetOpen}
             className={cn(
-              "flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white shadow-card transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef625e] focus-visible:ring-offset-2",
-              sheetOpen ? "rotate-45 bg-[#d94f4b]" : "bg-[#ef625e] hover:bg-[#d94f4b]",
+              "flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-card transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+              sheetOpen && "rotate-45 bg-primary-hover",
             )}
           >
             <Plus className="h-6 w-6 stroke-[2.5]" />
@@ -168,7 +175,7 @@ export function BottomNav() {
             ) : (
               <div className="mt-4 grid grid-cols-2 gap-2.5">
                 {/* 1. Ponte (si autorisé et non-chair) */}
-                {canCreateEgg && (
+                {showEggAction && (
                   <button
                     type="button"
                     onClick={() => triggerAction("egg")}
@@ -185,7 +192,7 @@ export function BottomNav() {
                 )}
 
                 {/* 2. Alimentation */}
-                {canFeed && (
+                {showFeedAction && (
                   <button
                     type="button"
                     onClick={() => triggerAction("feed")}
@@ -202,7 +209,7 @@ export function BottomNav() {
                 )}
 
                 {/* 3. Mortalité */}
-                {canRecordMovement && (
+                {showMovementAction && (
                   <button
                     type="button"
                     onClick={() => triggerAction("movement")}
@@ -253,7 +260,7 @@ export function BottomNav() {
                 )}
 
                 {/* 6. Soin / Santé */}
-                {canManageHealth && (
+                {showHealthAction && (
                   <button
                     type="button"
                     onClick={() => triggerAction("health")}
@@ -304,7 +311,7 @@ function MobileNavItem({
       </span>
       <span
         className={cn(
-          "truncate text-caption leading-none",
+          "truncate text-[11px] leading-none",
           active ? "max-w-20 font-semibold text-[#242820]" : "sr-only",
         )}
       >

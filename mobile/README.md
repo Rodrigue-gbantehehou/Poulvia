@@ -1,4 +1,4 @@
-﻿# Application Mobile Flutter — Le Fermier 🐔📱
+# Application mobile Flutter — Poulvia 🐔📱
 
 Application mobile native moderne pour la gestion d'exploitations avicoles en Afrique de l'Ouest (Bénin, Côte d'Ivoire, Togo, Sénégal, etc.). Conçue pour fonctionner de manière fluide sur le terrain avec prise en charge hors-ligne, calculs instantanés en plateaux d'œufs de 30 et flux de caisse en FCFA.
 
@@ -91,6 +91,29 @@ flutter test
 ## 🌐 Connexion au Backend API Symfony
 
 L'application communique avec l'API Symfony (`api/`) :
-- Sur émulateur Android officiel : `http://10.0.2.2:8000/api`
-- Sur appareil physique : `http://<IP_DU_PC_SUR_LE_WIFI>:8000/api`
-- En Web / Desktop : `http://localhost:8000/api`
+- Sur émulateur Android officiel : `http://10.0.2.2:8000`
+- Sur appareil physique : `http://<IP_DU_PC_SUR_LE_WIFI>:8000`
+- En Web / Desktop : `http://127.0.0.1:8000`
+
+## Bêta Android et signature release
+
+Les routes contiennent déjà le préfixe `/api`. `API_BASE_URL` doit donc contenir le domaine seul, sans `/api`. En release, l'URL par défaut est `https://api.poulvia.com`.
+
+Depuis le dossier `mobile/`, génère l'APK bêta avec :
+
+```powershell
+flutter build apk --release --dart-define=API_BASE_URL=https://api.poulvia.com
+```
+
+L'APK sera créé dans `build/app/outputs/flutter-apk/app-release.apk`.
+
+Une clé de signature privée est nécessaire pour installer et distribuer une version release. Crée-la avec `keytool`, conserve-la en lieu sûr et réutilise-la pour les mises à jour. Ne la versionne jamais. Avant le build, définis ces variables d'environnement :
+
+```powershell
+$env:POULVIA_UPLOAD_STORE_FILE = "C:\chemin-prive\poulvia-upload.jks"
+$env:POULVIA_UPLOAD_STORE_PASSWORD = "mot-de-passe-du-keystore"
+$env:POULVIA_UPLOAD_KEY_ALIAS = "poulvia"
+$env:POULVIA_UPLOAD_KEY_PASSWORD = "mot-de-passe-de-la-cle"
+```
+
+Sans ces quatre variables, les builds debug restent utilisables, mais les tâches `assembleRelease`, `packageRelease` et `bundleRelease` s'arrêtent plutôt que de produire une release non signée.

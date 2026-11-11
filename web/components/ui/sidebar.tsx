@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { PanelLeft, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 
@@ -155,16 +155,12 @@ export function SidebarProvider({
 }
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
-  side?: "left" | "right";
-  variant?: "sidebar" | "floating" | "inset";
   collapsible?: "offcanvas" | "icon" | "none";
 }
 
 export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
   (
     {
-      side = "left",
-      variant = "sidebar",
       collapsible = "icon",
       className,
       children,
@@ -382,7 +378,6 @@ SidebarMenuItem.displayName = "SidebarMenuItem";
 
 export interface SidebarMenuButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  asChild?: boolean;
   isActive?: boolean;
   tooltip?: string;
 }
@@ -393,7 +388,6 @@ export const SidebarMenuButton = React.forwardRef<
 >(
   (
     {
-      asChild = false,
       isActive = false,
       tooltip,
       className,

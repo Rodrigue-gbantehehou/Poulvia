@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/member.dart';
 import '../../core/theme/app_theme.dart';
@@ -54,7 +54,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
           IconButton(
             icon: Icon(
               isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-              color: isDark ? AppColors.accent : null,
+              color: isDark ? AppColors.primaryLight : null,
               size: 20,
             ),
             tooltip: isDark ? "Activer le mode clair" : "Activer le mode sombre",

@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { AlertTriangle, CheckCircle2, Bird } from "lucide-react";
+import { AlertTriangle, Bird } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/context/toast-context";
 import { api } from "@/lib/api-client";
 import { Flock, EggProduction, EggSession } from "@/lib/types";
-import { calcEggTrays, formatNumber } from "@/lib/utils";
+import { formatNumber } from "@/lib/utils";
 
 interface RecordEggModalProps {
   isOpen: boolean;
@@ -84,7 +84,6 @@ export function RecordEggModal({
     }
   }
 
-  const trayCalc = calcEggTrays(Number(goodEggs));
 
   const targetFlock =
     flocks.find((f) => f.id === selectedFlockId) ||
@@ -171,7 +170,7 @@ export function RecordEggModal({
                 onClick={() => setEggSession(session)}
                 className={`rounded-xl border py-2 text-xs font-bold transition-colors ${
                   eggSession === session
-                    ? "border-accent bg-accent text-white shadow-xs"
+                    ? "border-primary bg-primary text-white shadow-xs"
                     : "border-border bg-surface text-muted hover:bg-surface-hover"
                 }`}
               >
@@ -242,37 +241,6 @@ export function RecordEggModal({
           </div>
         </div>
 
-        {/* Estimation plateaux */}
-        <div className="rounded-2xl border border-accent/20 bg-accent-soft/30 p-3 space-y-2">
-          <div className="flex items-center justify-between text-xs font-bold text-accent">
-            <span>Équivalence plateaux</span>
-            <span className="flex items-center gap-1 font-mono text-foreground bg-surface px-2.5 py-1 rounded-lg border border-accent/20 shadow-2xs">
-              <CheckCircle2 className="h-3.5 w-3.5 text-success" />
-              {trayCalc.text}
-            </span>
-          </div>
-          <div className="grid grid-cols-3 gap-2 text-center text-xs">
-            <div className="rounded-xl bg-surface p-2 border border-border">
-              <span className="text-[10px] text-muted block">Plateaux</span>
-              <span className="font-bold font-mono text-base text-accent">
-                {trayCalc.trays}
-              </span>
-            </div>
-            <div className="rounded-xl bg-surface p-2 border border-border">
-              <span className="text-[10px] text-muted block">Libres</span>
-              <span className="font-bold font-mono text-base text-foreground">
-                {trayCalc.loose}
-              </span>
-            </div>
-            <div className="rounded-xl bg-surface p-2 border border-border">
-              <span className="text-[10px] text-muted block">Total</span>
-              <span className="font-bold font-mono text-base text-foreground">
-                {Number(goodEggs) + Number(brokenEggs) + Number(abnormalEggs)}
-              </span>
-            </div>
-          </div>
-        </div>
-
         <div>
           <label className="block text-xs font-semibold text-foreground mb-1">
             Notes
@@ -304,7 +272,7 @@ export function RecordEggModal({
           <button
             type="submit"
             disabled={submittingEgg}
-            className="rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-accent-hover"
+            className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-primary-hover"
           >
             {submittingEgg
               ? "Enregistrement..."

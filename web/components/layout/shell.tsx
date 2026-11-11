@@ -23,7 +23,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
-          <div className="relative flex h-16 w-16 animate-bounce items-center justify-center overflow-hidden rounded-2xl bg-surface p-1 shadow-lg border border-border">
+          <div className="relative flex h-16 w-16 animate-bounce items-center justify-center overflow-hidden rounded-2xl  p-1 shadow-lg border border-border">
             <Image
               src="/logo.png"
               alt="Poulvia"

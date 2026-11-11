@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, Bird, Warehouse, AlertCircle } from "lucide-react";
+import { Plus, AlertCircle } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { api } from "@/lib/api-client";
 import { Building } from "@/lib/types";
@@ -129,7 +129,7 @@ export function CreateFlockModal({
                 className="flex items-center gap-1 text-[10px] font-bold text-primary hover:underline cursor-pointer"
               >
                 <Plus className="h-3 w-3" />
-                <span>+ Nouveau</span>
+                <span>Nouveau</span>
               </button>
             </div>
             <select

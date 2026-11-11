@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../core/models/health_treatment.dart';
 import '../../core/models/inventory_item.dart';
+import '../../core/design_system/app_modal_surface.dart';
 import '../../core/theme/app_theme.dart';
 import '../dashboard/dashboard_provider.dart';
 import '../flocks/flock_provider.dart';
@@ -183,18 +184,7 @@ class _RecordFeedingModalState extends ConsumerState<RecordFeedingModal> {
     final suggestedTreatment = relevantTreatments.where((t) => t.administrationMethod == "DRINKING_WATER").firstOrNull ??
         relevantTreatments.firstOrNull;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border.all(color: borderColor),
-      ),
-      padding: EdgeInsets.fromLTRB(
-        20,
-        12,
-        20,
-        MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 20,
-      ),
+    return AppModalSurface(
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -366,9 +356,9 @@ class _RecordFeedingModalState extends ConsumerState<RecordFeedingModal> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.kpiEggBgDark : AppColors.accentSoft,
+                color: isDark ? AppColors.surfaceDark : AppColors.inputFillLight,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: isDark ? AppColors.kpiEggBorderDark : AppColors.accentWarm),
+                border: Border.all(color: borderColor),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -567,37 +557,6 @@ class _RecordFeedingModalState extends ConsumerState<RecordFeedingModal> {
                             ),
                           const SizedBox(height: 8),
 
-                          // Raccourcis rapides adaptés à l'unité
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: _feedUnit == "KG"
-                                  ? [
-                                      _buildQuickQtyChip("+5 kg", 5),
-                                      const SizedBox(width: 5),
-                                      _buildQuickQtyChip("+10 kg", 10),
-                                      const SizedBox(width: 5),
-                                      _buildQuickQtyChip("+25 kg (1/2 sac)", 25),
-                                      const SizedBox(width: 5),
-                                      _buildQuickQtyChip("+50 kg (1 sac)", 50),
-                                    ]
-                                  : _feedUnit.startsWith("BAG")
-                                      ? [
-                                          _buildQuickQtyChip("+0.5 sac", 0.5),
-                                          const SizedBox(width: 5),
-                                          _buildQuickQtyChip("+1 sac", 1.0),
-                                          const SizedBox(width: 5),
-                                          _buildQuickQtyChip("+2 sacs", 2.0),
-                                        ]
-                                      : [
-                                          _buildQuickQtyChip("+100 g", 100),
-                                          const SizedBox(width: 5),
-                                          _buildQuickQtyChip("+250 g", 250),
-                                          const SizedBox(width: 5),
-                                          _buildQuickQtyChip("+500 g", 500),
-                                        ],
-                            ),
-                          ),
                         ],
                       );
                     }(),
@@ -611,9 +570,9 @@ class _RecordFeedingModalState extends ConsumerState<RecordFeedingModal> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.kpiRateBgDark : AppColors.kpiRateBgLight,
+                color: isDark ? AppColors.surfaceDark : AppColors.inputFillLight,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: isDark ? AppColors.kpiRateBorderDark : AppColors.kpiRateBorderLight),
+                border: Border.all(color: borderColor),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -623,11 +582,11 @@ class _RecordFeedingModalState extends ConsumerState<RecordFeedingModal> {
                     children: [
                       const Row(
                         children: [
-                          Icon(Icons.water_drop_rounded, color: AppColors.kpiRateBadge, size: 16),
+                          Icon(Icons.water_drop_rounded, color: AppColors.primary, size: 16),
                           SizedBox(width: 6),
                           Text(
                             "2. Abreuvement",
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.kpiRateBadge),
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary),
                           ),
                         ],
                       ),
@@ -797,7 +756,7 @@ class _RecordFeedingModalState extends ConsumerState<RecordFeedingModal> {
                             labelText: "Volume d'eau préparé (Litres)",
                             hintText: "50",
                             suffixText: "L",
-                            suffixStyle: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.kpiRateBadge),
+                            suffixStyle: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           ),
@@ -977,28 +936,6 @@ class _RecordFeedingModalState extends ConsumerState<RecordFeedingModal> {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickQtyChip(String label, double addAmount) {
-    return InkWell(
-      onTap: () {
-        final cur = double.tryParse(_feedQtyController.text) ?? 0.0;
-        setState(() => _feedQtyController.text = (cur + addAmount).toStringAsFixed(0));
-      },
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: Theme.of(context).brightness == Brightness.dark ? AppColors.surfaceDark : Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.accent),
         ),
       ),
     );

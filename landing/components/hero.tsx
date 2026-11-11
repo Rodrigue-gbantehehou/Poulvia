@@ -1,12 +1,9 @@
 ﻿import React from "react";
+import Image from "next/image";
 import {
   CheckCircle2,
   ArrowRight,
   Smartphone,
-  Egg,
-  HeartPulse,
-  Package,
-  Wallet,
 } from "lucide-react";
 
 export function Hero() {
@@ -28,8 +25,8 @@ export function Hero() {
 
             {/* Subtitle in plain, human French */}
             <p className="text-base sm:text-lg text-muted max-w-xl mx-auto lg:mx-0 leading-relaxed">
-              Finis les cahiers raturés ou perdus. Poulvia vous aide à noter vos ramassages d'œufs,
-              surveiller vos sacs d'aliments et protéger la santé de vos volailles en quelques clics.
+              Finis les cahiers raturés ou perdus. Poulvia vous aide à suivre vos bandes,
+              vos stocks et la santé de vos volailles, avec un parcours adapté à votre type d’élevage.
             </p>
 
             {/* Action Buttons */}
@@ -38,7 +35,7 @@ export function Hero() {
                 href={`${appUrl}/register`}
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-semibold text-white shadow-xs hover:bg-primary-hover transition-colors"
               >
-                <span>Créer mon compte gratuit</span>
+                <span>Créer mon compte</span>
                 <ArrowRight className="h-4 w-4" />
               </a>
 
@@ -58,11 +55,11 @@ export function Hero() {
               </div>
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                <span>Sur n'importe quel smartphone</span>
+                <span>Sur n’importe quel smartphone</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                <span>Gratuit pour démarrer</span>
+                <span>Pondeuses, chair ou élevage mixte</span>
               </div>
             </div>
           </div>
@@ -71,9 +68,12 @@ export function Hero() {
           <div className="lg:col-span-5">
             <div className="relative rounded-2xl border border-border bg-surface shadow-md overflow-hidden">
               <div className="aspect-[4/3] w-full relative">
-                <img
+                <Image
                   src="/images/farmer-hero.jpg"
                   alt="Éleveur avicole souriant consultant son téléphone dans son poulailler"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 41vw"
+                  priority
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -89,7 +89,7 @@ export function Hero() {
                       Tout est accessible au creux de votre main
                     </h3>
                     <p className="text-[11px] text-muted">
-                      Une saisie en 30 secondes chrono après chaque visite au bâtiment.
+                      Retrouvez les informations utiles pendant vos opérations quotidiennes.
                     </p>
                   </div>
                 </div>

@@ -45,44 +45,6 @@ function SettingsLinkCard({
   );
 }
 
-function AccountSummaryCard({
-  name,
-  email,
-  roleName,
-}: {
-  name: string;
-  email: string;
-  roleName: string;
-}) {
-  const initials = name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase() || "U";
-
-  return (
-    <section
-      aria-labelledby="settings-account-title"
-      className="flex min-h-36 items-center gap-4 rounded-2xl border border-border bg-surface p-5 shadow-xs"
-    >
-      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-sm font-bold text-primary">
-        {initials}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span id="settings-account-title" className="block text-sm font-semibold text-foreground">
-          Mon compte
-        </span>
-        <span className="mt-1 block truncate text-xs text-muted">{name}</span>
-        <span className="block truncate text-xs text-muted">{email}</span>
-        <span className="mt-3 block truncate text-xs font-medium text-foreground">{roleName}</span>
-      </span>
-      <UserRound className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
-    </section>
-  );
-}
-
 function RestrictedSettingsCard({
   title,
   description,
@@ -108,22 +70,24 @@ function RestrictedSettingsCard({
 }
 
 export default function SettingsPage() {
-  const { user, activeFarm, role, isOwner, isSubscriptionOwner } = useAuth();
+  const { user, activeFarm, isOwner, isSubscriptionOwner } = useAuth();
   const subscription = activeFarm?.subscription;
 
   return (
     <Shell>
       <PageHeader
         title="Paramètres"
-        subtitle="Votre compte, votre exploitation et votre abonnement."
+        subtitle="Paramètres de votre exploitation et de son abonnement."
         icon={<Settings className="h-4 w-4" />}
       />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        <AccountSummaryCard
-          name={user?.fullName || "Utilisateur Poulvia"}
-          email={user?.email || ""}
-          roleName={role?.name || "Compte utilisateur"}
+        <SettingsLinkCard
+          href="/account"
+          title="Mon compte"
+          description="Consulter vos informations personnelles et gérer la sécurité de votre accès."
+          icon={<UserRound className="h-5 w-5" />}
+          detail={user?.email || "Informations du compte"}
         />
 
         {isOwner ? (

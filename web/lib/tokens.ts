@@ -8,26 +8,28 @@
 export const DESIGN_TOKENS = {
   // 1. Couleurs Principales (docs/DESIGN_SYSTEM.md § 3)
   colors: {
-    // Identité avicole (Vert émeraude profond)
+    // Identité Poulvia (vert profond, avec variantes lisibles sur fond sombre)
     primary: {
-      DEFAULT: "#245C43",
-      hover: "#194832",
-      soft: "#E8F2EC",
+      DEFAULT: "#154632",
+      hover: "#113828",
+      soft: "#EBF5F0",
+      readableDark: "color-mix(in srgb, #154632 40%, white)",
+      softDark: "color-mix(in srgb, #154632 32%, #0F1713)",
     },
-    // Mise en évidence ponctuelle (Doré / Jaune maïs / Œuf)
+    // Accent orange du logo, utilisé ponctuellement
     accent: {
-      DEFAULT: "#DDA64B",
-      hover: "#C48E37",
-      soft: "#FBF4E8",
+      DEFAULT: "#F39200",
+      hover: "#F39200",
+      soft: "#FFF1D9",
     },
-    // Surfaces et structure CLAIRE par défaut (fond jamais noir par défaut)
+    // Surfaces et structure du thème clair
     light: {
-      background: "#F6F8F6",        // Fond général clair et discret
+      background: "#FFF8ED",        // Fond général blanc orangé
       surface: "#FFFFFF",           // Cartes, tableaux et formulaires
       surfaceElevated: "#FFFFFF",   // Modales et popovers
-      foreground: "#202923",        // Texte principal fort contraste
-      mutedForeground: "#657168",   // Texte secondaire / descriptions
-      border: "#DFE6E0",            // Bordures fines et séparateurs
+      foreground: "#154632",        // Texte principal vert profond
+      mutedForeground: "#587064",   // Texte secondaire
+      border: "#E6E9E2",            // Bordures et séparateurs discrets
     },
     // Mode sombre (uniquement activable manuellement par l'utilisateur)
     dark: {

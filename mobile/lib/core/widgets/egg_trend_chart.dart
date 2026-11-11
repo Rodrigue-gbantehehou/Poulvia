@@ -1,11 +1,20 @@
-import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
 
 class EggTrendPoint {
   final String date;
   final int? goodEggs;
-  const EggTrendPoint({required this.date, required this.goodEggs});
+  final int? crackedEggs;
+  final int? abnormalEggs;
+
+  const EggTrendPoint({
+    required this.date,
+    this.goodEggs,
+    this.crackedEggs,
+    this.abnormalEggs,
+  });
 }
 
 class EggTrendChart extends StatelessWidget {
@@ -15,7 +24,16 @@ class EggTrendChart extends StatelessWidget {
   final String? error;
   final String? startDate;
   final String? endDate;
-  const EggTrendChart({super.key, required this.points, this.cachedAt, this.isLoading = false, this.error, this.startDate, this.endDate});
+
+  const EggTrendChart({
+    super.key,
+    required this.points,
+    this.cachedAt,
+    this.isLoading = false,
+    this.error,
+    this.startDate,
+    this.endDate,
+  });
 
   String _dateLabel(String value) {
     final date = DateTime.tryParse(value);
@@ -28,100 +46,163 @@ class EggTrendChart extends StatelessWidget {
     final surface = dark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final border = dark ? AppColors.borderDark : AppColors.borderLight;
     final muted = dark ? Colors.white60 : AppColors.textMutedLight;
-    final observations = {for (final point in points) point.date: point.goodEggs};
+    final observations = {for (final point in points) point.date: point};
     final plotPoints = <EggTrendPoint>[];
+
     if (points.isNotEmpty) {
       var cursor = DateTime.tryParse(startDate ?? points.first.date);
       final last = DateTime.tryParse(endDate ?? points.last.date);
       while (cursor != null && last != null && !cursor.isAfter(last)) {
         final date = DateFormat('yyyy-MM-dd').format(cursor);
-        plotPoints.add(EggTrendPoint(date: date, goodEggs: observations[date]));
+        plotPoints.add(observations[date] ?? EggTrendPoint(date: date));
         cursor = cursor.add(const Duration(days: 1));
       }
     }
-    final maxValue = points.fold<int>(0, (max, point) => (point.goodEggs ?? 0) > max ? (point.goodEggs ?? 0) : max);
+
+    final series = <_EggSeries>[
+      _EggSeries('Normaux', AppColors.primary, (point) => point.goodEggs),
+      _EggSeries('Fêlés', AppColors.danger, (point) => point.crackedEggs),
+      _EggSeries('Autres', AppColors.accent, (point) => point.abnormalEggs),
+    ];
+    final maxValue = points.fold<int>(0, (max, point) {
+      final values = [point.goodEggs, point.crackedEggs, point.abnormalEggs];
+      return values.fold<int>(max, (current, value) => (value ?? 0) > current ? value! : current);
+    });
+    final chartMaxY = maxValue == 0 ? 1.0 : maxValue * 1.12;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: border)),
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: border),
+      ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text("Évolution de la ponte", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 3),
-        Text("Œufs bons par jour · 7 derniers jours", style: TextStyle(fontSize: 11, color: muted)),
-        if (cachedAt != null) ...[
-          const SizedBox(height: 5),
-          Text("Données synchronisées le ${DateFormat('dd/MM à HH:mm').format(cachedAt!)}", style: TextStyle(fontSize: 10, color: muted)),
-          Text("Les saisies hors ligne apparaîtront après synchronisation.", style: TextStyle(fontSize: 10, color: muted)),
-        ],
-        const SizedBox(height: 14),
+        const Text('Tendance de ponte', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 12,
+          runSpacing: 6,
+          children: series.map((item) => Row(mainAxisSize: MainAxisSize.min, children: [
+            Container(width: 8, height: 8, decoration: BoxDecoration(color: item.color, shape: BoxShape.circle)),
+            const SizedBox(width: 5),
+            Text(item.label, style: TextStyle(fontSize: 10, color: muted)),
+          ])).toList(),
+        ),
+        const SizedBox(height: 8),
         if (isLoading)
           const SizedBox(height: 150, child: Center(child: CircularProgressIndicator()))
         else if (error != null && points.isEmpty)
           SizedBox(height: 150, child: Center(child: Text(error!, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: AppColors.danger))))
         else if (points.isEmpty)
-          SizedBox(height: 150, child: Center(child: Text("Aucune donnée sur cette période.", style: TextStyle(fontSize: 12, color: muted))))
+          SizedBox(height: 150, child: Center(child: Text('Aucune donnée sur cette période.', style: TextStyle(fontSize: 12, color: muted))))
         else ...[
           SizedBox(
-            height: 132,
+            height: 150,
             width: double.infinity,
             child: Semantics(
-              label: "Production quotidienne d'œufs",
-              child: CustomPaint(painter: _EggTrendPainter(points: plotPoints, maxValue: maxValue, color: AppColors.primary, gridColor: border, backgroundColor: surface)),
+              label: 'Courbes de production quotidienne : œufs normaux, fêlés et autres œufs anormaux.',
+              child: LineChart(
+                LineChartData(
+                  minX: 0,
+                  maxX: (plotPoints.length - 1).clamp(1, double.infinity).toDouble(),
+                  minY: 0,
+                  maxY: chartMaxY,
+                  gridData: FlGridData(
+                    drawVerticalLine: false,
+                    horizontalInterval: chartMaxY / 2,
+                    getDrawingHorizontalLine: (_) => FlLine(color: border, strokeWidth: 1, dashArray: [3, 4]),
+                  ),
+                  borderData: FlBorderData(show: false),
+                  titlesData: FlTitlesData(
+                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 30,
+                        interval: chartMaxY / 2,
+                        getTitlesWidget: (value, _) => Text(
+                          NumberFormat.compact(locale: 'fr').format(value),
+                          style: TextStyle(fontSize: 9, color: muted),
+                        ),
+                      ),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 22,
+                        interval: (plotPoints.length - 1).clamp(1, double.infinity).toDouble() / 2,
+                        getTitlesWidget: (value, _) {
+                          final index = value.round();
+                          if (index < 0 || index >= plotPoints.length) return const SizedBox.shrink();
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 5),
+                            child: Text(_dateLabel(plotPoints[index].date), style: TextStyle(fontSize: 9, color: muted)),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  lineTouchData: LineTouchData(
+                    handleBuiltInTouches: true,
+                    touchTooltipData: LineTouchTooltipData(
+                      getTooltipColor: (_) => surface,
+                      getTooltipItems: (spots) => spots.map((spot) {
+                        final index = spot.barIndex.clamp(0, series.length - 1);
+                        final dateIndex = spot.x.round().clamp(0, plotPoints.length - 1);
+                        return LineTooltipItem(
+                          '${series[index].label}\n${_dateLabel(plotPoints[dateIndex].date)} · ${spot.y.round()} œufs',
+                          TextStyle(color: series[index].color, fontSize: 10, fontWeight: FontWeight.w600),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  lineBarsData: series.map((item) {
+                    final spots = plotPoints.asMap().entries
+                        .where((entry) => item.value(entry.value) != null)
+                        .map((entry) => FlSpot(
+                              entry.key.toDouble(),
+                              item.value(entry.value)!.toDouble(),
+                            ))
+                        .toList();
+                    return LineChartBarData(
+                      spots: spots,
+                      color: item.color,
+                      barWidth: 2.5,
+                      isCurved: true,
+                      curveSmoothness: 0.2,
+                      preventCurveOverShooting: true,
+                      isStrokeCapRound: true,
+                      isStrokeJoinRound: true,
+                      dotData: FlDotData(show: spots.length == 1),
+                      belowBarData: BarAreaData(show: false),
+                    );
+                  }).toList(),
+                ),
+                duration: const Duration(milliseconds: 250),
+              ),
             ),
           ),
-          const SizedBox(height: 5),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text(_dateLabel(plotPoints.first.date), style: TextStyle(fontSize: 10, color: muted)),
-            if (plotPoints.length > 2) Text(_dateLabel(plotPoints[plotPoints.length ~/ 2].date), style: TextStyle(fontSize: 10, color: muted)),
-            Text(_dateLabel(plotPoints.last.date), style: TextStyle(fontSize: 10, color: muted)),
-          ]),
+          if (points.length == 1) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Ajoutez un relevé sur une autre journée pour afficher l’évolution.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 10, color: muted),
+            ),
+          ],
         ],
       ]),
     );
   }
 }
 
-class _EggTrendPainter extends CustomPainter {
-  final List<EggTrendPoint> points;
-  final int maxValue;
+class _EggSeries {
+  final String label;
   final Color color;
-  final Color gridColor;
-  final Color backgroundColor;
-  _EggTrendPainter({required this.points, required this.maxValue, required this.color, required this.gridColor, required this.backgroundColor});
+  final int? Function(EggTrendPoint) value;
 
-  @override
-  void paint(Canvas canvas, Size size) {
-    final chart = Rect.fromLTWH(8, 8, size.width - 16, size.height - 16);
-    final grid = Paint()..color = gridColor..strokeWidth = 1;
-    for (var i = 0; i < 3; i++) {
-      final y = chart.top + chart.height * i / 2;
-      canvas.drawLine(Offset(chart.left, y), Offset(chart.right, y), grid);
-    }
-    final values = points.asMap().entries.map((entry) {
-      final x = points.length == 1 ? chart.center.dx : chart.left + chart.width * entry.key / (points.length - 1);
-      final eggs = entry.value.goodEggs;
-      final y = eggs == null ? null : chart.bottom - (maxValue == 0 ? 0 : chart.height * eggs / maxValue);
-      return (x: x, y: y);
-    }).toList();
-    final line = Paint()..color = color..strokeWidth = 2.5..strokeCap = StrokeCap.round..style = PaintingStyle.stroke;
-    Path? path;
-    var segmentLength = 0;
-    for (final point in values) {
-      if (point.y == null) {
-        if (path != null && segmentLength > 1) canvas.drawPath(path, line);
-        path = null;
-        segmentLength = 0;
-      } else {
-        if (path == null) { path = Path()..moveTo(point.x, point.y!); segmentLength = 1; }
-        else { path.lineTo(point.x, point.y!); segmentLength++; }
-      }
-    }
-    if (path != null && segmentLength > 1) canvas.drawPath(path, line);
-    final dot = Paint()..color = color;
-    final hole = Paint()..color = backgroundColor;
-    for (final point in values) { if (point.y != null) { final offset = Offset(point.x, point.y!); canvas.drawCircle(offset, 4, dot); canvas.drawCircle(offset, 1.8, hole); } }
-  }
-
-  @override
-  bool shouldRepaint(covariant _EggTrendPainter oldDelegate) => oldDelegate.points != points || oldDelegate.maxValue != maxValue || oldDelegate.color != color || oldDelegate.gridColor != gridColor || oldDelegate.backgroundColor != backgroundColor;
+  const _EggSeries(this.label, this.color, this.value);
 }

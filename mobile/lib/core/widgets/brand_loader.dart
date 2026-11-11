@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../theme/app_theme.dart';
 
 /// Loader animé de prestige respectant scrupuleusement la charte Le Fermier.

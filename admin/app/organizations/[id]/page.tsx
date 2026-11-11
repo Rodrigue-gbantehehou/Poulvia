@@ -50,6 +50,8 @@ export default function OrganizationDetailPage() {
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string>("");
   const [isUpdatingPlan, setIsUpdatingPlan] = useState(false);
+  const [trialDaysInput, setTrialDaysInput] = useState("14");
+  const [isUpdatingTrial, setIsUpdatingTrial] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
   const fetchOrganization = async () => {
@@ -64,6 +66,11 @@ export default function OrganizationDetailPage() {
       setOrg(orgData);
       setAvailablePlans(plansData);
       setSelectedPlan(orgData.subscriptionPlan);
+      const trialEnd = orgData.subscriptionTrialEndsAt ? new Date(orgData.subscriptionTrialEndsAt) : null;
+      const remainingTrialDays = trialEnd
+        ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / 86_400_000))
+        : plansData.find((plan) => plan.sku === orgData.subscriptionPlan)?.trialDays ?? 14;
+      setTrialDaysInput(String(remainingTrialDays));
     } catch (err: unknown) {
       setApiError(
         (err as Error).message ||
@@ -113,6 +120,26 @@ export default function OrganizationDetailPage() {
       alert((err as Error).message || "Erreur lors du changement de plan");
     } finally {
       setIsUpdatingPlan(false);
+    }
+  };
+
+  const handleUpdateTrial = async () => {
+    if (!org) return;
+    const days = Number(trialDaysInput);
+    if (!Number.isInteger(days) || days < 0 || days > 3650) {
+      alert("Saisissez un nombre de jours entre 0 et 3650.");
+      return;
+    }
+
+    setIsUpdatingTrial(true);
+    try {
+      const updated = await adminApi.organizations.setTrialDays(org.id, days);
+      setOrg(updated);
+      alert(`Essai mis à jour : ${days} jour${days > 1 ? "s" : ""}.`);
+    } catch (err: unknown) {
+      alert((err as Error).message || "Impossible de modifier la période d'essai.");
+    } finally {
+      setIsUpdatingTrial(false);
     }
   };
 
@@ -414,6 +441,48 @@ export default function OrganizationDetailPage() {
                 </Button>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary" />
+              <div>
+                <CardTitle>Période d&apos;essai</CardTitle>
+                <CardDescription>
+                  Définir le nombre de jours accordés à partir d&apos;aujourd&apos;hui.
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="flex flex-wrap items-end gap-3">
+            <label className="grid gap-1.5 text-xs font-medium text-muted">
+              Jours d&apos;essai
+              <input
+                type="number"
+                min={0}
+                max={3650}
+                value={trialDaysInput}
+                disabled={!canManageSubscriptions}
+                onChange={(event) => setTrialDaysInput(event.target.value)}
+                className="h-10 w-40 rounded-lg border border-border bg-surface px-3 text-sm text-foreground disabled:opacity-60"
+              />
+            </label>
+            <Button
+              size="default"
+              onClick={handleUpdateTrial}
+              isLoading={isUpdatingTrial}
+              disabled={!canManageSubscriptions}
+              className="text-xs font-semibold"
+            >
+              Enregistrer l&apos;essai
+            </Button>
+            <span className="text-xs text-muted">
+              {org?.subscriptionTrialEndsAt
+                ? `Fin actuelle : ${formatDate(org.subscriptionTrialEndsAt)}`
+                : "Aucune date d’essai enregistrée."}
+            </span>
           </CardContent>
         </Card>
       </main>

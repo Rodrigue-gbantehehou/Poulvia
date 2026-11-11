@@ -44,4 +44,15 @@ export const organizationsApi = {
       body: JSON.stringify({ status }),
     });
   },
+
+  setTrialDays: async (id: string, trialDays: number): Promise<OrganizationItem> => {
+    const res = await apiRequest<{ status: string; data: OrganizationItem }>(
+      `/api/admin/organizations/${id}/trial`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ trialDays }),
+      }
+    );
+    return res.data;
+  },
 };

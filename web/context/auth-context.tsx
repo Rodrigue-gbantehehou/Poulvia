@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { api } from "@/lib/api-client";
 import { Farm, FarmRole, FarmSubscription, User } from "@/lib/types";
 
@@ -41,22 +41,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize from localStorage on client-side
-  useEffect(() => {
-    async function initializeSession() {
-      const storedToken = localStorage.getItem("Poulvia_token");
-      if (storedToken) {
-        setToken(storedToken);
-        await loadCurrentUser();
-      } else {
-        setIsLoading(false);
-      }
-    }
-
-    void initializeSession();
+  const logout = useCallback(() => {
+    localStorage.removeItem("Poulvia_token");
+    localStorage.removeItem("Poulvia_active_farm_id");
+    setToken(null);
+    setUser(null);
+    setActiveFarm(null);
+    setFarms([]);
+    setRole(null);
+    setPermissions([]);
+    setIsLoading(false);
   }, []);
 
-  async function loadCurrentUser() {
+  const loadCurrentUser = useCallback(async () => {
     try {
       setIsLoading(true);
       const res = await api.auth.me();
@@ -65,6 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         id: res.id,
         email: res.email,
         fullName: res.fullName || `${res.firstName} ${res.lastName}`,
+        phone: res.phone || null,
         roles: res.roles || [],
       };
       setUser(mappedUser);
@@ -109,19 +107,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       }
 
-      const allPermissions = [
-        "farm:read", "farm:create", "farm:update", "farm:delete", "farm:view", "farm:edit",
-        "flock:read", "flock:create", "flock:update", "flock:delete", "flock:view", "flock:movement",
-        "egg:read", "egg:create", "egg:delete", "egg:view",
-        "inventory:read", "inventory:create", "inventory:update", "inventory:delete", "inventory:view", "inventory:movement", "inventory:valuation",
-        "finance:read", "finance:create", "finance:delete", "finance:view", "finance:margin",
-        "contact:read", "contact:create", "contact:update", "contact:delete", "contact:view",
-        "role:read", "role:create", "role:update", "role:manage",
-        "member:manage", "member:read", "member:create", "member:update", "member:delete",
-        "dashboard:view", "dashboard:financials",
-        "api_key:manage",
-      ];
-
       // Les permissions retournées par l'API intègrent déjà la formule souscrite pour la ferme active
       if (Array.isArray(currentFarm?.permissions)) {
         const rawPerms: string[] = currentFarm.permissions;
@@ -147,7 +132,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [logout]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const storedToken = localStorage.getItem("Poulvia_token");
+      if (storedToken) {
+        setToken(storedToken);
+        void loadCurrentUser();
+      } else {
+        setIsLoading(false);
+      }
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [loadCurrentUser]);
 
   async function login(credentials: { email: string; password: string }) {
     setIsLoading(true);
@@ -183,18 +181,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }
-
-  function logout() {
-    localStorage.removeItem("Poulvia_token");
-    localStorage.removeItem("Poulvia_active_farm_id");
-    setToken(null);
-    setUser(null);
-    setActiveFarm(null);
-    setFarms([]);
-    setRole(null);
-    setPermissions([]);
-    setIsLoading(false);
   }
 
   async function switchFarm(farmId: string) {

@@ -37,7 +37,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Header / Logo */}
         <div className="text-center mb-8">
-          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-white p-2 shadow-md">
+          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl p-2 ">
             <Image src="/logo.png" alt="Logo Poulvia" width={48} height={48} className="h-full w-full object-contain" priority />
           </div>
           <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">

@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Plus,
   Wallet,
   ArrowUpRight,
   ArrowDownRight,
-  Filter,
   Printer,
   AlertTriangle,
   AlertCircle,
@@ -19,7 +18,6 @@ import { Shell } from "@/components/layout/shell";
 import { StatCard } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
-import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, ColumnDef } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
 import { useAuth } from "@/context/auth-context";
@@ -73,13 +71,14 @@ export default function FinancesPage() {
 
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (activeFarm?.id && hasModule("finance") && (hasPermission("finance:read") || hasPermission("finance:view"))) {
-      loadTransactions();
-    }
-  }, [activeFarm?.id]);
+  const canViewFinance = hasModule("finance") &&
+    (hasPermission("finance:read") || hasPermission("finance:view"));
 
-  async function loadTransactions() {
+  const loadTransactions = useCallback(async () => {
+    if (!activeFarm?.id || !canViewFinance) {
+      setIsLoading(false);
+      return;
+    }
     try {
       const [txData, contactsData] = await Promise.all([
         api.finance.listTransactions({ farmId: activeFarm?.id }),
@@ -92,7 +91,12 @@ export default function FinancesPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [activeFarm, canViewFinance]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadTransactions(), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadTransactions]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

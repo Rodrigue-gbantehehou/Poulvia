@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:poulvia/features/welcome/welcome_screen.dart';
@@ -18,7 +18,7 @@ void main() {
       ),
     );
 
-    expect(find.text('LE FERMIER'), findsOneWidget);
+    expect(find.text('POULVIA'), findsOneWidget);
     expect(find.text('Créer mon exploitation'), findsOneWidget);
     expect(find.text("J'ai déjà un compte"), findsOneWidget);
   });
@@ -32,7 +32,7 @@ void main() {
       ),
     );
 
-    expect(find.text('Le Fermier'), findsOneWidget);
+    expect(find.text('Poulvia'), findsOneWidget);
     expect(find.text('Connexion'), findsOneWidget);
     expect(find.text('Se connecter'), findsOneWidget);
   });

@@ -1,14 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Warehouse,
   Plus,
   Edit3,
   Trash2,
-  Building2,
-  Box,
   RefreshCw,
   Users,
   CheckCircle2,
@@ -47,14 +45,11 @@ export default function BuildingsPage() {
   const canViewBuildings = hasModule("buildings") &&
     (hasPermission("building:manage") || hasPermission("farm:view") || isOwner);
 
-  useEffect(() => {
-    if (activeFarm?.id && canViewBuildings) {
-      loadBuildings();
+  const loadBuildings = useCallback(async () => {
+    if (!activeFarm?.id || !canViewBuildings) {
+      setIsLoading(false);
+      return;
     }
-  }, [activeFarm?.id, canViewBuildings]);
-
-  async function loadBuildings() {
-    if (!activeFarm?.id || !canViewBuildings) return;
     setIsLoading(true);
     setLoadError(false);
     try {
@@ -66,7 +61,12 @@ export default function BuildingsPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [activeFarm, canViewBuildings]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadBuildings(), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadBuildings]);
 
   async function handleDelete(id: string) {
     if (!activeFarm?.id) return;
@@ -90,7 +90,6 @@ export default function BuildingsPage() {
   };
 
   const totalCapacity = buildings.reduce((sum, b) => sum + (Number(b.capacity) || 0), 0);
-  const totalPoultryHouses = buildings.filter((b) => b.type === "POULTRY_HOUSE" || b.type === "BROODER").length;
 
   if (!hasModule("buildings")) {
     return (
@@ -118,13 +117,14 @@ export default function BuildingsPage() {
     <Shell>
       <PageHeader
         title="Poulaillers"
+        inlineOnMobile
         subtitle={`${buildings.length} bâtiment(s) enregistrés`}
         icon={<Warehouse className="h-4 w-4" />}
         actions={
           <div className="flex items-center gap-1.5">
             <Link
               href="/flocks"
-              className="inline-flex h-8 items-center justify-center gap-1.5 rounded-full border border-border bg-surface px-3 text-xs font-semibold text-foreground hover:bg-surface-hover shadow-2xs active:scale-95 transition-all"
+              className="hidden h-8 items-center justify-center gap-1.5 rounded-full border border-border bg-surface px-3 text-xs font-semibold text-foreground hover:bg-surface-hover shadow-2xs active:scale-95 transition-all sm:inline-flex"
               title="Retour aux bandes d'élevage"
             >
               <Bird className="h-3.5 w-3.5 text-primary" />
@@ -135,7 +135,7 @@ export default function BuildingsPage() {
               type="button"
               onClick={loadBuildings}
               title="Actualiser"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border bg-surface text-foreground shadow-xs hover:bg-surface-hover active:scale-95 transition-all"
+              className="hidden h-8 w-8 items-center justify-center rounded-full border border-border bg-surface text-foreground shadow-xs hover:bg-surface-hover active:scale-95 transition-all sm:inline-flex"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin text-primary" : "text-muted"}`} />
             </button>
@@ -302,18 +302,6 @@ export default function BuildingsPage() {
         />
       )}
 
-      {/* Floating Action Button (FAB) Mobile */}
-      {(hasPermission("farm:update") || hasPermission("building:create")) && (
-        <button
-          type="button"
-          onClick={() => setCreateModalOpen(true)}
-          aria-label="Nouveau poulailler"
-          className="fixed bottom-20 right-4 z-30 flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-xs font-bold text-white shadow-xl shadow-primary/40 border-2 border-surface active:scale-90 transition-all sm:hidden cursor-pointer"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Poulailler</span>
-        </button>
-      )}
     </Shell>
   );
 }

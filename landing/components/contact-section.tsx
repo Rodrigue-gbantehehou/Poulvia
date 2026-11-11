@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import React, { useState } from "react";
-import { Send, CheckCircle2, Phone, Mail, MapPin, MessageSquare, AlertCircle } from "lucide-react";
+import { Send, Mail, Phone, MapPin, AlertCircle } from "lucide-react";
 
 export function ContactSection() {
   const [name, setName] = useState("");
@@ -11,11 +11,10 @@ export function ContactSection() {
   const [flockSize, setFlockSize] = useState("");
   const [message, setMessage] = useState("");
 
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [draftReady, setDraftReady] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrorMessage(null);
 
@@ -28,18 +27,28 @@ export function ContactSection() {
       return;
     }
 
-    setSubmitting(true);
-
-    try {
-      // Simulate real transmission or POST to backend if configured
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      setSubmitted(true);
-    } catch {
-      setErrorMessage("Une erreur réseau est survenue. Veuillez réessayer ou nous contacter par téléphone.");
-    } finally {
-      setSubmitting(false);
-    }
+    setDraftReady(true);
   }
+
+  const farmTypeLabels: Record<string, string> = {
+    LAYER: "Poules pondeuses",
+    BROILER: "Poulets de chair",
+    MIXED: "Élevage mixte",
+    LOCAL: "Poules locales / Goliath",
+  };
+  const farmTypeLabel = farmTypeLabels[farmType] ?? farmType;
+  const emailSubject = "Demande de démonstration Poulvia";
+  const emailBody = [
+    `Nom : ${name.trim()}`,
+    `Téléphone : ${phone.trim() || "Non renseigné"}`,
+    `Adresse e-mail : ${email.trim() || "Non renseignée"}`,
+    `Type d’élevage : ${farmTypeLabel}`,
+    `Effectif estimé : ${flockSize.trim() || "Non renseigné"}`,
+    "",
+    "Message :",
+    message.trim() || "Aucun message ajouté.",
+  ].join("\n");
+  const emailDraftHref = `mailto:contact@poulvia.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
 
   return (
     <section id="contact" className="py-20 md:py-28 bg-background border-t border-border">
@@ -56,7 +65,7 @@ export function ContactSection() {
             </h2>
 
             <p className="text-sm text-muted leading-relaxed">
-              Vous souhaitez une démonstration personnalisée, une aide pour configurer vos premiers poulaillers ou une formation pour votre équipe ? Notre équipe avicole vous répond rapidement.
+              Vous souhaitez une démonstration personnalisée ou un renseignement ? Préparez un courriel avec les informations utiles pour nous présenter votre élevage et votre demande.
             </p>
 
             <div className="space-y-4 pt-4 border-t border-border text-xs text-foreground">
@@ -89,7 +98,7 @@ export function ContactSection() {
                   <MapPin className="h-4 w-4" />
                 </div>
                 <div>
-                  <span className="text-[10px] text-muted block">Zone d'intervention</span>
+                  <span className="text-[10px] text-muted block">Zone d’intervention</span>
                   <span className="font-bold">Cotonou, Calavi, Porto-Novo et toute la sous-région</span>
                 </div>
               </div>
@@ -99,30 +108,32 @@ export function ContactSection() {
           {/* Right form column */}
           <div className="lg:col-span-7">
             <div className="rounded-3xl border border-border bg-surface p-7 sm:p-9 shadow-lg">
-              {submitted ? (
+              {draftReady ? (
                 <div className="text-center py-10 space-y-4 animate-in fade-in duration-300">
-                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-success-soft text-success shadow-xs">
-                    <CheckCircle2 className="h-8 w-8" />
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-soft text-primary shadow-xs">
+                    <Mail className="h-8 w-8" />
                   </div>
                   <h3 className="text-xl font-bold text-foreground">
-                    Demande transmise avec succès !
+                    Votre demande est prête à être envoyée
                   </h3>
                   <p className="text-xs sm:text-sm text-muted max-w-md mx-auto leading-relaxed">
-                    Merci {name}. Un conseiller Poulvia a bien reçu vos informations et prendra contact avec vous sur votre numéro {phone || email} pour planifier votre accompagnement.
+                    Aucune demande n’a encore été transmise. Ouvrez le brouillon dans votre messagerie, vérifiez son contenu puis appuyez sur « Envoyer » pour contacter Poulvia.
                   </p>
+                  <a
+                    href={emailDraftHref}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-xs font-bold text-white shadow-xs hover:bg-primary-hover transition-colors"
+                  >
+                    <Mail className="h-4 w-4" />
+                    Ouvrir le brouillon e-mail
+                  </a>
                   <button
                     type="button"
-                    onClick={() => {
-                      setSubmitted(false);
-                      setName("");
-                      setPhone("");
-                      setEmail("");
-                      setMessage("");
-                    }}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-4 py-2 text-xs font-semibold text-foreground hover:bg-surface-hover"
+                    onClick={() => setDraftReady(false)}
+                    className="block mx-auto rounded-xl border border-border bg-surface px-4 py-2 text-xs font-semibold text-foreground hover:bg-surface-hover"
                   >
-                    Envoyer un autre message
+                    Modifier les informations
                   </button>
+                  <p className="text-[11px] text-muted">Les informations ne sont envoyées à Poulvia que si vous envoyez le courriel depuis votre messagerie.</p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -130,7 +141,7 @@ export function ContactSection() {
                     Demander une démonstration ou un renseignement
                   </h3>
                   <p className="text-xs text-muted mb-4">
-                    Remplissez ce formulaire et nous vous recontacterons sous 24h.
+                    Préparez un e-mail de demande de démonstration ou de renseignement.
                   </p>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -145,22 +156,21 @@ export function ContactSection() {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="ex. Koffi Dossou"
-                        className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-xs text-foreground focus:border-primary focus:outline-hidden"
+                        className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-base text-foreground focus:border-primary focus:outline-hidden sm:text-sm"
                       />
                     </div>
 
                     <div>
                       <label htmlFor="phone" className="block text-xs font-semibold text-foreground mb-1">
-                        Téléphone / WhatsApp *
+                        Téléphone / WhatsApp
                       </label>
                       <input
                         id="phone"
                         type="tel"
-                        required
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         placeholder="ex. +229 97 00 00 00"
-                        className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-xs font-mono text-foreground focus:border-primary focus:outline-hidden"
+                        className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-base font-mono text-foreground focus:border-primary focus:outline-hidden sm:text-sm"
                       />
                     </div>
                   </div>
@@ -176,19 +186,19 @@ export function ContactSection() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="votre-ferme@gmail.com"
-                        className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-xs text-foreground focus:border-primary focus:outline-hidden"
+                        className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-base text-foreground focus:border-primary focus:outline-hidden sm:text-sm"
                       />
                     </div>
 
                     <div>
                       <label htmlFor="farmType" className="block text-xs font-semibold text-foreground mb-1">
-                        Type d'élevage principal
+                        Type d’élevage principal
                       </label>
                       <select
                         id="farmType"
                         value={farmType}
                         onChange={(e) => setFarmType(e.target.value)}
-                        className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-xs font-semibold text-foreground"
+                        className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-base font-semibold text-foreground sm:text-sm"
                       >
                         <option value="LAYER">Poules pondeuses (Œufs de table)</option>
                         <option value="BROILER">Poulets de chair (Viande)</option>
@@ -208,7 +218,7 @@ export function ContactSection() {
                       value={flockSize}
                       onChange={(e) => setFlockSize(e.target.value)}
                       placeholder="ex. 1 500 pondeuses ou 500 poussins"
-                      className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-xs text-foreground focus:border-primary focus:outline-hidden"
+                      className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-base text-foreground focus:border-primary focus:outline-hidden sm:text-sm"
                     />
                   </div>
 
@@ -222,7 +232,7 @@ export function ContactSection() {
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                       placeholder="Précisez votre demande (ex. aide à la configuration, questions sur les tarifs...)"
-                      className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-xs text-foreground focus:border-primary focus:outline-hidden"
+                      className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-base text-foreground focus:border-primary focus:outline-hidden sm:text-sm"
                     />
                   </div>
 
@@ -233,14 +243,17 @@ export function ContactSection() {
                     </div>
                   )}
 
+                  <p className="text-[11px] text-muted">
+                    Vos informations restent dans ce formulaire jusqu’à l’ouverture du brouillon. Elles ne sont pas envoyées automatiquement.
+                  </p>
+
                   <div className="pt-2 flex justify-end">
                     <button
                       type="submit"
-                      disabled={submitting}
                       className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-xs font-bold text-white shadow-xs hover:bg-primary-hover transition-colors"
                     >
                       <Send className="h-3.5 w-3.5" />
-                      <span>{submitting ? "Transmission en cours..." : "Envoyer ma demande"}</span>
+                      <span>Préparer mon e-mail</span>
                     </button>
                   </div>
                 </form>

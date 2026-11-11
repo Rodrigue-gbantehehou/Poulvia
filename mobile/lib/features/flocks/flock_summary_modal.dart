@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
@@ -6,6 +6,7 @@ import '../../core/api/api_client.dart';
 import '../../core/api/api_endpoints.dart';
 import '../../core/models/farm.dart';
 import '../../core/models/flock.dart';
+import '../../core/design_system/app_modal_surface.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/pdf_helper.dart';
@@ -110,7 +111,8 @@ class _FlockSummaryModalState extends ConsumerState<FlockSummaryModal> {
     try {
       // 1. Transactions financières rattachées
       try {
-        final txRes = await dio.get("${ApiEndpoints.farmTransactions(farmId)}?flockId=${widget.flock.id}");
+        final txRes = await dio.get(
+            "${ApiEndpoints.farmTransactions(farmId)}?flockId=${widget.flock.id}");
         if (txRes.data != null && txRes.data['data'] is List) {
           final txs = txRes.data['data'] as List;
           double inc = 0;
@@ -133,15 +135,18 @@ class _FlockSummaryModalState extends ConsumerState<FlockSummaryModal> {
           final metaSummary = eggRes.data?['meta']?['summary'];
           if (metaSummary != null) {
             _eggs = (metaSummary['totalGoodEggs'] as num?)?.toInt() ?? 0;
-            _trays = (metaSummary['totalTrays'] as num?)?.toInt() ?? (_eggs ~/ 30);
-            _layingRate = (metaSummary['averageLayingRate'] as num?)?.toDouble() ?? 0.0;
+            _trays =
+                (metaSummary['totalTrays'] as num?)?.toInt() ?? (_eggs ~/ 30);
+            _layingRate =
+                (metaSummary['averageLayingRate'] as num?)?.toDouble() ?? 0.0;
           }
         } catch (_) {}
       }
 
       // 3. Aliments
       try {
-        final feedRes = await dio.get("${ApiEndpoints.farmInventoryMovements(farmId)}?flockId=${widget.flock.id}");
+        final feedRes = await dio.get(
+            "${ApiEndpoints.farmInventoryMovements(farmId)}?flockId=${widget.flock.id}");
         if (feedRes.data != null && feedRes.data['data'] is List) {
           final movements = feedRes.data['data'] as List;
           double kg = 0.0;
@@ -171,7 +176,8 @@ class _FlockSummaryModalState extends ConsumerState<FlockSummaryModal> {
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text("Bilan copié pour WhatsApp ! Collez-le dans votre discussion."),
+        content: Text(
+            "Bilan copié pour WhatsApp ! Collez-le dans votre discussion."),
         backgroundColor: Color(0xFF25D366),
         duration: Duration(seconds: 3),
       ),
@@ -227,30 +233,24 @@ class _FlockSummaryModalState extends ConsumerState<FlockSummaryModal> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surfaceColor = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+    final surfaceColor =
+        isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
     final authState = ref.watch(authProvider);
-    final farm = widget.farm ?? authState.activeFarm ?? const Farm(id: "", name: "Exploitation Avicole");
+    final farm = widget.farm ??
+        authState.activeFarm ??
+        const Farm(id: "", name: "Exploitation Avicole");
     final canViewFinance = farm.canViewFinance;
 
-    final initialQty = widget.flock.initialQuantity > 0 ? widget.flock.initialQuantity : 1;
+    final initialQty =
+        widget.flock.initialQuantity > 0 ? widget.flock.initialQuantity : 1;
     final marginPerBird = (_margin / initialQty).round();
     final mortalityRate = widget.flock.calculatedMortalityRate;
 
     // Indice de consommation estimé (IC = kg aliment / kg vif produit ou ratio par tête)
     final feedPerBirdKg = (initialQty > 0) ? (_feedKg / initialQty) : 0.0;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      padding: EdgeInsets.fromLTRB(
-        20,
-        12,
-        20,
-        MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 20,
-      ),
+    return AppModalSurface(
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -281,7 +281,8 @@ class _FlockSummaryModalState extends ConsumerState<FlockSummaryModal> {
                         color: AppColors.primary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.assessment_rounded, color: AppColors.primary, size: 22),
+                      child: const Icon(Icons.assessment_rounded,
+                          color: AppColors.primary, size: 22),
                     ),
                     const SizedBox(width: 12),
                     Column(
@@ -296,7 +297,8 @@ class _FlockSummaryModalState extends ConsumerState<FlockSummaryModal> {
                         ),
                         Text(
                           "${widget.flock.name} • ${widget.flock.typeLabel}",
-                          style: const TextStyle(fontSize: 12, color: AppColors.textMutedLight),
+                          style: const TextStyle(
+                              fontSize: 12, color: AppColors.textMutedLight),
                         ),
                       ],
                     ),
@@ -314,7 +316,8 @@ class _FlockSummaryModalState extends ConsumerState<FlockSummaryModal> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.backgroundDark : const Color(0xFFF9FAFB),
+                color:
+                    isDark ? AppColors.backgroundDark : AppColors.surfaceLight,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: borderColor),
               ),
@@ -326,35 +329,22 @@ class _FlockSummaryModalState extends ConsumerState<FlockSummaryModal> {
                     children: [
                       Text(
                         "Code : ${widget.flock.code ?? '—'}",
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'monospace'),
+                        style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'monospace'),
                       ),
                       Text(
                         "Souche : ${widget.flock.breed} • Début : ${widget.flock.startDate}",
-                        style: const TextStyle(fontSize: 11, color: AppColors.textMutedLight),
+                        style: const TextStyle(
+                            fontSize: 11, color: AppColors.textMutedLight),
                       ),
                     ],
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: widget.flock.isActive
-                          ? AppColors.success.withValues(alpha: 0.12)
-                          : Colors.grey.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: widget.flock.isActive
-                            ? AppColors.success.withValues(alpha: 0.4)
-                            : Colors.grey.withValues(alpha: 0.4),
-                      ),
-                    ),
-                    child: Text(
-                      widget.flock.isActive ? "En élevage" : "Clôturée",
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: widget.flock.isActive ? AppColors.success : AppColors.textMutedLight,
-                      ),
-                    ),
+                  Text(
+                    widget.flock.isActive ? "En élevage" : "Clôturée",
+                    style: const TextStyle(
+                        fontSize: 11, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -370,7 +360,11 @@ class _FlockSummaryModalState extends ConsumerState<FlockSummaryModal> {
               // Section 1 : Performances Zootechniques
               const Text(
                 "PERFORMANCES ZOOTECHNIQUES",
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.textMutedLight, letterSpacing: 0.5),
+                style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textMutedLight,
+                    letterSpacing: 0.5),
               ),
               const SizedBox(height: 8),
 
@@ -385,34 +379,31 @@ class _FlockSummaryModalState extends ConsumerState<FlockSummaryModal> {
                   _MetricCard(
                     title: "Mortalité globale",
                     value: "${mortalityRate.toStringAsFixed(1)}%",
-                    sub: "${widget.flock.deathsCount} / ${widget.flock.initialQuantity} pertes",
-                    color: mortalityRate > 8 ? AppColors.danger : (mortalityRate > 4 ? AppColors.warning : AppColors.success),
+                    sub:
+                        "${widget.flock.deathsCount} / ${widget.flock.initialQuantity} pertes",
                   ),
                   _MetricCard(
                     title: "Effectif restant",
                     value: "${widget.flock.currentQuantity}",
                     sub: "sujets vivants actuels",
-                    color: AppColors.primary,
                   ),
                   _MetricCard(
                     title: "Aliments consommés",
                     value: "${_feedKg.toStringAsFixed(1)} kg",
                     sub: "Soit ~${feedPerBirdKg.toStringAsFixed(2)} kg / sujet",
-                    color: AppColors.accent,
                   ),
                   if (widget.flock.isLayer)
                     _MetricCard(
                       title: "Ponte cumulée",
                       value: "$_trays plx",
-                      sub: "$_eggs œufs (Moy: ${_layingRate.toStringAsFixed(1)}%)",
-                      color: AppColors.accent,
+                      sub:
+                          "$_eggs œufs (Moy: ${_layingRate.toStringAsFixed(1)}%)",
                     )
                   else
                     _MetricCard(
                       title: "Durée d'élevage",
                       value: "${widget.flock.ageInWeeks ?? 0} sem",
                       sub: "${widget.flock.ageInDays ?? 0} jours de bande",
-                      color: AppColors.primary,
                     ),
                 ],
               ),
@@ -422,14 +413,19 @@ class _FlockSummaryModalState extends ConsumerState<FlockSummaryModal> {
               if (canViewFinance) ...[
                 const Text(
                   "COMPTE D'EXPLOITATION & RENTABILITÉ",
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.textMutedLight, letterSpacing: 0.5),
+                  style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textMutedLight,
+                      letterSpacing: 0.5),
                 ),
                 const SizedBox(height: 8),
-
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: isDark ? AppColors.backgroundDark : const Color(0xFFF9FAFB),
+                    color: isDark
+                        ? AppColors.backgroundDark
+                        : AppColors.surfaceLight,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: borderColor),
                   ),
@@ -438,10 +434,16 @@ class _FlockSummaryModalState extends ConsumerState<FlockSummaryModal> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text("Chiffre d'affaires (Ventes)", style: TextStyle(fontSize: 12.5, color: AppColors.textMutedLight)),
+                          const Text("Chiffre d'affaires (Ventes)",
+                              style: TextStyle(
+                                  fontSize: 12.5,
+                                  color: AppColors.textMutedLight)),
                           Text(
                             "+${CurrencyFormatter.formatFcfa(_income)}",
-                            style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, fontFamily: 'monospace', color: AppColors.success),
+                            style: const TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'monospace'),
                           ),
                         ],
                       ),
@@ -449,10 +451,16 @@ class _FlockSummaryModalState extends ConsumerState<FlockSummaryModal> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text("Total des charges imputées", style: TextStyle(fontSize: 12.5, color: AppColors.textMutedLight)),
+                          const Text("Total des charges imputées",
+                              style: TextStyle(
+                                  fontSize: 12.5,
+                                  color: AppColors.textMutedLight)),
                           Text(
                             "-${CurrencyFormatter.formatFcfa(_expense)}",
-                            style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, fontFamily: 'monospace', color: AppColors.danger),
+                            style: const TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'monospace'),
                           ),
                         ],
                       ),
@@ -466,15 +474,15 @@ class _FlockSummaryModalState extends ConsumerState<FlockSummaryModal> {
                         children: [
                           const Text(
                             "MARGE BRUTE RÉELLE",
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
+                            style: TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w900),
                           ),
                           Text(
                             CurrencyFormatter.formatFcfa(_margin),
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 17,
                               fontWeight: FontWeight.w900,
                               fontFamily: 'monospace',
-                              color: _margin >= 0 ? AppColors.success : AppColors.danger,
                             ),
                           ),
                         ],
@@ -485,15 +493,15 @@ class _FlockSummaryModalState extends ConsumerState<FlockSummaryModal> {
                         children: [
                           const Text(
                             "Rentabilité nette par sujet mis en place",
-                            style: TextStyle(fontSize: 11, color: AppColors.textMutedLight),
+                            style: TextStyle(
+                                fontSize: 11, color: AppColors.textMutedLight),
                           ),
                           Text(
                             "${CurrencyFormatter.formatFcfa(marginPerBird)} / tête",
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.bold,
                               fontFamily: 'monospace',
-                              color: _margin >= 0 ? AppColors.success : AppColors.danger,
                             ),
                           ),
                         ],
@@ -505,7 +513,8 @@ class _FlockSummaryModalState extends ConsumerState<FlockSummaryModal> {
               ],
 
               // Notes de bande
-              if (widget.flock.notes != null && widget.flock.notes!.isNotEmpty) ...[
+              if (widget.flock.notes != null &&
+                  widget.flock.notes!.isNotEmpty) ...[
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
@@ -519,7 +528,10 @@ class _FlockSummaryModalState extends ConsumerState<FlockSummaryModal> {
                     children: [
                       const Text(
                         "OBSERVATIONS & ITINÉRAIRE TECHNIQUE",
-                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.textMutedLight),
+                        style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textMutedLight),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -540,15 +552,20 @@ class _FlockSummaryModalState extends ConsumerState<FlockSummaryModal> {
                   flex: 3,
                   child: ElevatedButton.icon(
                     onPressed: () => _shareBilan(farm),
-                    icon: const Icon(Icons.share_rounded, size: 18, color: Colors.white),
+                    icon: const Icon(Icons.share_rounded,
+                        size: 18, color: Colors.white),
                     label: const Text(
                       "Partager le bilan (WhatsApp)",
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white),
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF25D366),
                       padding: const EdgeInsets.symmetric(vertical: 13),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                       elevation: 0,
                     ),
                   ),
@@ -565,9 +582,11 @@ class _FlockSummaryModalState extends ConsumerState<FlockSummaryModal> {
                           height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.picture_as_pdf_rounded, size: 20, color: AppColors.danger),
+                      : const Icon(Icons.picture_as_pdf_rounded,
+                          size: 20, color: AppColors.danger),
                   style: IconButton.styleFrom(
-                    backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+                    backgroundColor:
+                        isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
                     padding: const EdgeInsets.all(12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -588,50 +607,40 @@ class _MetricCard extends StatelessWidget {
   final String title;
   final String value;
   final String sub;
-  final Color color;
 
   const _MetricCard({
     required this.title,
     required this.value,
     required this.sub,
-    required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.backgroundDark : const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             title,
-            style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: AppColors.textMutedLight),
+            style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 2),
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w900,
               fontFamily: 'monospace',
-              color: color,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             sub,
-            style: const TextStyle(fontSize: 9.5, color: AppColors.textMutedLight),
+            style: const TextStyle(fontSize: 9.5),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),

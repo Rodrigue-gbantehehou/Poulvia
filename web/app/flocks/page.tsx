@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useCallback, useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { Plus, Bird, Calendar, Warehouse, ArrowRight, Eye, AlertCircle, Utensils } from "lucide-react";
 import { Shell } from "@/components/layout/shell";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
-import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, ColumnDef } from "@/components/ui/data-table";
 import { RecordFeedingModal } from "@/components/dashboard";
 import { useAuth } from "@/context/auth-context";
@@ -103,14 +102,11 @@ export default function FlocksPage() {
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [feedingModalOpen, setFeedingModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (activeFarm?.id && canViewFlocks) {
-      loadFlocks();
+  const loadFlocks = useCallback(async () => {
+    if (!activeFarm?.id || !canViewFlocks) {
+      setIsLoading(false);
+      return;
     }
-  }, [activeFarm?.id, canViewFlocks]);
-
-  async function loadFlocks() {
-    if (!activeFarm?.id || !canViewFlocks) return;
     setIsLoading(true);
     setLoadError(null);
     try {
@@ -129,7 +125,12 @@ export default function FlocksPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [activeFarm, canViewFlocks, canViewBuildings, canViewInventory]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadFlocks(), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadFlocks]);
 
   async function handleCreateFlock(e: React.FormEvent) {
     e.preventDefault();
@@ -220,10 +221,7 @@ export default function FlocksPage() {
 
           </div>
           {flock.code && <span className="text-[10px] font-mono text-muted">{flock.code}</span>}
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground">
-            <span className={`h-1.5 w-1.5 rounded-full ${flock.status === "ACTIVE" ? "bg-success" : "bg-muted"}`} />
-            {flock.status === "ACTIVE" ? "Actif" : "Clôturé"}
-          </span>
+
         </div>
       ),
     },
@@ -286,7 +284,6 @@ export default function FlocksPage() {
       accessor: (f) => f.initialQuantity - f.currentQuantity,
       cell: (flock) => {
         const losses = flock.initialQuantity - flock.currentQuantity;
-        const mortalityRate = flock.initialQuantity > 0 ? (losses / flock.initialQuantity) * 100 : 0;
         return (
           <span className={`font-mono font-semibold ${losses > 0 ? "text-danger" : "text-muted"}`}>
             {losses}
@@ -356,6 +353,8 @@ export default function FlocksPage() {
       {/* En-tête mobile natif */}
       <PageHeader
         title="Bandes de volailles"
+        mobileTitle="Mes bandes"
+        inlineOnMobile
         subtitle={`${flocks.filter((f) => f.status === "ACTIVE").length} lot(s) actif(s) en élevage`}
         icon={<Bird className="h-4 w-4" />}
         actions={
@@ -363,11 +362,11 @@ export default function FlocksPage() {
             {(hasPermission("building:manage") || hasPermission("farm:view") || isOwner) && (
               <Link
                 href="/buildings"
-                className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-surface-hover shadow-2xs active:scale-95 transition-all cursor-pointer"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border bg-surface text-xs font-semibold text-foreground hover:bg-surface-hover shadow-2xs active:scale-95 transition-all cursor-pointer sm:h-auto sm:w-auto sm:gap-1 sm:px-3 sm:py-1.5"
                 title="Voir et gérer les bâtiments & poulaillers"
               >
                 <Warehouse className="h-3.5 w-3.5 text-primary" />
-                <span className="hidden xs:inline">Poulaillers</span>
+                <span className="hidden sm:inline">Poulaillers</span>
               </Link>
             )}
 
@@ -404,11 +403,13 @@ export default function FlocksPage() {
           data={filteredFlocks}
           columns={flockColumns}
           searchable={true}
+          collapsibleFilters={true}
           searchPlaceholder="Rechercher par nom, race, code..."
           searchAccessor={(f) => `${f.name} ${f.code || ""} ${f.breed || ""}`}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           isLoading={isLoading}
+          activeFilterCount={statusFilter === "ACTIVE" ? 1 : 0}
           secondaryFilter={
             <div className="flex items-center gap-1.5 shrink-0">
               {[
@@ -474,13 +475,21 @@ export default function FlocksPage() {
                   </div>
 
                   {/* Quantitative Stats */}
-                  <div className="mt-4 grid grid-cols-2 gap-3 rounded-xl bg-surface-muted p-3">
+                  <div className="mt-4 grid grid-cols-3 gap-2 rounded-xl bg-surface-muted p-3">
                     <div>
                       <span className="text-[11px] text-muted">
-                        Poules vivantes
+                        Vivantes
                       </span>
                       <p className="text-base sm:text-lg font-bold font-mono text-primary">
                         {formatNumber(flock.currentQuantity)}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-[11px] text-muted">Âge</span>
+                      <p className="text-base sm:text-lg font-bold font-mono text-foreground">
+                        {flock.ageInDays !== undefined && flock.ageInDays < 7
+                          ? `J${flock.ageInDays}`
+                          : `S${flock.ageInWeeks ?? "?"}`}
                       </p>
                     </div>
                     <div>
@@ -563,11 +572,19 @@ export default function FlocksPage() {
                   </div>
 
                   {/* Quantitative Stats */}
-                  <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl bg-surface-muted p-2.5">
+                  <div className="mt-3 grid grid-cols-3 gap-2 rounded-xl bg-surface-muted p-2.5">
                     <div>
                       <span className="text-[10px] text-muted">Poules vivantes</span>
                       <p className="text-base font-bold font-mono text-primary">
                         {formatNumber(flock.currentQuantity)}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-muted">Âge</span>
+                      <p className="text-base font-bold font-mono text-foreground">
+                        {flock.ageInDays !== undefined && flock.ageInDays < 7
+                          ? `J${flock.ageInDays}`
+                          : `S${flock.ageInWeeks ?? "?"}`}
                       </p>
                     </div>
                     <div>
@@ -659,7 +676,7 @@ export default function FlocksPage() {
                 className="flex items-center gap-1 text-[11px] font-bold text-primary hover:text-primary-hover hover:underline transition-colors"
               >
                 <Plus className="h-3 w-3" />
-                <span>+ Nouveau</span>
+                <span>Nouveau</span>
               </button>
             </div>
             <select

@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme/app_theme.dart';
 import '../auth/auth_provider.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../dashboard/dashboard_provider.dart';
@@ -267,6 +268,10 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
 
     final authState = ref.watch(authProvider);
     final farm = authState.activeFarm;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final navBackground = isDark ? AppColors.backgroundDark : AppColors.surfaceLight;
+    final navTrack = isDark ? AppColors.surfaceDark : AppColors.backgroundLight;
+    final navBorder = isDark ? AppColors.borderDark : AppColors.borderLight;
 
     // ─── 4 ÉCRANS STABLES EN BAS ───
     final screens = <Widget>[
@@ -307,7 +312,7 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
                 children: screens,
               ),
         bottomNavigationBar: Container(
-          color: const Color(0xFFFAFAF8),
+          color: navBackground,
           child: SafeArea(
             top: false,
             child: Padding(
@@ -319,9 +324,9 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
                     height: 58,
                     padding: const EdgeInsets.all(5),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF0F0EE),
+                      color: navTrack,
                       borderRadius: BorderRadius.circular(32),
-                      border: Border.all(color: const Color(0xFFE7E7E3)),
+                      border: Border.all(color: navBorder),
                     ),
                     child: Row(
                       children: [
@@ -360,14 +365,18 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
                     width: 54,
                     height: 54,
                     child: Material(
-                      color: const Color(0xFFF05257),
+                      color: isDark ? AppColors.primaryLight : AppColors.primary,
                       shape: const CircleBorder(),
                       child: InkWell(
                         onTap: _openQuickActions,
                         customBorder: const CircleBorder(),
-                        child: const Tooltip(
+                        child: Tooltip(
                           message: "Actions rapides",
-                          child: Icon(Icons.add_rounded, size: 27, color: Colors.white),
+                          child: Icon(
+                            Icons.add_rounded,
+                            size: 27,
+                            color: isDark ? AppColors.primaryDark : Colors.white,
+                          ),
                         ),
                       ),
                     ),
@@ -389,6 +398,10 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
     required String label,
   }) {
     final isSelected = _activeSecondaryKey == null && _currentIndex == index;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final selectedSurface = isDark ? AppColors.primaryDark : Colors.white;
+    final selectedForeground = isDark ? AppColors.primaryLight : AppColors.primary;
+    final unselectedForeground = isDark ? AppColors.textMutedDark : AppColors.textMutedLight;
     final flex = isSelected ? 4 : 2;
 
     return Expanded(
@@ -398,7 +411,7 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
         selected: isSelected,
         label: label,
         child: Material(
-          color: isSelected ? Colors.white : Colors.transparent,
+          color: isSelected ? selectedSurface : Colors.transparent,
           borderRadius: BorderRadius.circular(26),
           child: InkWell(
             onTap: () => _onTabSelected(index),
@@ -411,7 +424,7 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
                 children: [
                   Icon(
                     isSelected ? activeIcon : icon,
-                    color: isSelected ? const Color(0xFF262724) : const Color(0xFF777873),
+                    color: isSelected ? selectedForeground : unselectedForeground,
                     size: 20,
                   ),
                   if (isSelected) ...[
@@ -421,10 +434,10 @@ class _BottomNavScaffoldState extends ConsumerState<BottomNavScaffold> {
                         label,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF262724),
+                          color: selectedForeground,
                         ),
                       ),
                     ),

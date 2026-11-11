@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/models/subscription_plan.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_provider.dart';
@@ -128,7 +129,7 @@ class SubscriptionScreen extends ConsumerWidget {
           IconButton(
             icon: Icon(
               isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-              color: isDark ? AppColors.accent : null,
+              color: isDark ? AppColors.primaryLight : null,
               size: 20,
             ),
             tooltip: isDark ? "Activer le mode clair" : "Activer le mode sombre",
@@ -242,45 +243,6 @@ class SubscriptionScreen extends ConsumerWidget {
                       const SizedBox(height: 12),
                     ],
 
-                    // Quotas actuels
-                    if (currentPlan != null)
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: isDark ? AppColors.surfaceDark : Colors.white,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _QuotaItem(
-                              label: "Lots max",
-                              value: "${currentPlan.quotas.maxFlocks}",
-                              icon: Icons.grid_view_rounded,
-                            ),
-                            _QuotaItem(
-                              label: "Bâtiments",
-                              value: "${currentPlan.quotas.maxBuildings}",
-                              icon: Icons.home_work_rounded,
-                            ),
-                            _QuotaItem(
-                              label: "Équipe",
-                              value: "${currentPlan.quotas.maxMembers}",
-                              icon: Icons.people_rounded,
-                            ),
-                            _QuotaItem(
-                              label: "Historique",
-                              value: "${currentPlan.quotas.retentionMonths} mois",
-                              icon: Icons.history_rounded,
-                            ),
-                          ],
-                        ),
-                      ),
-                    const SizedBox(height: 20),
-
                     // Sélecteur de cycle de facturation
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -291,7 +253,7 @@ class SubscriptionScreen extends ConsumerWidget {
                         ),
                         Container(
                           decoration: BoxDecoration(
-                            color: isDark ? Colors.grey.shade900 : Colors.grey.shade200,
+                            color: isDark ? AppColors.surfaceDark : AppColors.inputFillLight,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           padding: const EdgeInsets.all(3),
@@ -346,36 +308,6 @@ class SubscriptionScreen extends ConsumerWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _UpgradeModal(plan: plan),
-    );
-  }
-}
-
-class _QuotaItem extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-
-  const _QuotaItem({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, size: 18, color: AppColors.primary),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-        ),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 10, color: AppColors.textMutedLight),
-        ),
-      ],
     );
   }
 }
@@ -516,13 +448,6 @@ class _PlanCard extends StatelessWidget {
           const Divider(height: 1),
           const SizedBox(height: 10),
 
-          // Quotas inclus
-          Text(
-            "Inclus : ${plan.quotas.maxFlocks} bande(s) simultanée(s) • ${plan.quotas.maxBuildings} bâtiment(s) • ${plan.quotas.maxMembers} collaborateur(s)",
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 8),
-
           // Liste des fonctionnalités incluses
           ...const [
             "Suivi des bandes, bâtiments et mortalités",
@@ -561,7 +486,7 @@ class _PlanCard extends StatelessWidget {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 child: Text(
-                  isCurrent ? "Choisir cette périodicité" : "Demander l’offre Poulvia",
+                  isCurrent ? "Choisir cette périodicité" : "S’abonner avec FedaPay",
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                 ),
               ),
@@ -582,23 +507,17 @@ class _UpgradeModal extends ConsumerStatefulWidget {
 }
 
 class _UpgradeModalState extends ConsumerState<_UpgradeModal> {
-  final _messageController = TextEditingController();
-
-  @override
-  void dispose() {
-    _messageController.dispose();
-    super.dispose();
-  }
-
   Future<void> _submit() async {
     final navigator = Navigator.of(context);
-    final success = await ref.read(subscriptionProvider.notifier).requestUpgrade(
-          targetPlan: widget.plan.sku,
-          message: _messageController.text.trim(),
-        );
-
-    if (success && mounted) {
+    final url = await ref.read(subscriptionProvider.notifier).createCheckout(targetPlan: widget.plan.sku);
+    if (url == null || !mounted) return;
+    final opened = await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    if (opened && mounted) {
       navigator.pop();
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Impossible d’ouvrir la page de paiement.")),
+      );
     }
   }
 
@@ -668,22 +587,14 @@ class _UpgradeModalState extends ConsumerState<_UpgradeModal> {
           ),
           const SizedBox(height: 14),
           const Text(
-            "Votre demande sera transmise à l’équipe Poulvia pour activation de l’abonnement. La périodicité choisie s’applique au même ensemble de modules.",
+            "Vous allez payer de façon sécurisée avec FedaPay. L’abonnement sera activé après confirmation du paiement par Poulvia.",
             style: TextStyle(fontSize: 12, color: AppColors.textMutedLight, height: 1.3),
           ),
           const SizedBox(height: 14),
-
-          TextField(
-            controller: _messageController,
-            maxLines: 2,
-            decoration: InputDecoration(
-              labelText: "Message ou besoin spécifique (optionnel)",
-              hintText: "Ex: Nous augmentons notre cheptel de 3000 pondeuses...",
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              contentPadding: const EdgeInsets.all(12),
-            ),
-          ),
-          const SizedBox(height: 16),
+          if (state.error != null) ...[
+            Text(state.error!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+            const SizedBox(height: 12),
+          ],
 
           SizedBox(
             width: double.infinity,
@@ -691,9 +602,9 @@ class _UpgradeModalState extends ConsumerState<_UpgradeModal> {
               onPressed: state.isSubmitting ? null : _submit,
               icon: state.isSubmitting
                   ? const BrandLoader.button(size: 18)
-                  : const Icon(Icons.send_rounded, size: 18),
+                  : const Icon(Icons.lock_outline_rounded, size: 18),
               label: Text(
-                state.isSubmitting ? "Envoi de la demande..." : "Confirmer la demande d'évolution",
+                state.isSubmitting ? "Préparation du paiement..." : "Continuer vers FedaPay",
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               style: ElevatedButton.styleFrom(

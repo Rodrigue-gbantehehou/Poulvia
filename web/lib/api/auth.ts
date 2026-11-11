@@ -63,9 +63,16 @@ export const authApi = {
       firstName: string;
       lastName: string;
       fullName: string;
+      phone?: string | null;
       roles: string[];
       farms: AuthFarmSummary[];
     }>("/auth/me"),
+
+  changePassword: (data: { currentPassword: string; newPassword: string }) =>
+    apiRequest<{ message: string }>("/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 
   forgotPassword: (data: { identifier: string; channel?: "email" | "sms" }) =>
     apiRequest<{ message: string; devCode?: string; channel?: string }>(

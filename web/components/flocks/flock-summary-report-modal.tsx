@@ -113,11 +113,11 @@ export function FlockSummaryReportModal({
           <div>
             <span className="text-[10px] font-bold text-zinc-500 uppercase block">Âge atteint :</span>
             <span className="font-bold text-emerald-800">
-              {flock.ageInWeeks
-                ? `${flock.ageInWeeks} semaines`
-                : flock.ageInDays
-                ? `${flock.ageInDays} jours`
-                : "—"}
+              {flock.ageInDays !== undefined && flock.ageInDays < 7
+                ? `${flock.ageInDays} jour${flock.ageInDays > 1 ? "s" : ""}`
+                : flock.ageInWeeks !== undefined
+                  ? `${flock.ageInWeeks} semaines`
+                  : "—"}
             </span>
           </div>
           <div>

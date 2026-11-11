@@ -55,4 +55,6 @@ class ApiEndpoints {
   static const String subscriptionPlans = "/api/subscriptions/plans";
   static String farmSubscription(String farmId) => "/api/subscriptions/farm/$farmId";
   static const String subscriptionRequestUpgrade = "/api/subscriptions/request-upgrade";
+  static const String subscriptionCheckout = "/api/subscriptions/checkout";
+  static String subscriptionPaymentStatus(String paymentId) => "/api/subscriptions/payments/$paymentId";
 }

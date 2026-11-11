@@ -13,15 +13,15 @@ export function FAQ() {
     },
     {
       q: "Est-ce que cela fonctionne sur mon téléphone portable ?",
-      a: "Oui. Poulvia fonctionne sur tous les smartphones, qu'il s'agisse d'un téléphone Android ou d'un iPhone. L'application s'adapte automatiquement à votre écran.",
+      a: "Poulvia est accessible sur le Web et dispose d'une application mobile. Les écrans s'adaptent aux formats d'utilisation prévus par chaque version.",
     },
     {
-      q: "Faut-il payer quelque chose pour démarrer ?",
-      a: "Non, l'inscription est totalement gratuite. Vous pouvez créer votre compte, enregistrer votre ferme et tester l'application tranquillement avec la formule Gratuite sans rien débourser.",
+      q: "Comment fonctionne l'offre Poulvia ?",
+      a: "Poulvia propose une seule offre payante. Vous pouvez choisir une facturation mensuelle ou annuelle ; les deux périodicités donnent accès aux mêmes modules. Les tarifs et la durée éventuelle de l'essai sont indiqués dans la rubrique Tarifs.",
     },
     {
-      q: "Comment se règle la formule Complète si je souhaite l'utiliser ?",
-      a: "Vous n'avez pas besoin de carte bancaire. Vous pouvez régler votre abonnement mensuel de 9 500 FCFA directement par MTN Mobile Money ou Moov Money. Vous arrêtez quand vous voulez sans aucune contrainte.",
+      q: "Que se passe-t-il à la fin de la période d'essai ?",
+      a: "À la fin de l'essai, vos données restent consultables. Vous pouvez demander l'activation de l'abonnement Poulvia depuis votre espace.",
     },
     {
       q: "Et si la connexion Internet est faible au poulailler ?",

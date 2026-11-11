@@ -1,171 +1,39 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
+import { useState } from "react";
 import Image from "next/image";
-import { Menu, X, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Menu, X } from "lucide-react";
+
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://app.poulvia.com";
 
 export function Navbar() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://app.poulvia.com";
-
-  useEffect(() => {
-    function handleScroll() {
-      setIsScrolled(window.scrollY > 20);
-    }
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const [open, setOpen] = useState(false);
+  const links = [
+    ["Fonctionnalités", "/#suivi"],
+    ["Comment ça marche", "/#demarrage"],
+    ["Application mobile", "/#application-mobile"],
+  ];
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
-        isScrolled
-          ? "bg-surface/95 backdrop-blur-md border-b border-border shadow-xs py-3"
-          : "bg-transparent py-4 sm:py-5"
-      }`}
-    >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-surface p-0.5 shadow-xs border border-border">
-              <Image
-                src="/logo.png"
-                alt="Poulvia"
-                width={34}
-                height={34}
-                className="h-full w-full object-contain"
-                priority
-              />
-            </div>
-            <div>
-              <span className="text-lg font-bold tracking-tight text-foreground">
-                Poul<span className="text-primary">via</span>
-              </span>
-            </div>
-          </Link>
-
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6 text-xs font-medium text-muted">
-            <a href="#simple-features" className="hover:text-primary transition-colors">
-              Ce que fait l&apos;application
-            </a>
-            <a href="#how-it-works" className="hover:text-primary transition-colors">
-              Comment ça marche
-            </a>
-            <a href="#who-is-it-for" className="hover:text-primary transition-colors">
-              Pour qui ?
-            </a>
-            <a href="#pricing" className="hover:text-primary transition-colors">
-              Tarifs
-            </a>
-            <a href="#faq" className="hover:text-primary transition-colors">
-              Questions
-            </a>
-            <a href="#contact" className="hover:text-primary transition-colors">
-              Contact
-            </a>
-          </nav>
-
-          {/* Action Buttons */}
-          <div className="hidden sm:flex items-center gap-3">
-            <a
-              href={`${appUrl}/login`}
-              className="px-3 py-1.5 text-xs font-semibold text-foreground hover:text-primary transition-colors"
-            >
-              Connexion
-            </a>
-            <a
-              href={`${appUrl}/register`}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-primary-hover transition-colors"
-            >
-              <span>Créer un compte</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </a>
-          </div>
-
-          {/* Mobile Menu Button */}
-          <div className="flex md:hidden items-center gap-2">
-            <a
-              href={`${appUrl}/login`}
-              className="px-2.5 py-1 text-xs font-semibold text-primary"
-            >
-              Connexion
-            </a>
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-1.5 rounded-lg text-muted hover:text-foreground hover:bg-surface-hover"
-              aria-label="Ouvrir le menu"
-            >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
-          </div>
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-border/70 bg-background/90 backdrop-blur-xl">
+      <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <Link href="/" className="flex items-center gap-2.5" aria-label="Poulvia, accueil">
+          <Image src="/logo.png" alt="" width={38} height={38} priority className="h-9 w-9 rounded-lg object-contain" />
+          <span className="text-xl font-bold tracking-tight text-foreground">Poul<span className="text-primary">via</span></span>
+        </Link>
+        <nav className="hidden items-center gap-8 md:flex">
+          {links.map(([label, href]) => <Link key={label} href={href} className="text-sm font-medium text-muted transition hover:text-primary">{label}</Link>)}
+        </nav>
+        <div className="hidden items-center gap-5 md:flex">
+          <a href={`${appUrl}/login`} className="text-sm font-semibold text-foreground hover:text-primary">Connexion</a>
+          <a href={`${appUrl}/register`} className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-hover">Créer un compte <ArrowRight className="h-4 w-4" /></a>
         </div>
-
-        {/* Mobile Dropdown Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden mt-3 rounded-xl border border-border bg-surface p-4 shadow-md space-y-3">
-            <nav className="flex flex-col gap-2 text-sm font-medium text-foreground">
-              <a
-                href="#simple-features"
-                onClick={() => setMobileMenuOpen(false)}
-                className="py-1 px-2 rounded hover:bg-surface-hover"
-              >
-                Ce que fait l&apos;application
-              </a>
-              <a
-                href="#how-it-works"
-                onClick={() => setMobileMenuOpen(false)}
-                className="py-1 px-2 rounded hover:bg-surface-hover"
-              >
-                Comment ça marche
-              </a>
-              <a
-                href="#who-is-it-for"
-                onClick={() => setMobileMenuOpen(false)}
-                className="py-1 px-2 rounded hover:bg-surface-hover"
-              >
-                Pour qui ?
-              </a>
-              <a
-                href="#pricing"
-                onClick={() => setMobileMenuOpen(false)}
-                className="py-1 px-2 rounded hover:bg-surface-hover"
-              >
-                Tarifs
-              </a>
-              <a
-                href="#faq"
-                onClick={() => setMobileMenuOpen(false)}
-                className="py-1 px-2 rounded hover:bg-surface-hover"
-              >
-                Questions
-              </a>
-              <a
-                href="#contact"
-                onClick={() => setMobileMenuOpen(false)}
-                className="py-1 px-2 rounded hover:bg-surface-hover"
-              >
-                Contact
-              </a>
-            </nav>
-
-            <div className="pt-2 border-t border-border">
-              <a
-                href={`${appUrl}/register`}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-xs font-semibold text-white shadow-xs"
-              >
-                <span>Créer mon compte gratuit</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </a>
-            </div>
-          </div>
-        )}
+        <button type="button" onClick={() => setOpen(!open)} className="rounded-lg p-2 text-foreground hover:bg-primary-soft md:hidden" aria-expanded={open} aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}>
+          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
       </div>
+      {open && <div className="border-t border-border bg-surface px-4 py-4 shadow-lg md:hidden"><nav className="mx-auto flex max-w-7xl flex-col gap-1">{links.map(([label, href]) => <Link key={label} href={href} onClick={() => setOpen(false)} className="rounded-lg px-3 py-3 text-sm font-medium text-foreground hover:bg-primary-soft">{label}</Link>)}<a href={`${appUrl}/login`} className="rounded-lg px-3 py-3 text-sm font-medium text-foreground hover:bg-primary-soft">Connexion</a><a href={`${appUrl}/register`} className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white">Créer un compte <ArrowRight className="h-4 w-4" /></a></nav></div>}
     </header>
   );
 }

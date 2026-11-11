@@ -62,7 +62,6 @@ export function RecordFeedingModal({
   const [feedDate, setFeedDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [feedItemId, setFeedItemId] = useState(availableFeeds[0]?.id ?? "");
   const [feedWeightKg, setFeedWeightKg] = useState<number | string>(25);
-  const [feedNotes, setFeedNotes] = useState("");
 
   const [waterMode, setWaterMode] = useState<"CLEAR" | "TREATED">("CLEAR");
   const [waterVolumeLiters, setWaterVolumeLiters] = useState<number | string>(50);
@@ -235,7 +234,6 @@ export function RecordFeedingModal({
       if (waterMode === "TREATED" && waterProducts.length > 0) {
         for (const wp of waterProducts) {
           if (wp.itemId && Number(wp.quantity) > 0) {
-            const productItem = inventoryItems.find((i) => i.id === wp.itemId);
             await api.inventory.addMovement(wp.itemId, {
               type: "FEEDING",
               quantity: Number(wp.quantity),
@@ -262,7 +260,7 @@ export function RecordFeedingModal({
               deductFromStock: false, // Déjà déduit dans la boucle de stock ci-dessus
               notes: `Administré lors de la tournée ${sessionLabel}${
                 waterVolumeLiters ? ` dans ${waterVolumeLiters} L d'eau` : ""
-              }${feedNotes ? ` - ${feedNotes}` : ""}`,
+              }`,
             })
             .catch((err) => console.warn("Erreur validation soin planifié:", err));
         } else {
@@ -525,6 +523,9 @@ export function RecordFeedingModal({
 
           {waterMode === "CLEAR" ? (
             <div className="space-y-2">
+              {isLoadingTreatments && (
+                <p className="text-[11px] text-muted">Chargement des soins programmés…</p>
+              )}
               {primarySuggestedTreatment && (
                 <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5 flex items-center justify-between gap-2 text-xs animate-in fade-in">
                   <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300">

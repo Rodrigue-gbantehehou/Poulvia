@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../../core/api/api_client.dart';
@@ -54,6 +55,7 @@ class SubscriptionState {
 class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
   final ApiClient _apiClient;
   final Ref _ref;
+  Timer? _paymentPollTimer;
 
   SubscriptionNotifier(this._apiClient, this._ref) : super(const SubscriptionState()) {
     loadSubscription();
@@ -124,45 +126,76 @@ class SubscriptionNotifier extends StateNotifier<SubscriptionState> {
     }
   }
 
-  Future<bool> requestUpgrade({
-    required String targetPlan,
-    String? message,
-  }) async {
+  Future<String?> createCheckout({required String targetPlan}) async {
     final activeFarm = _ref.read(authProvider).activeFarm;
-    if (activeFarm == null) return false;
+    if (activeFarm == null) return null;
 
     state = state.copyWith(isSubmitting: true, clearError: true, clearSuccess: true);
 
     try {
       final response = await _apiClient.dio.post(
-        ApiEndpoints.subscriptionRequestUpgrade,
+        ApiEndpoints.subscriptionCheckout,
         data: {
           'farmId': activeFarm.id,
-          'targetPlan': targetPlan,
+          'plan': targetPlan,
           'billingCycle': state.billingCycle,
-          if (message != null && message.trim().isNotEmpty) 'message': message.trim(),
         },
       );
-
-      final msg = response.data['message'] as String? ??
-          "Votre demande de changement d'offre a été enregistrée.";
-
+      final data = response.data['data'] as Map<String, dynamic>?;
+      final checkoutUrl = data?['checkoutUrl'] as String?;
+      final paymentId = data?['id'] as String?;
+      if (checkoutUrl == null || checkoutUrl.isEmpty || paymentId == null) {
+        throw StateError("Le lien de paiement n’a pas été créé.");
+      }
       state = state.copyWith(
         isSubmitting: false,
-        successMessage: msg,
+        successMessage: "Paiement lancé. En attente de confirmation sécurisée…",
       );
-      return true;
+      _watchPayment(paymentId);
+      return checkoutUrl;
     } on DioException catch (e) {
       String msg = "Erreur lors de la demande d'évolution d'offre.";
       if (e.response?.data is Map && e.response?.data['message'] != null) {
         msg = e.response!.data['message'] as String;
       }
       state = state.copyWith(isSubmitting: false, error: msg);
-      return false;
+      return null;
     } catch (e) {
       state = state.copyWith(isSubmitting: false, error: "Erreur: $e");
-      return false;
+      return null;
     }
+  }
+
+  void _watchPayment(String paymentId) {
+    _paymentPollTimer?.cancel();
+    var attempts = 0;
+    _paymentPollTimer = Timer.periodic(const Duration(seconds: 4), (timer) async {
+      attempts++;
+      try {
+        final response = await _apiClient.dio.get(ApiEndpoints.subscriptionPaymentStatus(paymentId));
+        final payment = response.data['data'] as Map<String, dynamic>?;
+        final status = payment?['status']?.toString().toUpperCase();
+        if (status == 'PAID') {
+          timer.cancel();
+          state = state.copyWith(successMessage: "Paiement confirmé. Abonnement activé.");
+          await loadSubscription(showLoading: false);
+        } else if (status == 'FAILED') {
+          timer.cancel();
+          state = state.copyWith(error: "Le paiement n’a pas été confirmé.");
+        } else if (attempts >= 90) {
+          timer.cancel();
+          state = state.copyWith(successMessage: "La confirmation du paiement est toujours en attente. Revenez ici pour actualiser l’abonnement.");
+        }
+      } on DioException {
+        if (attempts >= 90) timer.cancel();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _paymentPollTimer?.cancel();
+    super.dispose();
   }
 }
 

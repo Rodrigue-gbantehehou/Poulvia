@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/flock.dart';
+import '../../core/design_system/app_modal_surface.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/utils/egg_calculator.dart';
 import '../dashboard/dashboard_provider.dart';
 import '../flocks/flock_provider.dart';
 import 'egg_provider.dart';
@@ -42,9 +42,11 @@ class _RecordEggModalState extends ConsumerState<RecordEggModal> {
   final DateTime _selectedDate = DateTime.now();
   String _session = "MORNING";
   int _goodEggs = 0;
+  final _goodEggsController = TextEditingController(text: '0');
   int _crackedEggs = 0;
-  int _dirtyEggs = 0;
   int _deformedEggs = 0;
+  final _crackedEggsController = TextEditingController(text: '0');
+  final _deformedEggsController = TextEditingController(text: '0');
   final _notesController = TextEditingController();
 
   @override
@@ -56,13 +58,15 @@ class _RecordEggModalState extends ConsumerState<RecordEggModal> {
   @override
   void dispose() {
     _notesController.dispose();
+    _goodEggsController.dispose();
+    _crackedEggsController.dispose();
+    _deformedEggsController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surfaceColor = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
     final eggState = ref.watch(eggProvider);
     final flockState = ref.watch(flockProvider);
@@ -79,20 +83,8 @@ class _RecordEggModalState extends ConsumerState<RecordEggModal> {
       }
     }
 
-    final trayInfo = EggCalculator.calculate(_goodEggs);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border.all(color: borderColor),
-      ),
-      padding: EdgeInsets.fromLTRB(
-        20,
-        12,
-        20,
-        MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 20,
-      ),
+    return AppModalSurface(
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -165,7 +157,7 @@ class _RecordEggModalState extends ConsumerState<RecordEggModal> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
+                    color: isDark ? AppColors.surfaceDark : AppColors.inputFillLight,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: borderColor),
                   ),
@@ -251,17 +243,9 @@ class _RecordEggModalState extends ConsumerState<RecordEggModal> {
               ),
               const SizedBox(height: 16),
 
-              // Bons Œufs counter box avec calcul automatique des alvéoles de 30
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppColors.primarySoft,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -270,12 +254,15 @@ class _RecordEggModalState extends ConsumerState<RecordEggModal> {
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
+                            color: AppColors.textMainLight,
                           ),
                         ),
                         if (_goodEggs > 0)
                           InkWell(
-                            onTap: () => setState(() => _goodEggs = 0),
+                            onTap: () => setState(() {
+                              _goodEggs = 0;
+                              _goodEggsController.text = '0';
+                            }),
                             child: const Padding(
                               padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                               child: Text(
@@ -287,88 +274,16 @@ class _RecordEggModalState extends ConsumerState<RecordEggModal> {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        Text(
-                          "$_goodEggs",
-                          style: const TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.w900,
-                            fontFamily: 'monospace',
-                            color: AppColors.primary,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        const Text(
-                          "œufs",
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primary),
-                        ),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.accent.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            trayInfo.text,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.accent,
-                            ),
-                          ),
-                        ),
-                      ],
+                    TextField(
+                      controller: _goodEggsController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        hintText: "Nombre d’œufs",
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (value) => setState(() => _goodEggs = int.tryParse(value) ?? 0),
                     ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      "Ajout rapide par alvéoles / plateaux de 30 :",
-                      style: TextStyle(fontSize: 11, color: AppColors.textMutedLight, fontWeight: FontWeight.w500),
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        _TrayBtn(
-                          label: "+1 pl. (30)",
-                          onTap: () => setState(() => _goodEggs += 30),
-                        ),
-                        const SizedBox(width: 6),
-                        _TrayBtn(
-                          label: "+2 pl. (60)",
-                          onTap: () => setState(() => _goodEggs += 60),
-                        ),
-                        const SizedBox(width: 6),
-                        _TrayBtn(
-                          label: "+5 pl. (150)",
-                          onTap: () => setState(() => _goodEggs += 150),
-                        ),
-                        const SizedBox(width: 6),
-                        _TrayBtn(
-                          label: "+10 pl. (300)",
-                          onTap: () => setState(() => _goodEggs += 300),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        IconButton(
-                          onPressed: _goodEggs > 0 ? () => setState(() => _goodEggs = (_goodEggs - 1).clamp(0, 99999)) : null,
-                          icon: const Icon(Icons.remove_circle_outline, size: 22, color: AppColors.primary),
-                        ),
-                        const Text("Unité (+/-)", style: TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w600)),
-                        IconButton(
-                          onPressed: () => setState(() => _goodEggs++),
-                          icon: const Icon(Icons.add_circle_outline, size: 22, color: AppColors.primary),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                ],
               ),
               const SizedBox(height: 16),
 
@@ -378,28 +293,34 @@ class _RecordEggModalState extends ConsumerState<RecordEggModal> {
                 style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              _EggQualityRow(
-                label: "Œufs fêlés / cassés",
-                count: _crackedEggs,
-                color: AppColors.danger,
-                onDecrement: _crackedEggs > 0 ? () => setState(() => _crackedEggs--) : null,
-                onIncrement: () => setState(() => _crackedEggs++),
+              TextField(
+                controller: _crackedEggsController,
+                keyboardType: TextInputType.number,
+                onTap: () => _crackedEggsController.selection = TextSelection(
+                  baseOffset: 0,
+                  extentOffset: _crackedEggsController.text.length,
+                ),
+                onChanged: (value) => setState(() => _crackedEggs = int.tryParse(value) ?? 0),
+                decoration: const InputDecoration(
+                  labelText: "Œufs fêlés / cassés",
+                  hintText: "0",
+                  border: OutlineInputBorder(),
+                ),
               ),
-              const SizedBox(height: 6),
-              _EggQualityRow(
-                label: "Œufs sales",
-                count: _dirtyEggs,
-                color: AppColors.textMutedLight,
-                onDecrement: _dirtyEggs > 0 ? () => setState(() => _dirtyEggs--) : null,
-                onIncrement: () => setState(() => _dirtyEggs++),
-              ),
-              const SizedBox(height: 6),
-              _EggQualityRow(
-                label: "Œufs déformés / anormaux",
-                count: _deformedEggs,
-                color: AppColors.accent,
-                onDecrement: _deformedEggs > 0 ? () => setState(() => _deformedEggs--) : null,
-                onIncrement: () => setState(() => _deformedEggs++),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _deformedEggsController,
+                keyboardType: TextInputType.number,
+                onTap: () => _deformedEggsController.selection = TextSelection(
+                  baseOffset: 0,
+                  extentOffset: _deformedEggsController.text.length,
+                ),
+                onChanged: (value) => setState(() => _deformedEggs = int.tryParse(value) ?? 0),
+                decoration: const InputDecoration(
+                  labelText: "Œufs déformés / anormaux",
+                  hintText: "0",
+                  border: OutlineInputBorder(),
+                ),
               ),
               const SizedBox(height: 14),
 
@@ -443,7 +364,7 @@ class _RecordEggModalState extends ConsumerState<RecordEggModal> {
                                 session: _session,
                                 goodEggs: _goodEggs,
                                 crackedEggs: _crackedEggs,
-                                dirtyEggs: _dirtyEggs,
+                                dirtyEggs: 0,
                                 deformedEggs: _deformedEggs,
                                 notes: _notesController.text,
                               );
@@ -457,7 +378,7 @@ class _RecordEggModalState extends ConsumerState<RecordEggModal> {
                                   navigator.pop(true);
                                   scaffoldMessenger.showSnackBar(
                                     SnackBar(
-                                      content: Text("Collecte de $_goodEggs œufs (${trayInfo.text}) enregistrée avec succès"),
+                                      content: Text("Collecte de $_goodEggs œufs enregistrée avec succès"),
                                       backgroundColor: AppColors.success,
                                     ),
                                   );
@@ -544,89 +465,3 @@ class _SessionChip extends StatelessWidget {
   }
 }
 
-class _TrayBtn extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-
-  const _TrayBtn({required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _EggQualityRow extends StatelessWidget {
-  final String label;
-  final int count;
-  final Color color;
-  final VoidCallback? onDecrement;
-  final VoidCallback onIncrement;
-
-  const _EggQualityRow({
-    required this.label,
-    required this.count,
-    required this.color,
-    required this.onDecrement,
-    required this.onIncrement,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade900 : Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
-          Row(
-            children: [
-              IconButton(
-                visualDensity: VisualDensity.compact,
-                padding: EdgeInsets.zero,
-                icon: const Icon(Icons.remove_circle_outline, size: 20),
-                onPressed: onDecrement,
-              ),
-              Container(
-                constraints: const BoxConstraints(minWidth: 26),
-                alignment: Alignment.center,
-                child: Text(
-                  "$count",
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: color),
-                ),
-              ),
-              IconButton(
-                visualDensity: VisualDensity.compact,
-                padding: EdgeInsets.zero,
-                icon: const Icon(Icons.add_circle_outline, size: 20),
-                onPressed: onIncrement,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}

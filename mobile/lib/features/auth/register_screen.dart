@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import 'auth_provider.dart';
@@ -144,7 +144,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 ),
                                 const SizedBox(height: 5),
                                 const Text(
-                                  "Le Fermier",
+                                  "Poulvia",
                                   style: TextStyle(
                                     fontSize: 22,
                                     fontWeight: FontWeight.w900,

@@ -20,7 +20,7 @@
   --color-accent: var(--brand-accent);
   --color-accent-hover: var(--brand-accent-hover);
   --color-accent-soft: var(--brand-accent-soft);
-  --color-accent-foreground: #ffffff;
+  --color-accent-foreground: var(--brand-primary);
 
   --color-success: var(--status-success);
   --color-success-soft: var(--status-success-soft);
@@ -41,24 +41,25 @@
 @layer base {
   /* TOKENS CENTRAUX — DEFAUT CLAIR ET DISCRET (AUCUN FOND NOIR PAR DEFAUT) */
   :root {
-    --bg-main: #f6f8f6;
+    --bg-main: #fff8ed;
     --bg-surface: #ffffff;
-    --bg-surface-hover: #f1f4f1;
-    --bg-surface-muted: #eef2ee;
+    --bg-surface-hover: #f7f4ed;
+    --bg-surface-muted: #ebf5f0;
     --bg-surface-elevated: #ffffff;
 
-    --text-primary: #202923;
-    --text-muted: #657168;
+    --text-primary: #154632;
+    --text-muted: #587064;
 
-    --border-color: #dfe6e0;
+    --border-color: #e6e9e2;
 
-    --brand-primary: #245c43;
-    --brand-primary-hover: #194832;
-    --brand-primary-soft: #e8f2ec;
+    --brand-primary: #154632;
+    --brand-primary-hover: #113828;
+    --brand-primary-soft: #ebf5f0;
+    --brand-primary-readable: #154632;
 
-    --brand-accent: #dda64b;
-    --brand-accent-hover: #c48e37;
-    --brand-accent-soft: #fbf4e8;
+    --brand-accent: #f39200;
+    --brand-accent-hover: #f39200;
+    --brand-accent-soft: #fff1d9;
 
     --status-success: #237a4b;
     --status-success-soft: #eaf5ee;
@@ -83,13 +84,14 @@
 
     --border-color: #24382c;
 
-    --brand-primary: #2e7555;
-    --brand-primary-hover: #3b916b;
-    --brand-primary-soft: #162b20;
+    --brand-primary: #154632;
+    --brand-primary-hover: #113828;
+    --brand-primary-soft: color-mix(in srgb, #154632 32%, #0f1713);
+    --brand-primary-readable: color-mix(in srgb, #154632 40%, white);
 
-    --brand-accent: #e5b058;
-    --brand-accent-hover: #f0be6b;
-    --brand-accent-soft: #2e2617;
+    --brand-accent: #f39200;
+    --brand-accent-hover: #f39200;
+    --brand-accent-soft: color-mix(in srgb, #f39200 14%, #0f1713);
 
     --status-success: #2fa163;
     --status-success-soft: #142e20;
@@ -134,6 +136,14 @@
   /* Micro-animation tactile pour les boutons et cartes mobiles */
   button, a {
     touch-action: manipulation;
+  }
+}
+
+@layer utilities {
+  .dark .text-primary,
+  .dark .hover\:text-primary:hover,
+  .dark .group:hover .group-hover\:text-primary {
+    color: var(--brand-primary-readable);
   }
 }
 

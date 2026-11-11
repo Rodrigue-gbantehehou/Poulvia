@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../core/models/sync_item.dart';
@@ -37,7 +37,7 @@ class SyncScreen extends ConsumerWidget {
           IconButton(
             icon: Icon(
               isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-              color: isDark ? AppColors.accent : null,
+              color: isDark ? AppColors.primaryLight : null,
               size: 20,
             ),
             tooltip: isDark ? "Activer le mode clair" : "Activer le mode sombre",

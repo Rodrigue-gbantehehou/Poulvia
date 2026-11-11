@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Poulvia — Logiciel de Gestion Avicole en Afrique de l'Ouest",
+  title: "Poulvia — Le suivi simple de votre élevage avicole",
   description:
-    "Organisez le suivi de votre ferme : enregistrez vos pontes en plateaux de 30 alvéoles, gérez vos stocks de provende en sacs ou kg, suivez vos vaccins et tenez votre trésorerie en FCFA.",
+    "Suivez les bandes, la production, les stocks, les soins et les finances de votre exploitation avicole avec Poulvia, sur le web et bientôt sur Android.",
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any", type: "image/x-icon" },
@@ -34,9 +34,9 @@ export const metadata: Metadata = {
   publisher: "Poulvia",
   metadataBase: new URL("https://poulvia.com"),
   openGraph: {
-    title: "Poulvia — Logiciel de Gestion Avicole en Afrique de l'Ouest",
+    title: "Poulvia — Le suivi simple de votre élevage avicole",
     description:
-      "Suivi complet des élevages de volailles : ponte, provende, prophylaxie et caisse en FCFA.",
+      "Suivez les bandes, la production, les stocks, les soins et les finances de votre exploitation avicole.",
     url: "https://poulvia.com",
     siteName: "Poulvia",
     locale: "fr_FR",
@@ -76,14 +76,9 @@ export default function RootLayout({
               "@type": "SoftwareApplication",
               name: "Poulvia",
               applicationCategory: "BusinessApplication",
-              operatingSystem: "Web, Mobile (Android/iOS)",
+              operatingSystem: "Web, Android",
               description:
-                "Logiciel professionnel de gestion pour exploitations avicoles : suivi des pontes en plateaux de 30 alvéoles, gestion de la provende, prophylaxie automatisée et trésorerie en FCFA.",
-              offers: {
-                "@type": "Offer",
-                price: "0",
-                priceCurrency: "XOF",
-              },
+                "Logiciel de gestion pour exploitations avicoles : suivi des bandes, de la production selon le type d'élevage, de la santé, des stocks et de la trésorerie.",
             }),
           }}
         />

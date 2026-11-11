@@ -1,10 +1,12 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../auth/auth_provider.dart';
+import '../buildings/buildings_screen.dart';
 import '../contacts/contacts_screen.dart';
 import '../finances/finances_screen.dart';
+import '../health/health_screen.dart';
 import '../inventory/inventory_screen.dart';
 import '../members/members_screen.dart';
 
@@ -30,6 +32,8 @@ class ManagementScreen extends ConsumerWidget {
     final canInventory = farm == null || farm.canViewInventory;
     final canContacts = farm == null || farm.canViewContacts;
     final canMembers = farm == null || farm.canManageMembers;
+    final canBuildings = farm == null || farm.canManageBuildings;
+    final canHealth = farm == null || farm.canViewHealth;
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
@@ -51,76 +55,12 @@ class ManagementScreen extends ConsumerWidget {
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
-          // Carte d'introduction
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: isDark
-                    ? [const Color(0xFF1B4331), const Color(0xFF143627)]
-                    : [AppColors.primary, const Color(0xFF1B4331)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.2),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Icon(
-                    Icons.business_center_rounded,
-                    color: AppColors.accentGold,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Espace Gestion",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 16,
-                        ),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        "Dépenses, ventes, stocks, contacts et équipe.",
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
-
           // 1. Trésorerie & Ventes (Caisse)
           if (canFinance)
             _ManagementCard(
               icon: Icons.account_balance_wallet_rounded,
-              iconColor: AppColors.success,
               title: "Trésorerie & Ventes",
-              subtitle: "Caisse en FCFA, entrées/sorties et reçus",
+              subtitle: "Ventes, dépenses et reçus",
               onTap: () => _navigate(context, const FinancesScreen()),
             ),
 
@@ -128,19 +68,33 @@ class ManagementScreen extends ConsumerWidget {
           if (canInventory)
             _ManagementCard(
               icon: Icons.inventory_2_rounded,
-              iconColor: AppColors.primary,
               title: "Stocks & Intrants",
-              subtitle: "Provende (sacs 50 kg), intrants et réassorts",
+              subtitle: "Aliments et intrants",
               onTap: () => _navigate(context, const InventoryScreen()),
+            ),
+
+          if (canBuildings)
+            _ManagementCard(
+              icon: Icons.home_work_rounded,
+              title: "Bâtiments",
+              subtitle: "Poulaillers et capacités",
+              onTap: () => _navigate(context, const BuildingsScreen()),
+            ),
+
+          if (canHealth)
+            _ManagementCard(
+              icon: Icons.medical_services_outlined,
+              title: "Santé",
+              subtitle: "Soins et interventions",
+              onTap: () => _navigate(context, const HealthScreen()),
             ),
 
           // 3. Contacts & Répertoire
           if (canContacts)
             _ManagementCard(
               icon: Icons.contacts_rounded,
-              iconColor: const Color(0xFF8B5CF6),
               title: "Répertoire & Contacts",
-              subtitle: "Clients, provendiers, vétérinaires et partenaires",
+              subtitle: "Clients, fournisseurs et partenaires",
               onTap: () => _navigate(context, const ContactsScreen()),
             ),
 
@@ -148,9 +102,8 @@ class ManagementScreen extends ConsumerWidget {
           if (canMembers)
             _ManagementCard(
               icon: Icons.people_alt_rounded,
-              iconColor: AppColors.accentWarm,
               title: "Équipe & Rôles",
-              subtitle: "Employés de ferme et habilitations d'accès",
+              subtitle: "Employés et accès",
               onTap: () => _navigate(context, const MembersScreen()),
             ),
 
@@ -163,14 +116,12 @@ class ManagementScreen extends ConsumerWidget {
 
 class _ManagementCard extends StatelessWidget {
   final IconData icon;
-  final Color iconColor;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
 
   const _ManagementCard({
     required this.icon,
-    required this.iconColor,
     required this.title,
     required this.subtitle,
     required this.onTap,
@@ -179,6 +130,7 @@ class _ManagementCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final iconColor = isDark ? AppColors.primaryLight : AppColors.primary;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),

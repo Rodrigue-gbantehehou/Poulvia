@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/design_system/app_modal_surface.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/widgets/brand_loader.dart';
@@ -157,7 +158,6 @@ class _RecordTransactionModalState extends ConsumerState<RecordTransactionModal>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surfaceColor = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
     final finState = ref.watch(financeProvider);
     final flockState = ref.watch(flockProvider);
@@ -173,18 +173,7 @@ class _RecordTransactionModalState extends ConsumerState<RecordTransactionModal>
         _category == "MEAT_POULTRY_SALE" ||
         _category == "LAYER_CULL_SALE";
 
-    return Container(
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border.all(color: borderColor),
-      ),
-      padding: EdgeInsets.fromLTRB(
-        20,
-        12,
-        20,
-        MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 20,
-      ),
+    return AppModalSurface(
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -232,7 +221,7 @@ class _RecordTransactionModalState extends ConsumerState<RecordTransactionModal>
             // Bascule Recette / Dépense
             Container(
               decoration: BoxDecoration(
-                color: isDark ? Colors.grey.shade900 : Colors.grey.shade200,
+                color: isDark ? AppColors.surfaceDark : AppColors.inputFillLight,
                 borderRadius: BorderRadius.circular(12),
               ),
               padding: const EdgeInsets.all(4),
@@ -304,7 +293,7 @@ class _RecordTransactionModalState extends ConsumerState<RecordTransactionModal>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
+                color: isDark ? AppColors.surfaceDark : AppColors.inputFillLight,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: borderColor),
               ),
@@ -547,44 +536,6 @@ class _RecordTransactionModalState extends ConsumerState<RecordTransactionModal>
             ),
             const SizedBox(height: 14),
 
-            // Raccourcis de montants
-            Row(
-              children: [
-                _AmountTag(
-                  label: "+5 000",
-                  onTap: () {
-                    final cur = int.tryParse(_amountController.text.replaceAll(' ', '')) ?? 0;
-                    setState(() => _amountController.text = "${cur + 5000}");
-                  },
-                ),
-                const SizedBox(width: 6),
-                _AmountTag(
-                  label: "+10 000",
-                  onTap: () {
-                    final cur = int.tryParse(_amountController.text.replaceAll(' ', '')) ?? 0;
-                    setState(() => _amountController.text = "${cur + 10000}");
-                  },
-                ),
-                const SizedBox(width: 6),
-                _AmountTag(
-                  label: "+25 000",
-                  onTap: () {
-                    final cur = int.tryParse(_amountController.text.replaceAll(' ', '')) ?? 0;
-                    setState(() => _amountController.text = "${cur + 25000}");
-                  },
-                ),
-                const SizedBox(width: 6),
-                _AmountTag(
-                  label: "+50 000",
-                  onTap: () {
-                    final cur = int.tryParse(_amountController.text.replaceAll(' ', '')) ?? 0;
-                    setState(() => _amountController.text = "${cur + 50000}");
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-
             // Mode d'encaissement / Crédit client (Uniquement pour les recettes)
             if (_showAdvancedReceivables && _type == "INCOME") ...[
               const Text("Statut d'encaissement (Comptant vs Crédit) *",
@@ -674,7 +625,7 @@ class _RecordTransactionModalState extends ConsumerState<RecordTransactionModal>
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
+                      color: isDark ? AppColors.surfaceDark : AppColors.inputFillLight,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: borderColor),
                     ),
@@ -707,7 +658,7 @@ class _RecordTransactionModalState extends ConsumerState<RecordTransactionModal>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
+                color: isDark ? AppColors.surfaceDark : AppColors.inputFillLight,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: borderColor),
               ),
@@ -736,7 +687,7 @@ class _RecordTransactionModalState extends ConsumerState<RecordTransactionModal>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
+                  color: isDark ? AppColors.surfaceDark : AppColors.inputFillLight,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: borderColor),
                 ),
@@ -774,7 +725,7 @@ class _RecordTransactionModalState extends ConsumerState<RecordTransactionModal>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
+                  color: isDark ? AppColors.surfaceDark : AppColors.inputFillLight,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: borderColor),
                 ),
@@ -915,36 +866,6 @@ class _RecordTransactionModalState extends ConsumerState<RecordTransactionModal>
               ],
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AmountTag extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-
-  const _AmountTag({required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary),
-          ),
         ),
       ),
     );

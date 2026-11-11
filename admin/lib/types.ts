@@ -58,6 +58,9 @@ export interface OrganizationItem {
   name: string;
   slug: string;
   subscriptionPlan: string;
+  subscriptionBillingCycle: "MONTHLY" | "ANNUALLY";
+  subscriptionTrialEndsAt: string | null;
+  subscriptionRenewalDate: string | null;
   status: OrganizationStatus;
   farmsCount: number;
   farms: FarmSummary[];

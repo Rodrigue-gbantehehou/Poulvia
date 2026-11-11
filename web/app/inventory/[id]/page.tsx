@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, Suspense } from "react";
+import React, { useCallback, useEffect, useState, useMemo, Suspense } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import {
   Package,
   ArrowLeft,
@@ -44,7 +44,6 @@ import {
   StockMovementType,
   InventoryCategory,
   Flock,
-  Contact,
 } from "@/lib/types";
 import { formatDate, formatNumber, formatFcfa } from "@/lib/utils";
 import {
@@ -114,15 +113,13 @@ const MOVEMENT_CONFIG: Record<
 
 function InventoryItemDetailContent() {
   const params = useParams();
-  const router = useRouter();
-  const { activeFarm, hasPermission, hasModule, isOwner } = useAuth();
+  const { activeFarm, hasPermission, hasModule } = useAuth();
   const { toast } = useToast();
   const itemId = params?.id as string;
 
   // Main state
   const [item, setItem] = useState<(InventoryItem & { movements?: StockMovement[] }) | null>(null);
   const [flocks, setFlocks] = useState<Flock[]>([]);
-  const [suppliers, setSuppliers] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"movements" | "details">("movements");
   const [movementFilter, setMovementFilter] = useState<string>("ALL");
@@ -167,19 +164,12 @@ function InventoryItemDetailContent() {
   const [submittingEdit, setSubmittingEdit] = useState(false);
 
   useEffect(() => {
-    if (itemId) {
-      loadItemData();
-    }
-  }, [itemId]);
-
-  useEffect(() => {
     if (activeFarm?.id) {
       api.flocks.list({ farmId: activeFarm.id, status: "ACTIVE" }).then(setFlocks).catch(() => {});
-      api.contacts.list({ farmId: activeFarm.id, type: "SUPPLIER" }).then(setSuppliers).catch(() => {});
     }
   }, [activeFarm?.id]);
 
-  async function loadItemData() {
+  const loadItemData = useCallback(async () => {
     setLoading(true);
     try {
       const data = await api.inventory.get(itemId);
@@ -198,7 +188,12 @@ function InventoryItemDetailContent() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [itemId]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadItemData(), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadItemData]);
 
   function openMovementModal(type: StockMovementType) {
     setMoveError(null);
@@ -1096,7 +1091,7 @@ function InventoryItemDetailContent() {
             </div>
           )}
 
-          {/* Motif / Remarque avec suggestions discrètes */}
+          {/* Motif / Remarque */}
           <div>
             <label className="block text-xs font-semibold text-foreground mb-1">
               Motif / Remarque
@@ -1108,22 +1103,6 @@ function InventoryItemDetailContent() {
               placeholder={isFeed ? "ex. Ration matin, distribution repas..." : "ex. Traitement eau de boisson, vitamines..."}
               className="w-full rounded-xl border border-border bg-surface-muted p-2.5 text-xs text-foreground focus:border-primary focus:outline-hidden"
             />
-            <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
-              <span className="text-[10px] text-muted">Suggestions :</span>
-              {(isFeed
-                ? ["Ration matin", "Ration midi", "Ration soir", "Réassort"]
-                : ["Traitement eau", "Vitamines", "Soins", "Approvisionnement"]
-              ).map((sug) => (
-                <button
-                  key={sug}
-                  type="button"
-                  onClick={() => setMoveReason(sug)}
-                  className="text-[10px] px-2 py-0.5 rounded-md border border-border bg-surface hover:bg-surface-hover text-muted hover:text-foreground transition-colors cursor-pointer"
-                >
-                  {sug}
-                </button>
-              ))}
-            </div>
           </div>
 
           {moveError && (

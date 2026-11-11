@@ -7,6 +7,10 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    app.fedapay_secret_key: ''
+    app.fedapay_api_base_url: 'https://sandbox-api.fedapay.com/v1'
+    app.fedapay_webhook_secret: ''
+    app.subscription_payment_provider: 'fedapay'
 
 services:
     # default configuration for services in *this* file
@@ -18,6 +22,16 @@ services:
     # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
+
+    App\Service\Payment\FedaPayGateway:
+        arguments:
+            $secretKey: '%env(default:app.fedapay_secret_key:FEDAPAY_SECRET_KEY)%'
+            $apiBaseUrl: '%env(default:app.fedapay_api_base_url:FEDAPAY_API_BASE_URL)%'
+            $webhookSecret: '%env(default:app.fedapay_webhook_secret:FEDAPAY_WEBHOOK_SECRET)%'
+
+    App\Service\Payment\SubscriptionPaymentService:
+        arguments:
+            $defaultProvider: '%env(default:app.subscription_payment_provider:SUBSCRIPTION_PAYMENT_PROVIDER)%'
 
     Sentry\SentryBundle\Monolog\LogsHandler:
         arguments:

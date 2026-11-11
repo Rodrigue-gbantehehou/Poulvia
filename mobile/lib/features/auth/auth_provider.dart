@@ -141,7 +141,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
             'email': email.trim().toLowerCase(),
             'password': password,
             'deviceId': SecureStorageService().deviceId,
-            'deviceName': 'Mobile Le Fermier',
+            'deviceName': 'Poulvia Android',
           },
         );
       } on DioException catch (de) {

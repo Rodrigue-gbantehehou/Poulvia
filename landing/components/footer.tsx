@@ -1,123 +1,20 @@
-import React from "react";
-import Link from "next/link";
 import Image from "next/image";
-import { ShieldCheck } from "lucide-react";
+import Link from "next/link";
+
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://app.poulvia.com";
 
 export function Footer() {
-  const currentYear = new Date().getFullYear();
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://app.poulvia.com";
-
   return (
-    <footer className="border-t border-border bg-surface py-14 text-xs text-muted">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-10 border-b border-border">
-          {/* Brand Col */}
-          <div className="md:col-span-5 space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="relative h-8 w-8 overflow-hidden rounded-xl border border-border bg-surface p-0.5 shadow-2xs">
-                <Image
-                  src="/logo.png"
-                  alt="Poulvia"
-                  width={28}
-                  height={28}
-                  className="h-full w-full object-contain"
-                />
-              </div>
-              <span className="text-lg font-extrabold font-mono text-foreground">
-                Poul<span className="text-primary">via</span>
-              </span>
-            </div>
-            <p className="text-xs text-muted max-w-sm leading-relaxed">
-              Le logiciel professionnel de pilotage d&apos;exploitations avicoles conçu pour les réalités d&apos;Afrique de l&apos;Ouest : plateaux de 30 œufs, sacs de provende 50 kg et caisse en FCFA.
-            </p>
-            <div className="pt-2 flex items-center gap-2 text-[11px] text-muted">
-              <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
-              <span>Données isolées et strictement confidentielles.</span>
-            </div>
-          </div>
-
-          {/* Nav links 1 */}
-          <div className="md:col-span-3 space-y-2.5">
-            <h4 className="font-bold text-foreground uppercase tracking-wider text-[11px]">
-              Navigation
-            </h4>
-            <ul className="space-y-2">
-              <li>
-                <a href="#features" className="hover:text-primary transition-colors">
-                  Modules &amp; Fonctionnalités
-                </a>
-              </li>
-              <li>
-                <a href="#preview" className="hover:text-primary transition-colors">
-                  Simulateur de plateaux de 30
-                </a>
-              </li>
-              <li>
-                <a href="#how-it-works" className="hover:text-primary transition-colors">
-                  Comment ça marche
-                </a>
-              </li>
-              <li>
-                <a href="#pricing" className="hover:text-primary transition-colors">
-                  Tarification en FCFA
-                </a>
-              </li>
-              <li>
-                <a href="#faq" className="hover:text-primary transition-colors">
-                  Foire aux questions (FAQ)
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Nav links 2 */}
-          <div className="md:col-span-4 space-y-2.5">
-            <h4 className="font-bold text-foreground uppercase tracking-wider text-[11px]">
-              Espace Exploitation
-            </h4>
-            <ul className="space-y-2">
-              <li>
-                <a href={`${appUrl}/login`} className="hover:text-primary transition-colors font-medium">
-                  Connexion à mon compte
-                </a>
-              </li>
-              <li>
-                <a href={`${appUrl}/register`} className="hover:text-primary transition-colors font-medium">
-                  Créer ma première ferme
-                </a>
-              </li>
-              <li>
-                <a href="#contact" className="hover:text-primary transition-colors">
-                  Demande d&apos;accompagnement
-                </a>
-              </li>
-            </ul>
-
-            <div className="pt-3">
-              <a
-                href={`${appUrl}/login`}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-primary/20 bg-primary/5 px-3.5 py-2 font-bold text-primary hover:bg-primary/10 transition-colors"
-              >
-                <span>Accéder à l&apos;application Poulvia →</span>
-              </a>
-            </div>
-          </div>
+    <footer className="border-t border-border bg-surface">
+      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.5fr_1fr_1fr] lg:px-8">
+        <div>
+          <Link href="/" className="inline-flex items-center gap-2.5"><Image src="/logo.png" alt="" width={34} height={34} className="h-8 w-8 object-contain" /><span className="text-lg font-bold text-foreground">Poulvia</span></Link>
+          <p className="mt-4 max-w-sm text-sm leading-6 text-muted">Un outil de suivi pour les exploitations avicoles, accessible sur le web et bientôt en bêta sur Android.</p>
         </div>
-
-        {/* Bottom bar */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-muted">
-          <div>
-            © {currentYear} Poulvia. Tous droits réservés. Développé pour l&apos;aviculture ouest-africaine.
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="hover:text-foreground cursor-pointer">Mentions Légales</span>
-            <span>•</span>
-            <span className="hover:text-foreground cursor-pointer">Confidentialité</span>
-            <span>•</span>
-            <span className="hover:text-foreground cursor-pointer">Conditions Générales</span>
-          </div>
-        </div>
+        <div><h2 className="text-xs font-bold uppercase tracking-[.16em] text-foreground">Explorer</h2><div className="mt-4 flex flex-col gap-3 text-sm text-muted"><Link href="/#suivi" className="hover:text-primary">Fonctionnalités</Link><Link href="/#demarrage" className="hover:text-primary">Comment ça marche</Link><Link href="/beta-android" className="hover:text-primary">Bêta Android</Link></div></div>
+        <div><h2 className="text-xs font-bold uppercase tracking-[.16em] text-foreground">Mon espace</h2><div className="mt-4 flex flex-col gap-3 text-sm text-muted"><a href={`${appUrl}/login`} className="hover:text-primary">Connexion</a><a href={`${appUrl}/register`} className="hover:text-primary">Créer un compte</a><a href="mailto:contact@poulvia.com" className="hover:text-primary">Nous contacter</a></div></div>
       </div>
+      <div className="border-t border-border"><div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-muted sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8"><span>© {new Date().getFullYear()} Poulvia. Tous droits réservés.</span><span>Conçu pour accompagner les élevages avicoles.</span></div></div>
     </footer>
   );
 }

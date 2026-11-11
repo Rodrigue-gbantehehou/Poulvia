@@ -1,20 +1,18 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useCallback, useEffect, useState, useMemo } from "react";
 import {
   ContactRound,
   Plus,
   Search,
   Phone,
   Mail,
-  MapPin,
   Edit2,
   Trash2,
   ShoppingBag,
   Truck,
   Building,
   RefreshCw,
-  ExternalLink,
   Users,
   AlertCircle,
   Lock,
@@ -30,7 +28,6 @@ import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
 import { api } from "@/lib/api-client";
 import { Contact, ContactType } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
 import { ModuleLockedState } from "@/components/ui/module-locked-state";
 import type { LucideIcon } from "lucide-react";
 
@@ -58,7 +55,6 @@ const TYPE_CONFIG: Record<
   },
 };
 
-const CITY_PRESETS = ["Cotonou", "Abomey-Calavi", "Allada", "Porto-Novo", "Bohicon", "Parakou", "Ouidah", "Zè"];
 
 export default function ContactsPage() {
   const { activeFarm, hasPermission, hasModule, isOwner } = useAuth();
@@ -67,6 +63,7 @@ export default function ContactsPage() {
   // Permissions effectives du catalogue officiel Symfony (contact:view / contact:create)
   const canViewContacts = isOwner || hasPermission("contact:view");
   const canManageContacts = isOwner || hasPermission("contact:create");
+  const canLoadContacts = hasModule("contacts") && canViewContacts;
 
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [filterType, setFilterType] = useState<string>("ALL");
@@ -93,14 +90,11 @@ export default function ContactsPage() {
   const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    if (activeFarm?.id && hasModule("contacts") && canViewContacts) {
-      loadContacts();
+  const loadContacts = useCallback(async () => {
+    if (!activeFarm?.id || !canLoadContacts) {
+      setIsLoading(false);
+      return;
     }
-  }, [activeFarm?.id, canViewContacts]);
-
-  async function loadContacts() {
-    if (!activeFarm?.id || !canViewContacts) return;
     try {
       const data = await api.contacts.list({
         farmId: activeFarm.id,
@@ -112,7 +106,12 @@ export default function ContactsPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [activeFarm, canLoadContacts]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadContacts(), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadContacts]);
 
   function openCreateModal(defaultType: ContactType = "CLIENT") {
     if (!canManageContacts) {
@@ -654,18 +653,6 @@ export default function ContactsPage() {
                   onChange={(e) => setCity(e.target.value)}
                   className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg text-foreground focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 />
-                <div className="flex flex-wrap gap-1 mt-1.5">
-                  {CITY_PRESETS.slice(0, 5).map((preset) => (
-                    <button
-                      type="button"
-                      key={preset}
-                      onClick={() => setCity(preset)}
-                      className="px-1.5 py-0.5 text-[11px] font-medium rounded bg-muted/10 text-muted hover:text-foreground hover:bg-muted/20 transition-colors"
-                    >
-                      {preset}
-                    </button>
-                  ))}
-                </div>
               </div>
 
               <div>

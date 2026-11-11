@@ -22,7 +22,7 @@
   --color-accent: var(--brand-accent);
   --color-accent-hover: var(--brand-accent-hover);
   --color-accent-soft: var(--brand-accent-soft);
-  --color-accent-foreground: #ffffff;
+  --color-accent-foreground: var(--brand-primary);
 
   --color-success: var(--status-success);
   --color-success-soft: var(--status-success-soft);
@@ -36,24 +36,24 @@
 
 @layer base {
   :root {
-    --bg-main: #f6f8f6;
+    --bg-main: #fbf8f1;
     --bg-surface: #ffffff;
-    --bg-surface-hover: #f1f4f1;
-    --bg-surface-muted: #eef2ee;
+    --bg-surface-hover: #f2f1eb;
+    --bg-surface-muted: #edf1ea;
     --bg-surface-elevated: #ffffff;
 
-    --text-primary: #202923;
-    --text-muted: #657168;
+    --text-primary: #26362d;
+    --text-muted: #5d6a61;
 
-    --border-color: #dfe6e0;
+    --border-color: #e1e3db;
 
-    --brand-primary: #245c43;
-    --brand-primary-hover: #194832;
-    --brand-primary-soft: #e8f2ec;
+    --brand-primary: #154632;
+    --brand-primary-hover: #113828;
+    --brand-primary-soft: #e8eee8;
 
-    --brand-accent: #dda64b;
-    --brand-accent-hover: #c48e37;
-    --brand-accent-soft: #fbf4e8;
+    --brand-accent: #935a25;
+    --brand-accent-hover: #75451d;
+    --brand-accent-soft: #f3ebdf;
 
     --status-success: #237a4b;
     --status-success-soft: #eaf5ee;

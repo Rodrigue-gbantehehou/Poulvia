@@ -6,22 +6,22 @@ export function StatsStrip() {
     {
       icon: <Egg className="h-5 w-5 text-accent" />,
       title: "Plateaux de 30 œufs",
-      description: "Vos ramassages comptés automatiquement en plateaux complets, comme au marché.",
+      description: "Pour les élevages de pondeuses, retrouvez le nombre d'œufs en plateaux et en vrac.",
     },
     {
       icon: <Layers className="h-5 w-5 text-primary" />,
       title: "Sacs de provende",
-      description: "Suivez vos sacs d'aliments de 50 kg ou 25 kg pour ne jamais tomber à court.",
+      description: "Enregistrez les aliments et intrants utilisés dans votre élevage.",
     },
     {
       icon: <CalendarCheck2 className="h-5 w-5 text-accent" />,
       title: "Santé & Vaccins",
-      description: "Des rappels clairs sur votre téléphone pour ne rater aucun vaccin ni vitamine.",
+      description: "Consultez les soins et vaccins que vous avez programmés pour vos bandes.",
     },
     {
       icon: <Wallet className="h-5 w-5 text-primary" />,
       title: "Caisse en FCFA",
-      description: "Notez vos règlements par MTN MoMo, Moov Money et en espèces simplement.",
+      description: "Enregistrez les recettes et dépenses de votre exploitation en FCFA.",
     },
   ];
 

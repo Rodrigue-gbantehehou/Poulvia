@@ -1,224 +1,196 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Check, ArrowRight, Shield } from "lucide-react";
+import { Check, ArrowRight } from "lucide-react";
 
 interface PublicPlan {
-  id?: string;
   sku: string;
   name: string;
-  tier?: string;
-  badge?: string | null;
   description?: string | null;
   priceMonthly: number;
-  priceAnnually?: number;
+  priceAnnually: number;
   currency?: string;
   features?: string[];
-  isRecommended?: boolean;
-  isPopular?: boolean;
+  trialDays?: number;
+  allowedBillingCycles?: Array<"MONTHLY" | "ANNUALLY">;
 }
 
-const DEFAULT_PLANS: PublicPlan[] = [
-  {
-    sku: "FREE",
-    name: "Formule Gratuite",
-    tier: "Pour démarrer",
-    description: "Idéal pour découvrir l'application et sécuriser le suivi de vos premières volailles.",
-    priceMonthly: 0,
-    features: [
-      "1 exploitation avicole",
-      "Jusqu'à 2 bandes (pondeuses ou chair)",
-      "Comptage des ramassages en plateaux de 30",
-      "Suivi de l'aliment et des mortalités",
-      "Caisse simple en FCFA",
-    ],
-    isRecommended: false,
-  },
-  {
-    sku: "PRO",
-    name: "Formule Complète",
-    tier: "Pour les fermes professionnelles",
-    description: "Pour les éleveurs qui souhaitent un suivi rigoureux de leur santé et de leurs finances.",
-    priceMonthly: 9500,
-    badge: "Recommandé",
-    features: [
-      "Autant de bandes et de bâtiments que vous voulez",
-      "Rappels de vaccins et soins automatiques",
-      "Validation du vaccin du jour en 1 clic dans l'eau",
-      "Alertes avant que vos sacs d'aliments ne manquent",
-      "Accès direct pour votre vétérinaire",
-      "Caisse séparée : MTN MoMo, Moov Money et Espèces",
-    ],
-    isRecommended: true,
-  },
-];
+type BillingCycle = "MONTHLY" | "ANNUALLY";
 
 export function Pricing() {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://app.poulvia.com";
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.poulvia.com";
-
-  const [plans, setPlans] = useState<PublicPlan[]>(DEFAULT_PLANS);
+  const [plan, setPlan] = useState<PublicPlan | null>(null);
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>("MONTHLY");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
 
-    async function loadLandingPlans() {
+    async function loadLandingPlan() {
       try {
         const response = await fetch(`${apiUrl}/api/public/plans`, {
           headers: { Accept: "application/json" },
         });
+        if (!response.ok) throw new Error("Impossible de charger l’offre");
 
-        if (!response.ok) return;
+        const result: unknown = await response.json();
+        if (typeof result !== "object" || result === null || !("data" in result)) {
+          throw new Error("Réponse d’offre invalide");
+        }
+        const data = (result as { data?: unknown }).data;
+        if (!Array.isArray(data)) throw new Error("Liste d’offres invalide");
 
-        const result = await response.json();
-        if (
-          isMounted &&
-          result?.status === "success" &&
-          Array.isArray(result?.data) &&
-          result.data.length > 0
-        ) {
-          setPlans(result.data);
+        const standard = data.find(
+          (item): item is PublicPlan =>
+            typeof item === "object" &&
+            item !== null &&
+            "sku" in item &&
+            String(item.sku).toUpperCase() === "STANDARD" &&
+            "priceMonthly" in item,
+        );
+
+        if (isMounted) {
+          setPlan(standard ?? null);
+          if (
+            standard?.allowedBillingCycles?.includes("ANNUALLY") &&
+            standard.priceAnnually > 0
+          ) {
+            setBillingCycle("MONTHLY");
+          }
         }
       } catch {
-        // En cas d'indisponibilité temporaire, les plans de secours restent affichés
+        if (isMounted) setPlan(null);
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
     }
 
-    loadLandingPlans();
-
+    loadLandingPlan();
     return () => {
       isMounted = false;
     };
   }, [apiUrl]);
 
+  const annualAvailable = plan !== null &&
+    plan.priceAnnually > 0 &&
+    (plan.allowedBillingCycles?.includes("ANNUALLY") ?? true);
+  const selectedCycle = billingCycle === "ANNUALLY" && annualAvailable
+    ? "ANNUALLY"
+    : "MONTHLY";
+  const selectedPrice = selectedCycle === "ANNUALLY"
+    ? plan?.priceAnnually
+    : plan?.priceMonthly;
+  const currencyLabel = plan?.currency === "XOF" || !plan?.currency
+    ? "FCFA"
+    : plan.currency;
+  const formattedPrice = selectedPrice === undefined
+    ? ""
+    : new Intl.NumberFormat("fr-FR").format(selectedPrice);
+
   return (
     <section id="pricing" className="py-16 md:py-24 bg-background border-b border-border">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Title */}
-        <div className="text-center max-w-2xl mx-auto space-y-3 mb-12">
+        <div className="text-center max-w-2xl mx-auto space-y-3 mb-10">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
-            <span>Tarifs simples et transparents</span>
+            <span>Une offre, deux périodicités</span>
           </div>
-
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-            Des tarifs clairs, sans surprise
+            L’offre Poulvia, au rythme qui vous convient
           </h2>
-
           <p className="text-sm sm:text-base text-muted leading-relaxed">
-            Tarifs en Francs CFA. Pas besoin de carte bancaire : vous pouvez régler simplement par
-            MTN Mobile Money ou Moov Money.
+            L’abonnement mensuel et l’abonnement annuel donnent accès aux mêmes modules. Seule la périodicité change.
           </p>
         </div>
 
-        {/* Dynamic Cards Grid */}
-        <div
-          className={`grid grid-cols-1 ${
-            plans.length === 1
-              ? "max-w-md mx-auto"
-              : plans.length === 2
-              ? "md:grid-cols-2 max-w-4xl mx-auto"
-              : "md:grid-cols-3"
-          } gap-8 items-stretch`}
-        >
-          {plans.map((plan) => {
-            const isHighlight = !!plan.isRecommended || !!plan.isPopular;
-            const badgeLabel =
-              plan.badge || (plan.isRecommended ? "Recommandé" : plan.isPopular ? "Populaire" : null);
-
-            const formattedPrice =
-              plan.priceMonthly === 0
-                ? "0 FCFA"
-                : `${plan.priceMonthly.toLocaleString("fr-FR")} FCFA`;
-
-            const subPriceLabel =
-              plan.priceMonthly === 0
-                ? "Gratuit pour toujours"
-                : "par mois • Sans engagement";
-
-            return (
-              <div
-                key={plan.sku}
-                className={`rounded-2xl p-6 sm:p-8 flex flex-col justify-between relative transition-all ${
-                  isHighlight
-                    ? "border-2 border-primary bg-surface shadow-sm"
-                    : "border border-border bg-surface shadow-xs"
-                }`}
-              >
-                {badgeLabel && (
-                  <div className="absolute -top-3 right-6 px-3 py-0.5 rounded-full bg-primary text-white text-[11px] font-semibold shadow-xs">
-                    {badgeLabel}
-                  </div>
+        {isLoading ? (
+          <div className="mx-auto h-72 max-w-md animate-pulse rounded-2xl bg-surface" role="status" aria-label="Chargement de l’offre" />
+        ) : !plan ? (
+          <div className="mx-auto max-w-md rounded-2xl border border-border bg-surface p-6 text-center shadow-xs" role="status">
+            <h3 className="text-lg font-bold text-foreground">Tarifs momentanément indisponibles</h3>
+            <p className="mt-2 text-sm text-muted">
+              Contactez l’équipe Poulvia pour connaître les conditions de l’offre.
+            </p>
+            <a
+              href="#contact"
+              className="mt-5 inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-white hover:bg-primary-hover"
+            >
+              Contacter l’équipe
+              <ArrowRight className="h-4 w-4" />
+            </a>
+          </div>
+        ) : (
+          <div className="mx-auto max-w-md rounded-2xl border-2 border-primary bg-surface p-6 shadow-sm sm:p-8">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-foreground">Offre Poulvia</h3>
+                {plan.description && (
+                  <p className="mt-2 text-sm leading-relaxed text-muted">{plan.description}</p>
                 )}
+              </div>
 
-                <div>
-                  <span
-                    className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-md mb-3 ${
-                      isHighlight
-                        ? "text-primary bg-primary-soft"
-                        : "text-muted bg-surface-muted"
-                    }`}
-                  >
-                    {plan.tier || (plan.priceMonthly === 0 ? "Pour démarrer" : "Pour les fermes")}
-                  </span>
-
-                  <h3 className="text-xl font-bold text-foreground">{plan.name}</h3>
-
-                  {plan.description && (
-                    <p className="text-xs sm:text-sm text-muted mt-2 leading-relaxed">
-                      {plan.description}
-                    </p>
-                  )}
-
-                  <div className="my-5">
-                    <span
-                      className={`text-3xl font-bold ${
-                        isHighlight ? "text-primary" : "text-foreground"
+              {annualAvailable && (
+                <div
+                  className="inline-flex shrink-0 rounded-lg border border-border bg-surface-muted p-1"
+                  role="group"
+                  aria-label="Périodicité de l’abonnement"
+                >
+                  {(["MONTHLY", "ANNUALLY"] as const).map((cycle) => (
+                    <button
+                      key={cycle}
+                      type="button"
+                      aria-pressed={selectedCycle === cycle}
+                      onClick={() => setBillingCycle(cycle)}
+                      className={`rounded-md px-3 py-2 text-xs font-semibold transition-colors ${
+                        selectedCycle === cycle
+                          ? "bg-primary text-white shadow-xs"
+                          : "text-muted hover:text-foreground"
                       }`}
                     >
-                      {formattedPrice}
-                    </span>
-                    <span className="text-xs text-muted block mt-1">{subPriceLabel}</span>
-                  </div>
-
-                  {Array.isArray(plan.features) && plan.features.length > 0 && (
-                    <ul className="space-y-3 text-xs text-foreground border-t border-border pt-5">
-                      {plan.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-start gap-2">
-                          <Check className="h-4 w-4 text-primary shrink-0 stroke-[2.5] mt-0.5" />
-                          <span className="leading-tight">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                      {cycle === "MONTHLY" ? "Mensuel" : "Annuel"}
+                    </button>
+                  ))}
                 </div>
+              )}
+            </div>
 
-                <div className="pt-6">
-                  <a
-                    href={`${appUrl}/register?plan=${encodeURIComponent(plan.sku.toLowerCase())}`}
-                    className={`w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-xs font-semibold transition-colors ${
-                      isHighlight
-                        ? "bg-primary hover:bg-primary-hover text-white shadow-xs"
-                        : "border border-border bg-surface-muted hover:bg-surface-hover text-foreground"
-                    }`}
-                  >
-                    <span>
-                      {plan.priceMonthly === 0
-                        ? "Créer mon compte gratuit"
-                        : `Démarrer avec ${plan.name}`}
-                    </span>
-                    {isHighlight && <ArrowRight className="h-4 w-4" />}
-                  </a>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+            <div className="my-6 border-y border-border py-5">
+              <p className="text-3xl font-bold text-primary">
+                {formattedPrice} {currencyLabel}
+                <span className="ml-1 text-sm font-medium text-muted">
+                  / {selectedCycle === "ANNUALLY" ? "an" : "mois"}
+                </span>
+              </p>
+              {plan.trialDays !== undefined && plan.trialDays > 0 && (
+                <p className="mt-2 text-sm font-medium text-primary">
+                  Essai gratuit de {plan.trialDays} jours
+                </p>
+              )}
+            </div>
 
-        {/* Reassurance note */}
-        <div className="mt-8 text-center text-xs text-muted flex items-center justify-center gap-2">
-          <Shield className="h-4 w-4 text-primary" />
-          <span>Règlement mensuel par MTN MoMo ou Moov Money. Vous pouvez arrêter à tout moment.</span>
-        </div>
+            {Array.isArray(plan.features) && plan.features.length > 0 && (
+              <ul className="space-y-3 text-sm text-foreground">
+                {plan.features.map((feature, index) => (
+                  <li key={`${index}-${feature}`} className="flex items-start gap-2">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <a
+              href={`${appUrl}/register`}
+              className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-primary-hover"
+            >
+              Créer mon compte
+              <ArrowRight className="h-4 w-4" />
+            </a>
+            <p className="mt-3 text-center text-xs text-muted">
+              La périodicité choisie ne modifie pas les modules inclus.
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );

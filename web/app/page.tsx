@@ -1,25 +1,21 @@
 ﻿"use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Plus,
   Building2,
-  RefreshCw,
   Egg,
   Utensils,
   AlertTriangle,
   ArrowUpRight,
   ArrowDownRight,
   Bird,
-  Wallet,
   Clock,
   ChevronRight,
   Warehouse,
-  Package,
   HeartPulse,
   CheckCircle2,
-  Calendar,
 } from "lucide-react";
 import { Shell } from "@/components/layout/shell";
 import { CreateFarmModal } from "@/components/farms/create-farm-modal";
@@ -33,7 +29,6 @@ import {
 } from "@/components/dashboard";
 import { StatCard } from "@/components/ui/stat-card";
 import { EggProductionChart } from "@/components/dashboard/egg-production-chart";
-import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/context/auth-context";
 import { api } from "@/lib/api-client";
 import {
@@ -43,7 +38,7 @@ import {
   Transaction,
   InventoryItem,
 } from "@/lib/types";
-import { formatFcfa, formatNumber, formatPercent, formatDate, cn, localDateString } from "@/lib/utils";
+import { formatFcfa, formatNumber, formatDate, cn, localDateString } from "@/lib/utils";
 
 export default function DashboardPage() {
   const { activeFarm, hasPermission, hasModule, activePlan, isOwner } = useAuth();
@@ -66,6 +61,12 @@ export default function DashboardPage() {
   const [financeTxType, setFinanceTxType] = useState<"INCOME" | "EXPENSE">("INCOME");
   const [selectedFlockId, setSelectedFlockId] = useState("");
   const [todayStr] = useState(() => localDateString());
+  const [today] = useState(() => new Date());
+  const trialEndsAt = activeFarm?.subscription?.trialEndsAt;
+  const isTrial = activeFarm?.subscription?.status?.toUpperCase() === "TRIAL";
+  const trialDaysLeft = trialEndsAt
+    ? Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - today.getTime()) / 86400000))
+    : null;
   const showDashboardLoading = isLoading && Boolean(activeFarm?.id);
 
   function openCreateEggModal() {
@@ -83,11 +84,10 @@ export default function DashboardPage() {
     setFinanceModalOpen(true);
   }
 
-  useEffect(() => {
-    if (activeFarm?.id) {
-      loadDashboardData();
-    }
-  }, [activeFarm?.id]);
+  const canLoadFlocks = hasPermission("flock:read") || hasPermission("flock:view");
+  const canLoadEggs = hasPermission("egg:read") || hasPermission("egg:view");
+  const canLoadFinance = hasPermission("finance:read") || hasPermission("finance:view");
+  const canLoadInventory = hasPermission("inventory:read") || hasPermission("inventory:view");
 
   // Écouteur pour les actions rapides déclenchées depuis le BottomNav ou la barre d'action
   useEffect(() => {
@@ -123,23 +123,23 @@ export default function DashboardPage() {
     return () => window.removeEventListener("open-dashboard-action", handleAction);
   }, [flocks]);
 
-  async function loadDashboardData() {
+  const loadDashboardData = useCallback(async () => {
     try {
       const [kpiData, flocksData, eggsData, txData, invData] = await Promise.all([
         api.dashboard.getKpi(activeFarm?.id).catch((err) => {
           console.warn("KPIs non accessibles:", err);
           return null;
         }),
-        hasPermission("flock:read") || hasPermission("flock:view")
+        canLoadFlocks
           ? api.flocks.list({ farmId: activeFarm?.id, status: "ACTIVE" }).catch(() => [])
           : Promise.resolve([]),
-        hasPermission("egg:read") || hasPermission("egg:view")
+        canLoadEggs
           ? api.eggs.list({ farmId: activeFarm?.id }).catch(() => [])
           : Promise.resolve([]),
-        hasPermission("finance:read") || hasPermission("finance:view")
+        canLoadFinance
           ? api.finance.listTransactions({ farmId: activeFarm?.id }).catch(() => [])
           : Promise.resolve([]),
-        hasPermission("inventory:read") || hasPermission("inventory:view")
+        canLoadInventory
           ? api.inventory.listItems({ farmId: activeFarm?.id }).catch(() => [])
           : Promise.resolve([]),
       ]);
@@ -158,7 +158,12 @@ export default function DashboardPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [activeFarm, canLoadFlocks, canLoadEggs, canLoadFinance, canLoadInventory, selectedFlockId]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadDashboardData(), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadDashboardData]);
 
   // Calculs synthétiques
   const computedLiveBirds =
@@ -205,22 +210,6 @@ export default function DashboardPage() {
   const overdueHealthCount = kpi?.health?.overdueCount || 0;
   const pendingHealthCount = kpi?.health?.pendingCount || 0;
 
-  const todayIncome = recentTransactions
-    .filter((t) => t.type === "INCOME" && (todayStr ? t.date === todayStr : true))
-    .reduce((sum, t) => sum + (t.amountFcfa || 0), 0);
-
-  const totalIncome = recentTransactions
-    .filter((t) => t.type === "INCOME")
-    .reduce((sum, t) => sum + (t.amountFcfa || 0), 0);
-  const totalExpense = recentTransactions
-    .filter((t) => t.type === "EXPENSE")
-    .reduce((sum, t) => sum + (t.amountFcfa || 0), 0);
-
-  const computedNet =
-    kpi?.financialSummary?.netCashflowFcfa !== undefined && kpi.financialSummary.netCashflowFcfa !== 0
-      ? kpi.financialSummary.netCashflowFcfa
-      : totalIncome - totalExpense;
-
   // Inventaire d'aliments pour les stats opérationnelles
   const feedItems = inventoryItems.filter(
     (i) =>
@@ -237,16 +226,12 @@ export default function DashboardPage() {
 
   // Double vérification stricte : Abonnement de la ferme (Modules) & Droits du compte utilisateur (Permissions)
   const canViewEgg = hasModule("eggs") && !isBroiler && (hasPermission("egg:read") || hasPermission("egg:view") || isOwner);
-  const canCreateEgg = hasModule("eggs") && !isBroiler && (hasPermission("egg:create") || isOwner);
 
   const canFeed = (hasModule("inventory") || hasModule("feed_rationing")) && (hasPermission("inventory:movement") || hasPermission("flock:update") || isOwner);
-  const canRecordMovement = hasPermission("flock:movement") || hasPermission("flock:create") || hasPermission("flock:update") || isOwner;
 
   const canViewFinance = hasModule("finance") && (hasPermission("finance:read") || hasPermission("finance:view") || isOwner);
-  const canCreateFinance = hasModule("finance") && (hasPermission("finance:create") || isOwner);
 
   const canViewHealth = hasModule("health") && (hasPermission("health:view") || hasPermission("health:read") || isOwner);
-  const canManageHealth = hasModule("health") && (hasPermission("health:manage") || isOwner);
 
   const canViewInventory = hasModule("inventory") && (hasPermission("inventory:read") || hasPermission("inventory:view") || isOwner);
 
@@ -306,6 +291,21 @@ export default function DashboardPage() {
         </div>
       ) : (
         <div className="space-y-6 sm:space-y-7">
+          {isTrial && trialDaysLeft !== null && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Votre essai gratuit Poulvia est en cours</p>
+                <p className="mt-0.5 text-xs text-muted">
+                  {trialDaysLeft === 0
+                    ? "Votre période d’essai se termine aujourd’hui."
+                    : `Il vous reste ${trialDaysLeft} ${trialDaysLeft === 1 ? "jour" : "jours"} d’essai gratuit.`}
+                </p>
+              </div>
+              <Link href="/settings/subscription" className="text-xs font-semibold text-primary hover:underline">
+                Voir mon abonnement
+              </Link>
+            </div>
+          )}
           <div className="flex items-end justify-between gap-4 border-b border-border pb-4">
             <div>
               <p className="text-caption font-medium text-muted">TABLEAU DE BORD</p>
@@ -334,8 +334,14 @@ export default function DashboardPage() {
             ) : (
               <StatCard
                 title="Âge"
-                value={flocks.length > 0 ? `S${flocks[0].ageInWeeks || "?"}` : "—"}
-                subtitle={flocks.length > 0 ? `J${flocks[0].ageInDays || "?"}` : "0 lot"}
+                value={
+                  flocks.length > 0
+                    ? flocks[0].ageInDays !== undefined && flocks[0].ageInDays < 7
+                      ? `J${flocks[0].ageInDays}`
+                      : `S${flocks[0].ageInWeeks ?? "?"}`
+                    : "—"
+                }
+                subtitle={flocks.length > 0 ? `J${flocks[0].ageInDays ?? "?"}` : "0 lot"}
                 accent="sky"
                 icon={<Clock className="h-4 w-4" />}
               />
@@ -404,10 +410,6 @@ export default function DashboardPage() {
               />
             )}
           </div>
-
-          {canViewEgg && kpi?.hasEggAccess !== false && (
-            <EggProductionChart points={kpi?.eggProductionChart ?? []} isLoading={showDashboardLoading} error={kpi?.dashboardError} startDate={kpi?.eggChartStartDate} endDate={kpi?.eggChartEndDate} title="Tendance de ponte" />
-          )}
 
           {/* 3. Alertes (si stock bas ou vaccin en retard) */}
           {((canViewInventory && computedLowStock > 0) || (canViewHealth && overdueHealthCount > 0)) && (
@@ -520,9 +522,7 @@ export default function DashboardPage() {
                           </div>
                         </div>
 
-                        <Badge variant={flock.type === "LAYER" ? "warning" : "info"} size="sm">
-                          {flock.type === "LAYER" ? "Ponte" : "Chair"}
-                        </Badge>
+                
                       </div>
 
                       {/* Métriques clés en pastilles */}
@@ -536,7 +536,9 @@ export default function DashboardPage() {
                         <div>
                           <div className="text-[10px] text-muted">Âge</div>
                           <div className="text-xs font-bold text-foreground font-mono">
-                            S{flock.ageInWeeks || "?"}
+                            {flock.ageInDays !== undefined && flock.ageInDays < 7
+                              ? `J${flock.ageInDays}`
+                              : `S${flock.ageInWeeks ?? "?"}`}
                           </div>
                         </div>
                         <div>
@@ -655,12 +657,16 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+
+          {canViewEgg && kpi?.hasEggAccess !== false && (
+            <EggProductionChart points={kpi?.eggProductionChart ?? []} isLoading={showDashboardLoading} error={kpi?.dashboardError} startDate={kpi?.eggChartStartDate} endDate={kpi?.eggChartEndDate} title="Tendance de ponte" />
+          )}
         </div>
       )}
 
       {/* MODALES DASHBOARD FONCTIONNELLES */}
       <RecordEggModal
-        key={`${eggModalOpen}-${editingEgg?.id ?? "new"}-${selectedFlockId}`}
+        key={`egg-${eggModalOpen}-${editingEgg?.id ?? "new"}-${selectedFlockId}`}
         isOpen={eggModalOpen}
         onClose={() => {
           setEggModalOpen(false);
@@ -674,7 +680,7 @@ export default function DashboardPage() {
       />
 
       <RecordMovementModal
-        key={`${movementModalOpen}-${selectedFlockId}`}
+        key={`movement-${movementModalOpen}-${selectedFlockId}`}
         isOpen={movementModalOpen}
         onClose={() => setMovementModalOpen(false)}
         onSuccess={loadDashboardData}
@@ -683,7 +689,7 @@ export default function DashboardPage() {
       />
 
       <RecordFeedingModal
-        key={`${feedingModalOpen}-${selectedFlockId}`}
+        key={`feeding-${feedingModalOpen}-${selectedFlockId}`}
         isOpen={feedingModalOpen}
         onClose={() => setFeedingModalOpen(false)}
         onSuccess={loadDashboardData}
@@ -694,7 +700,7 @@ export default function DashboardPage() {
       />
 
       <RecordTransactionModal
-        key={`${financeModalOpen}-${financeTxType}`}
+        key={`transaction-${financeModalOpen}-${financeTxType}`}
         isOpen={financeModalOpen}
         onClose={() => setFinanceModalOpen(false)}
         onSuccess={loadDashboardData}
@@ -708,7 +714,7 @@ export default function DashboardPage() {
       />
 
       <CreateFlockModal
-        key={String(createFlockModalOpen)}
+        key={`create-flock-${createFlockModalOpen}`}
         isOpen={createFlockModalOpen}
         onClose={() => setCreateFlockModalOpen(false)}
         onSuccess={loadDashboardData}

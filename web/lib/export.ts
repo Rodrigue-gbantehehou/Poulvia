@@ -3,8 +3,7 @@
  * Spécialement adaptés pour Microsoft Excel, LibreOffice et Google Sheets
  */
 
-import { Transaction, InventoryItem, StockMovement } from "./types";
-import { formatNumber } from "./utils";
+import { Transaction, InventoryItem } from "./types";
 
 function downloadCsv(content: string, filename: string) {
   // \uFEFF enables Excel to recognize UTF-8 encoding automatically

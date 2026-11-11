@@ -58,19 +58,28 @@ L'interface doit évoquer la confiance, la précision, la maîtrise opérationne
 
 ### Palette de référence
 
-Ces couleurs constituent la palette initiale. Les centraliser dans les variables de thème et les tokens du projet.
+L'identité visuelle s'appuie sur quatre couleurs de base, en cohérence avec le logo Poulvia : vert profond, orange, blanc orangé et blanc. Les couleurs de statut décrites séparément plus bas sont réservées aux états fonctionnels et ne constituent pas des couleurs décoratives de marque. Centraliser ces rôles dans les variables de thème et les tokens de chaque plateforme.
 
 | Token | Couleur | Utilisation |
 |---|---|---|
-| `primary` | `#245C43` | Actions principales, navigation active |
-| `primary-hover` | `#194832` | Survol des actions principales |
-| `primary-soft` | `#E8F2EC` | Fonds et sélections légères |
-| `accent` | `#DDA64B` | Mise en évidence ponctuelle |
-| `background` | `#F6F8F6` | Fond général |
+| `primary` | `#154632` | Actions principales, navigation active et texte principal |
+| `primary-hover` | `#113828` | Survol des actions principales |
+| `primary-soft` | `#EBF5F0` | Fonds et sélections légères |
+| `accent` | `#F39200` | Accent du logo, utilisé ponctuellement |
+| `background` | `#FFF8ED` | Fond général blanc orangé |
 | `surface` | `#FFFFFF` | Cartes, tableaux et formulaires |
-| `foreground` | `#202923` | Texte principal |
-| `muted-foreground` | `#657168` | Texte secondaire |
-| `border` | `#DFE6E0` | Bordures et séparations |
+| `foreground` | `#154632` | Texte principal, pour éviter une couleur charbon supplémentaire |
+| `muted-foreground` | Vert principal atténué | Texte secondaire, vérifier le contraste sur chaque surface |
+| `border` | Vert principal très atténué | Bordures et séparations discrètes |
+
+Les fonds doux, textes secondaires et bordures peuvent utiliser des variantes transparentes ou mélangées du vert principal. Ne pas ajouter une nouvelle couleur pleine pour chaque composant.
+
+### Couleurs d'état fonctionnelles
+
+Ces couleurs sont nécessaires pour distinguer les états métier. Les utiliser uniquement lorsqu'un état correspondant est présent, et toujours ajouter un libellé ou une icône afin que l'information ne dépende pas de la couleur seule.
+
+| Token | Couleur | Utilisation |
+|---|---|---|
 | `success` | `#237A4B` | Succès et situations favorables |
 | `warning` | `#946200` | Avertissements et seuils à surveiller |
 | `danger` | `#B4232C` | Erreurs et situations critiques |
@@ -78,13 +87,14 @@ Ces couleurs constituent la palette initiale. Les centraliser dans les variables
 
 ### Règles de couleur
 
-- Le vert est la couleur d'identité, pas un fond à appliquer partout.
-- Le fond général reste clair et discret.
-- Le blanc sert à distinguer les surfaces de travail.
-- L'accent doré doit rester ponctuel.
+- Le vert profond est la couleur d'identité et d'action principale, pas un fond à appliquer partout.
+- Le fond blanc orangé reste clair et discret ; le blanc distingue les surfaces de travail.
+- L'orange du logo reste un accent ponctuel. Ne pas l'utiliser comme couleur universelle des boutons, des liens ou des états.
+- Le charbon et les gris autonomes ne font pas partie de la palette de marque ; employer le vert principal ou ses variantes atténuées pour le texte et la structure.
 - Les couleurs sémantiques doivent conserver leur signification dans toute l'application.
+- Les états d'avertissement ne doivent pas être présentés comme des états critiques ; réserver le rouge aux erreurs et situations critiques.
 - Une couleur ne doit jamais être le seul moyen de transmettre une information.
-- Vérifier le contraste entre le texte et son arrière-plan.
+- Vérifier le contraste entre le texte et son arrière-plan. L'orange ne doit pas être utilisé seul pour du petit texte sur fond blanc ou blanc orangé.
 - Éviter les dégradés décoratifs, les effets lumineux, les ombres lourdes et les couleurs saturées sans justification fonctionnelle.
 
 ## 4. Typographie

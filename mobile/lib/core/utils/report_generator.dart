@@ -48,7 +48,7 @@ class ReportGenerator {
       buffer.writeln("");
     }
 
-    buffer.writeln("📲 _Généré via l'application Le Fermier_");
+    buffer.writeln("📲 _Généré via l'application Poulvia_");
     return buffer.toString();
   }
 
@@ -83,7 +83,7 @@ class ReportGenerator {
       buffer.writeln("");
     }
 
-    buffer.writeln("📲 _Généré via l'application Le Fermier_");
+    buffer.writeln("📲 _Généré via l'application Poulvia_");
     return buffer.toString();
   }
 
@@ -120,7 +120,7 @@ class ReportGenerator {
       buffer.writeln("🔢 *Opérations enregistrées :* $transactionCount");
     }
     buffer.writeln("");
-    buffer.writeln("📲 _Généré via l'application Le Fermier_");
+    buffer.writeln("📲 _Généré via l'application Poulvia_");
     return buffer.toString();
   }
 
@@ -152,7 +152,7 @@ class ReportGenerator {
       buffer.writeln("");
     }
 
-    buffer.writeln("📲 _Généré via l'application Le Fermier_");
+    buffer.writeln("📲 _Généré via l'application Poulvia_");
     return buffer.toString();
   }
 
@@ -199,7 +199,7 @@ class ReportGenerator {
     }
     buffer.writeln("--------------------------------");
     buffer.writeln("🙏 _Merci pour votre confiance !_");
-    buffer.writeln("📲 _Émis via Le Fermier App_");
+    buffer.writeln("📲 _Émis via Poulvia_");
 
     return buffer.toString();
   }

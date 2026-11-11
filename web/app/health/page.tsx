@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   HeartPulse,
   Plus,
@@ -16,13 +16,9 @@ import {
   Sparkles,
   ShieldAlert,
   Trash2,
-  Edit2,
   Check,
-  Building,
-  User,
   Coins,
   AlertCircle,
-  Lock,
 } from "lucide-react";
 import { Shell } from "@/components/layout/shell";
 import { StatCard } from "@/components/ui/stat-card";
@@ -36,7 +32,6 @@ import { api } from "@/lib/api-client";
 import {
   Flock,
   HealthTreatment,
-  HealthTreatmentStatus,
   HealthTreatmentType,
   AdministrationMethod,
   InventoryItem,
@@ -73,6 +68,7 @@ export default function HealthPage() {
   const [selectedFlockId, setSelectedFlockId] = useState<string>("ALL");
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
   const [selectedType, setSelectedType] = useState<string>("ALL");
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // Modale Nouveau Soin
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -112,60 +108,11 @@ export default function HealthPage() {
   const [completeDeductStock, setCompleteDeductStock] = useState(true);
   const [submittingComplete, setSubmittingComplete] = useState(false);
 
-  // Suggestions rapides pour le formulaire
-  const PRESET_TREATMENTS = [
-    {
-      title: "Vaccin Gumboro 1ère dose (IBD)",
-      type: "VACCINATION" as HealthTreatmentType,
-      method: "DRINKING_WATER" as AdministrationMethod,
-      age: 7,
-    },
-    {
-      title: "Vaccin Newcastle (HB1 / Clone 30)",
-      type: "VACCINATION" as HealthTreatmentType,
-      method: "OCULAR_NASAL" as AdministrationMethod,
-      age: 10,
-    },
-    {
-      title: "Vaccin Gumboro 2ème dose (rappel)",
-      type: "VACCINATION" as HealthTreatmentType,
-      method: "DRINKING_WATER" as AdministrationMethod,
-      age: 14,
-    },
-    {
-      title: "Traitement préventif Anticoccidien",
-      type: "TREATMENT" as HealthTreatmentType,
-      method: "DRINKING_WATER" as AdministrationMethod,
-      age: 18,
-    },
-    {
-      title: "Vaccin Newcastle (LaSota)",
-      type: "VACCINATION" as HealthTreatmentType,
-      method: "DRINKING_WATER" as AdministrationMethod,
-      age: 21,
-    },
-    {
-      title: "Vermifugation / Déparasitage interne",
-      type: "DEWORMING" as HealthTreatmentType,
-      method: "DRINKING_WATER" as AdministrationMethod,
-      age: 28,
-    },
-    {
-      title: "Solution réhydratante & Anti-stress",
-      type: "VITAMIN" as HealthTreatmentType,
-      method: "DRINKING_WATER" as AdministrationMethod,
-      age: 1,
-    },
-  ];
-
-  useEffect(() => {
-    if (activeFarm?.id && canViewHealth) {
-      loadData();
+  const loadData = useCallback(async () => {
+    if (!activeFarm?.id || !canViewHealth) {
+      setIsLoading(false);
+      return;
     }
-  }, [activeFarm?.id, selectedFlockId, selectedStatus, canViewHealth]);
-
-  async function loadData() {
-    if (!activeFarm?.id || !canViewHealth) return;
     setIsLoading(true);
     setLoadError(false);
     try {
@@ -195,7 +142,12 @@ export default function HealthPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [activeFarm, canViewHealth, canViewFlocks, canViewInventory, selectedFlockId, selectedStatus, createFlockId]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadData(), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadData]);
 
   function handleOpenCreateModal() {
     setCreateTitle("");
@@ -212,20 +164,6 @@ export default function HealthPage() {
       setCreateFlockId(flocks[0].id);
     }
     setCreateModalOpen(true);
-  }
-
-  function applyPreset(preset: typeof PRESET_TREATMENTS[0]) {
-    setCreateTitle(preset.title);
-    setCreateType(preset.type);
-    setCreateMethod(preset.method);
-    setCreateTargetAgeDays(preset.age);
-
-    const flock = flocks.find((f) => f.id === createFlockId);
-    if (flock?.startDate) {
-      const start = new Date(flock.startDate);
-      start.setDate(start.getDate() + Math.max(0, preset.age - (flock.initialQuantity ? 1 : 1)));
-      setCreateScheduledDate(start.toISOString().split("T")[0]);
-    }
   }
 
   async function handleCreateTreatment(e: React.FormEvent) {
@@ -361,6 +299,7 @@ export default function HealthPage() {
   // Calculs synthétiques
   const completedCount = treatments.filter((t) => t.status === "COMPLETED").length;
   const totalCost = treatments.reduce((acc, t) => acc + (t.costFcfa || 0), 0);
+  const activeFilterCount = [selectedStatus !== "ALL", selectedFlockId !== "ALL", selectedType !== "ALL"].filter(Boolean).length;
 
   if (!hasModule("health")) {
     return (
@@ -390,6 +329,8 @@ export default function HealthPage() {
         {/* En-tête mobile natif */}
         <PageHeader
           title="Santé & Soins"
+          mobileTitle="Santé"
+          inlineOnMobile
           subtitle={loadError ? "Données momentanément indisponibles" : `${meta.totalItems} soin(s) planifié(s)`}
           icon={<HeartPulse className="h-4 w-4 text-accent" />}
           actions={
@@ -436,79 +377,84 @@ export default function HealthPage() {
           />
         </div>}
 
-        {/* Filtres Hors Tableau (Style Vraie App Mobile) */}
-        {!loadError && <div className="space-y-2">
-          {/* Rangée 1 : Statuts en pastilles tactiles défilantes */}
-          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 -mx-1 px-1 touch-pan-x">
-            {[
-              { label: `Tous (${meta.totalItems})`, value: "ALL" },
-              { label: `À venir (${meta.upcomingCount})`, value: "SCHEDULED" },
-              { label: `Administrés (${completedCount})`, value: "COMPLETED" },
-              ...(meta.overdueCount > 0 ? [{ label: `En retard (${meta.overdueCount})`, value: "MISSED" }] : []),
-            ].map((tab) => {
-              const isActive = selectedStatus === tab.value;
-              return (
-                <button
-                  key={tab.value}
-                  type="button"
-                  onClick={() => setSelectedStatus(tab.value)}
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold shrink-0 transition-all active:scale-95 cursor-pointer ${
-                    isActive
-                      ? "bg-primary text-white shadow-xs"
-                      : "bg-surface text-muted hover:text-foreground border border-border/80 hover:bg-surface-muted"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Rangée 2 : Sélecteur de Bande & Pastilles Catégories */}
-          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 -mx-1 px-1 touch-pan-x">
-            {/* Filtre Bande */}
-            {flocks.length > 1 && (
-              <select
-                value={selectedFlockId}
-                onChange={(e) => setSelectedFlockId(e.target.value)}
-                className="rounded-full border border-border/80 bg-surface px-3 py-1.5 text-xs font-semibold text-foreground focus:border-primary focus:outline-hidden transition-all shadow-2xs shrink-0 cursor-pointer"
+        {!loadError && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-semibold text-foreground">Interventions</p>
+              <button
+                type="button"
+                onClick={() => setFiltersOpen((open) => !open)}
+                aria-expanded={filtersOpen}
+                className="inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-xs font-semibold text-foreground hover:bg-surface-hover"
               >
-                <option value="ALL">Toutes les bandes</option>
-                {flocks.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.name} ({f.code || "Lot"})
-                  </option>
-                ))}
-              </select>
-            )}
+                <Filter className="h-3.5 w-3.5 text-primary" />
+                Filtres{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+              </button>
+            </div>
 
-            {/* Pastilles Catégories */}
-            {[
-              { label: "Toutes catégories", value: "ALL" },
-              { label: "Vaccinations", value: "VACCINATION" },
-              { label: "Traitements", value: "TREATMENT" },
-              { label: "Déparasitages", value: "DEWORMING" },
-              { label: "Vitamines", value: "VITAMIN" },
-              { label: "Désinfections", value: "DISINFECTION" },
-            ].map((cat) => {
-              const isActive = selectedType === cat.value;
-              return (
-                <button
-                  key={cat.value}
-                  type="button"
-                  onClick={() => setSelectedType(cat.value)}
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold shrink-0 transition-all active:scale-95 cursor-pointer ${
-                    isActive
-                      ? "bg-primary text-white shadow-xs"
-                      : "bg-surface text-muted hover:text-foreground border border-border/80 hover:bg-surface-muted"
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              );
-            })}
+            {filtersOpen && (
+              <div className="grid grid-cols-1 gap-2 rounded-xl border border-border bg-surface p-3 sm:grid-cols-3">
+                <label className="space-y-1 text-[11px] font-semibold text-muted">
+                  Statut
+                  <select
+                    value={selectedStatus}
+                    onChange={(event) => setSelectedStatus(event.target.value)}
+                    className="h-10 w-full rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground focus:border-primary focus:outline-hidden"
+                  >
+                    <option value="ALL">Tous les statuts</option>
+                    <option value="SCHEDULED">À venir</option>
+                    <option value="COMPLETED">Administrés</option>
+                    <option value="MISSED">En retard</option>
+                  </select>
+                </label>
+
+                {flocks.length > 1 && (
+                  <label className="space-y-1 text-[11px] font-semibold text-muted">
+                    Bande
+                    <select
+                      value={selectedFlockId}
+                      onChange={(event) => setSelectedFlockId(event.target.value)}
+                      className="h-10 w-full rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground focus:border-primary focus:outline-hidden"
+                    >
+                      <option value="ALL">Toutes les bandes</option>
+                      {flocks.map((flock) => <option key={flock.id} value={flock.id}>{flock.name}</option>)}
+                    </select>
+                  </label>
+                )}
+
+                <label className="space-y-1 text-[11px] font-semibold text-muted">
+                  Type de soin
+                  <select
+                    value={selectedType}
+                    onChange={(event) => setSelectedType(event.target.value)}
+                    className="h-10 w-full rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground focus:border-primary focus:outline-hidden"
+                  >
+                    <option value="ALL">Tous les types</option>
+                    <option value="VACCINATION">Vaccination</option>
+                    <option value="TREATMENT">Traitement</option>
+                    <option value="DEWORMING">Déparasitage</option>
+                    <option value="VITAMIN">Vitamine</option>
+                    <option value="DISINFECTION">Désinfection</option>
+                  </select>
+                </label>
+
+                {activeFilterCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedStatus("ALL");
+                      setSelectedFlockId("ALL");
+                      setSelectedType("ALL");
+                    }}
+                    className="justify-self-start text-xs font-semibold text-primary hover:underline sm:col-span-3"
+                  >
+                    Effacer les filtres
+                  </button>
+                )}
+              </div>
+            )}
           </div>
-        </div>}
+        )}
 
         {/* Liste des interventions */}
         {showLoading ? (
@@ -694,25 +640,6 @@ export default function HealthPage() {
         maxWidth="lg"
       >
         <form onSubmit={handleCreateTreatment} className="space-y-3.5">
-          {/* Puces de presets rapides */}
-          <div>
-            <label className="text-xs font-semibold text-muted block mb-1.5">
-              Modèles rapides :
-            </label>
-            <div className="flex flex-wrap gap-1.5">
-              {PRESET_TREATMENTS.map((p, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => applyPreset(p)}
-                  className="rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-medium text-foreground hover:border-primary hover:text-primary transition-colors"
-                >
-                  {p.title.split(":")[0]} (J{p.age})
-                </button>
-              ))}
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label className="text-xs font-semibold text-foreground block mb-1">
@@ -1004,7 +931,7 @@ export default function HealthPage() {
             <button
               type="submit"
               disabled={generatingProgram}
-              className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent/90 disabled:opacity-50 transition-colors shadow-sm"
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-50 transition-colors shadow-sm"
             >
               {generatingProgram ? "Génération..." : "Générer"}
             </button>
@@ -1142,16 +1069,6 @@ export default function HealthPage() {
         </form>
       </Modal>
 
-      {/* Floating Action Button (FAB) Mobile */}
-      <button
-        type="button"
-        onClick={handleOpenCreateModal}
-        aria-label="Planifier un soin"
-        className="fixed bottom-20 right-4 z-30 flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-xs font-bold text-white shadow-xl shadow-primary/40 border-2 border-surface active:scale-90 transition-all sm:hidden"
-      >
-        <Plus className="h-4 w-4" />
-        <span>Planifier soin</span>
-      </button>
     </Shell>
   );
 }

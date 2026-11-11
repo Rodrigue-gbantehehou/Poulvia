@@ -7,41 +7,41 @@ export function WhoIsItFor() {
       icon: <UserCheck className="h-6 w-6 text-primary" />,
       title: "Éleveurs & Propriétaires",
       description:
-        "Gardez le contrôle total sur votre cheptel, vos stocks d'aliments et vos recettes financières, même si vous n'êtes pas présent physiquement tous les jours sur le site.",
+        "Consultez le suivi des bandes, des stocks et des opérations enregistrées pour votre exploitation.",
     },
     {
       icon: <Users className="h-6 w-6 text-accent" />,
       title: "Gérants & Équipes d'exploitation",
       description:
-        "Finie la corvée des cahiers tachés ou égarés : notez les ramassages d'œufs et les sacs de provende en 30 secondes chrono depuis un simple smartphone.",
+        "Enregistrez les opérations confiées à votre équipe selon les accès accordés par le propriétaire.",
     },
     {
       icon: <Stethoscope className="h-6 w-6 text-rose-600" />,
       title: "Vétérinaires & Consultants Avicoles",
       description:
-        "Bénéficiez d'un accès dédié (rôle Consultant Vétérinaire) pour inspecter l'historique des courbes de ponte, des mortalités et des vaccinations sans déplacer de paperasse.",
+        "Un membre ayant un rôle adapté peut consulter les informations sanitaires auxquelles il a été autorisé à accéder.",
     },
     {
       icon: <Shield className="h-6 w-6 text-emerald-600" />,
       title: "Coopératives & Multi-sites",
       description:
-        "Gérez plusieurs fermes distinctes ou plusieurs poulaillers sous un seul compte sécurisé, avec isolation stricte des données et gestion fine des permissions d'accès.",
+        "Organisez le suivi des exploitations et bâtiments accessibles à votre compte, avec des permissions attribuées aux membres.",
     },
   ];
 
   return (
-    <section className="py-20 bg-surface-muted border-t border-border">
+    <section id="who-is-it-for" className="py-20 bg-surface-muted border-t border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary-soft px-3 py-1 text-xs font-bold text-primary">
             <span>Pour Qui ?</span>
           </div>
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-foreground">
-            Une solution adaptée à toute l'équipe avicole
+            Un suivi partagé selon les responsabilités
           </h2>
           <p className="text-sm sm:text-base text-muted leading-relaxed">
-            Du propriétaire au soigneur avicole, Poulvia simplifie le quotidien de chacun
-            avec des interfaces claires et adaptées à chaque responsabilité.
+            Les propriétaires et leurs collaborateurs retrouvent les informations utiles à leur rôle
+            dans l’exploitation.
           </p>
         </div>
 

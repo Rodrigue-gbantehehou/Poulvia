@@ -60,6 +60,20 @@ export interface PlansResponse {
   privatePlans: PublicPlan[];
 }
 
+export interface SubscriptionPayment {
+  id: string;
+  reference: string;
+  provider: string;
+  plan: string;
+  billingCycle: "MONTHLY" | "ANNUALLY";
+  amount: number;
+  currency: string;
+  status: "PENDING" | "PAID" | "FAILED";
+  checkoutUrl: string | null;
+  createdAt: string;
+  paidAt: string | null;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
@@ -152,5 +166,16 @@ export const subscriptionsApi = {
         body: JSON.stringify(payload),
       }
     );
+  },
+
+  async createCheckout(payload: { farmId: string; plan: string; billingCycle: "MONTHLY" | "ANNUALLY" }): Promise<SubscriptionPayment> {
+    return await apiRequest<SubscriptionPayment>("/subscriptions/checkout", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async getPayment(paymentId: string): Promise<SubscriptionPayment> {
+    return await apiRequest<SubscriptionPayment>(`/subscriptions/payments/${encodeURIComponent(paymentId)}`);
   },
 };

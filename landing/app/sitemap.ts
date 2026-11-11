@@ -4,44 +4,18 @@ export const dynamic = "force-static";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://poulvia.com";
-  const now = new Date();
-
   return [
     {
       url: baseUrl,
-      lastModified: now,
+      lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 1.0,
     },
     {
-      url: `${baseUrl}#features`,
-      lastModified: now,
+      url: `${baseUrl}/beta-android`,
+      lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.8,
-    },
-    {
-      url: `${baseUrl}#preview`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}#pricing`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}#faq`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}#contact`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.7,
     },
   ];
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useCallback, useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import {
   Plus,
@@ -12,15 +12,12 @@ import {
   AlertCircle,
   Sun,
   Moon,
-  Calendar,
-  RotateCcw,
-  Sparkles,
   Check,
+  RotateCcw,
 } from "lucide-react";
 import { Shell } from "@/components/layout/shell";
 import { StatCard } from "@/components/ui/stat-card";
 import { Modal } from "@/components/ui/modal";
-import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, ColumnDef } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
 import { useAuth } from "@/context/auth-context";
@@ -36,6 +33,8 @@ export default function EggsPage() {
   const { toast } = useToast();
   const canViewEggs = hasModule("eggs") &&
     (hasPermission("egg:read") || hasPermission("egg:view") || isOwner);
+  const canViewFlocks = hasModule("flocks") &&
+    (hasPermission("flock:read") || hasPermission("flock:view") || isOwner);
 
   const [productions, setProductions] = useState<EggProduction[]>([]);
   const [sessionFilter, setSessionFilter] = useState<"ALL" | EggSession>("ALL");
@@ -70,28 +69,6 @@ export default function EggsPage() {
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [editingEggId, setEditingEggId] = useState<string | null>(null);
-
-  // Quick helper for numeric adjustments
-  function addGoodEggs(amount: number) {
-    setGoodEggs((prev) => {
-      const current = typeof prev === "number" ? prev : parseInt(prev) || 0;
-      return Math.max(0, current + amount);
-    });
-  }
-
-  function addBrokenEggs(amount: number) {
-    setBrokenEggs((prev) => {
-      const current = typeof prev === "number" ? prev : parseInt(prev) || 0;
-      return Math.max(0, current + amount);
-    });
-  }
-
-  function addAbnormalEggs(amount: number) {
-    setAbnormalEggs((prev) => {
-      const current = typeof prev === "number" ? prev : parseInt(prev) || 0;
-      return Math.max(0, current + amount);
-    });
-  }
 
   function setToday() {
     setCollectionDate(new Date().toISOString().split("T")[0]);
@@ -131,13 +108,7 @@ export default function EggsPage() {
     setModalOpen(true);
   }
 
-  useEffect(() => {
-    if (activeFarm?.id && canViewEggs) {
-      loadData();
-    }
-  }, [activeFarm?.id, canViewEggs]);
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     if (!activeFarm?.id || !canViewEggs) {
       setIsLoading(false);
       return;
@@ -149,8 +120,6 @@ export default function EggsPage() {
         api.eggs.list({ farmId: activeFarm.id }),
         api.eggs.getSummary(activeFarm.id),
       ]);
-      const canViewFlocks = hasModule("flocks") &&
-        (hasPermission("flock:read") || hasPermission("flock:view") || isOwner);
       const flocksData = canViewFlocks
         ? await api.flocks.list({ farmId: activeFarm.id, type: "LAYER", status: "ACTIVE" }).catch(() => [])
         : [];
@@ -166,7 +135,12 @@ export default function EggsPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [activeFarm, canViewEggs, canViewFlocks, selectedFlockId]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadData(), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadData]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -211,7 +185,6 @@ export default function EggsPage() {
     }
   }
 
-  const trayCalc = calcEggTrays(Number(goodEggs));
   const selectedFlock = flocks.find((f) => f.id === selectedFlockId);
   const currentLayingRate =
     selectedFlock && selectedFlock.currentQuantity > 0
@@ -400,6 +373,8 @@ export default function EggsPage() {
       {/* En-tête mobile natif */}
       <PageHeader
         title="Production d'œufs"
+        mobileTitle="Production"
+        inlineOnMobile
         subtitle={loadError ? "Données momentanément indisponibles" : `${formatNumber(summary.totalEggsToday)} œuf(s) récolté(s) aujourd'hui`}
         icon={<Egg className="h-4 w-4 text-accent" />}
         actions={
@@ -407,7 +382,7 @@ export default function EggsPage() {
             <button
               type="button"
               onClick={openCreateModal}
-              className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 sm:px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-accent-hover active:scale-95 transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 sm:px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-primary-hover active:scale-95 transition-all cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>Ramassage</span>
@@ -449,11 +424,6 @@ export default function EggsPage() {
         />
       </div>}
 
-      {!loadError && <div className="mt-5 sm:mt-7">
-        <EggProductionChart points={summary.chart} isLoading={showLoading} error={summary.chartError} startDate={summary.chartStartDate} endDate={summary.chartEndDate} title="Évolution de la production" />
-      </div>}
-
-
       {/* Production History Table & Mobile Cards */}
       {!loadError && <div className="mt-6 sm:mt-8">
         <DataTable<EggProduction>
@@ -463,11 +433,13 @@ export default function EggsPage() {
           periodFilter={true}
           dateAccessor={(p) => p.date}
           searchable={true}
+          collapsibleFilters={true}
           searchPlaceholder="Rechercher par bande, session..."
           searchAccessor={(p) => `${p.flockName || ""} ${p.session} ${p.notes || ""}`}
           pageSize={15}
           initialSort={{ key: "date", direction: "desc" }}
           isLoading={showLoading}
+          activeFilterCount={sessionFilter !== "ALL" ? 1 : 0}
           secondaryFilter={
             <div className="flex items-center gap-1.5 shrink-0">
               {[
@@ -631,6 +603,10 @@ export default function EggsPage() {
         />
       </div>}
 
+      {!loadError && <div className="mt-5 sm:mt-7">
+        <EggProductionChart points={summary.chart} isLoading={showLoading} error={summary.chartError} startDate={summary.chartStartDate} endDate={summary.chartEndDate} title="Évolution de la production" />
+      </div>}
+
       {/* COLLECTION MODAL (Bottom Sheet sur smartphone) */}
       <Modal
         isOpen={modalOpen}
@@ -732,7 +708,7 @@ export default function EggsPage() {
                     onClick={() => setSession(s.id as EggSession)}
                     className={`flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-xs font-bold transition-all active:scale-95 ${
                       isSelected
-                        ? "border-accent bg-accent text-white shadow-xs"
+                        ? "border-primary bg-primary text-white shadow-xs"
                         : "border-border bg-surface text-muted hover:bg-surface-hover"
                     }`}
                   >
@@ -744,8 +720,8 @@ export default function EggsPage() {
             </div>
           </div>
 
-          {/* Bons Œufs avec pavé tactile de saisie rapide (+30, +60, +150, etc.) */}
-          <div className="rounded-2xl border border-success/30 bg-success/5 p-3.5 space-y-2.5">
+          {/* Saisie libre du nombre de bons œufs */}
+          <div className="space-y-2.5">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-success flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
@@ -775,66 +751,6 @@ export default function EggsPage() {
               className="w-full rounded-xl border border-success/40 bg-surface p-3 text-lg font-extrabold font-mono text-foreground focus:border-success focus:outline-hidden text-center"
             />
 
-            {/* Raccourcis tactiles pour les plateaux africains (30 œufs par plateau) */}
-            <div>
-              <div className="text-[10px] font-semibold text-muted mb-1">
-                Plateaux (30 œufs) :
-              </div>
-              <div className="grid grid-cols-4 gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => addGoodEggs(30)}
-                  className="rounded-lg border border-success/30 bg-surface py-1.5 text-xs font-bold text-success hover:bg-success/10 active:scale-95 transition-all"
-                >
-                  +1 pl. (30)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => addGoodEggs(60)}
-                  className="rounded-lg border border-success/30 bg-surface py-1.5 text-xs font-bold text-success hover:bg-success/10 active:scale-95 transition-all"
-                >
-                  +2 pl. (60)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => addGoodEggs(150)}
-                  className="rounded-lg border border-success/30 bg-surface py-1.5 text-xs font-bold text-success hover:bg-success/10 active:scale-95 transition-all"
-                >
-                  +5 pl. (150)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => addGoodEggs(300)}
-                  className="rounded-lg border border-success/30 bg-surface py-1.5 text-xs font-bold text-success hover:bg-success/10 active:scale-95 transition-all"
-                >
-                  +10 pl. (300)
-                </button>
-              </div>
-
-              <div className="grid grid-cols-3 gap-1.5 mt-1.5">
-                <button
-                  type="button"
-                  onClick={() => addGoodEggs(1)}
-                  className="rounded-lg border border-border bg-surface py-1 text-xs font-bold text-foreground hover:bg-surface-hover active:scale-95 transition-all"
-                >
-                  +1 œuf
-                </button>
-                <button
-                  type="button"
-                  onClick={() => addGoodEggs(5)}
-                  className="rounded-lg border border-border bg-surface py-1 text-xs font-bold text-foreground hover:bg-surface-hover active:scale-95 transition-all"
-                >
-                  +5 œufs
-                </button>
-                <button
-                  type="button"
-                  onClick={() => addGoodEggs(-1)}
-                  className="rounded-lg border border-border bg-surface py-1 text-xs font-bold text-muted hover:text-danger active:scale-95 transition-all"
-                >
-                  -1 œuf
-                </button>
-              </div>
-            </div>
           </div>
 
           {/* Déclassés : Cassés et Anormaux */}
@@ -844,22 +760,6 @@ export default function EggsPage() {
                 <label className="text-[11px] font-bold text-danger">
                   Cassés / Fêlés
                 </label>
-                <div className="flex gap-1">
-                  <button
-                    type="button"
-                    onClick={() => addBrokenEggs(1)}
-                    className="rounded bg-surface border border-danger/30 px-1.5 py-0.5 text-[10px] font-bold text-danger"
-                  >
-                    +1
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => addBrokenEggs(5)}
-                    className="rounded bg-surface border border-danger/30 px-1.5 py-0.5 text-[10px] font-bold text-danger"
-                  >
-                    +5
-                  </button>
-                </div>
               </div>
               <input
                 type="number"
@@ -880,22 +780,6 @@ export default function EggsPage() {
                 <label className="text-[11px] font-bold text-warning">
                   Anormaux / Petits
                 </label>
-                <div className="flex gap-1">
-                  <button
-                    type="button"
-                    onClick={() => addAbnormalEggs(1)}
-                    className="rounded bg-surface border border-warning/30 px-1.5 py-0.5 text-[10px] font-bold text-warning"
-                  >
-                    +1
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => addAbnormalEggs(5)}
-                    className="rounded bg-surface border border-warning/30 px-1.5 py-0.5 text-[10px] font-bold text-warning"
-                  >
-                    +5
-                  </button>
-                </div>
               </div>
               <input
                 type="number"
@@ -912,24 +796,9 @@ export default function EggsPage() {
             </div>
           </div>
 
-          {/* Live Plateaux & Rendement Display */}
-          <div className="rounded-xl bg-accent-soft p-3.5 text-xs text-accent border border-accent/20">
-            <div className="flex items-center justify-between font-bold">
-              <span>Équivalence :</span>
-              <span className="text-sm font-mono font-extrabold">{trayCalc.text}</span>
-            </div>
-            <div className="mt-1 flex items-center justify-between text-[11px] opacity-80">
-              <span>
-                Total :{" "}
-                {Number(goodEggs || 0) + Number(brokenEggs || 0) + Number(abnormalEggs || 0)} œufs
-              </span>
-              {currentLayingRate && (
-                <span className="font-semibold text-accent">
-                  Taux : {currentLayingRate}%
-                </span>
-              )}
-            </div>
-          </div>
+          {currentLayingRate && (
+            <p className="text-right text-[11px] text-muted">Taux de ponte estimé : {currentLayingRate}%</p>
+          )}
 
           {/* Notes */}
           <div>
@@ -967,7 +836,7 @@ export default function EggsPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-xl bg-accent px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-accent-hover active:scale-95 transition-all flex items-center gap-2"
+              className="rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-primary-hover active:scale-95 transition-all flex items-center gap-2"
             >
               {submitting ? (
                 "Enregistrement..."
@@ -984,18 +853,6 @@ export default function EggsPage() {
         </form>
       </Modal>
 
-      {/* Floating Action Button (FAB) Mobile — Toujours sous le pouce */}
-      {hasPermission("egg:create") && (
-        <button
-          type="button"
-          onClick={openCreateModal}
-          aria-label="Noter un ramassage"
-          className="fixed bottom-20 right-4 z-30 flex items-center gap-2 rounded-full bg-accent px-4 py-3 text-xs font-bold text-white shadow-xl shadow-accent/40 border-2 border-surface active:scale-90 transition-all sm:hidden"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Ramassage</span>
-        </button>
-      )}
     </Shell>
   );
 }
