@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppColors {
@@ -98,8 +98,9 @@ class AppRadius {
 
 class AppTheme {
   static ThemeData get lightTheme {
-    final baseTextTheme =
-        GoogleFonts.plusJakartaSansTextTheme(ThemeData.light().textTheme);
+    final baseTextTheme = ThemeData.light().textTheme.apply(
+      fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
+    );
 
     return ThemeData(
       useMaterial3: true,
@@ -208,8 +209,9 @@ class AppTheme {
   }
 
   static ThemeData get darkTheme {
-    final baseTextTheme =
-        GoogleFonts.plusJakartaSansTextTheme(ThemeData.dark().textTheme);
+    final baseTextTheme = ThemeData.dark().textTheme.apply(
+      fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
+    );
 
     return ThemeData(
       useMaterial3: true,

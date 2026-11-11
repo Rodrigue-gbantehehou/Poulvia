@@ -112,7 +112,7 @@ export async function apiRequest<T = unknown>(
           ) {
             // Redirection douce après un court délai pour laisser le toast s'afficher
             setTimeout(() => {
-              window.location.href = "/login?expired=1";
+              window.location.replace("/login?expired=1");
             }, 1200);
           }
         }
@@ -224,7 +224,7 @@ export async function apiRequestFull<T = unknown>(
             !window.location.pathname.startsWith("/login") &&
             !window.location.pathname.startsWith("/register")
           ) {
-            setTimeout(() => { window.location.href = "/login?expired=1"; }, 1200);
+            setTimeout(() => { window.location.replace("/login?expired=1"); }, 1200);
           }
         }
       }

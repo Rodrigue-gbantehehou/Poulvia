@@ -11,9 +11,6 @@ import {
   ArrowRight,
   TrendingUp,
   AlertCircle,
-  Boxes,
-  UserCheck,
-  Lock,
 } from "lucide-react";
 import { Shell } from "@/components/layout/shell";
 import { PageHeader } from "@/components/ui/page-header";

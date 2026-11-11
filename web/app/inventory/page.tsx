@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Package, AlertTriangle, AlertCircle, Filter, Eye, Download } from "lucide-react";
+import { Plus, Package, AlertTriangle, AlertCircle, Filter, Eye, Download, ArrowLeftRight } from "lucide-react";
 import { Shell } from "@/components/layout/shell";
 import { StatCard } from "@/components/ui/stat-card";
 import { Modal } from "@/components/ui/modal";
-import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, ColumnDef } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/ui/page-header";
 import { useAuth } from "@/context/auth-context";
@@ -23,10 +22,8 @@ import {
   formatInventoryUnit,
   getUnitLabel,
   getUnitShortLabel,
-  convertUnit,
   getCompatibleMovementUnits,
   getPracticalMeasurementHint,
-  ALL_UNITS_LIST,
 } from "@/lib/units";
 
 export default function InventoryPage() {
@@ -78,14 +75,12 @@ export default function InventoryPage() {
     setMovementModalOpen(true);
   }
 
-  useEffect(() => {
-    if (activeFarm?.id && hasModule("inventory")) {
-      loadInventory();
+  const canViewInventory = hasModule("inventory");
+  const loadInventory = useCallback(async () => {
+    if (!activeFarm?.id || !canViewInventory) {
+      setIsLoading(false);
+      return;
     }
-  }, [activeFarm?.id]);
-
-  async function loadInventory() {
-    if (!activeFarm?.id) return;
     try {
       const [itemsData, movementsData] = await Promise.all([
         api.inventory.listItems({ farmId: activeFarm.id }),
@@ -98,7 +93,12 @@ export default function InventoryPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [activeFarm, canViewInventory]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadInventory(), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadInventory]);
 
   const isBagUnit = unit === "BAG" || unit === "BAG_50KG" || unit === "BAG_25KG";
 
@@ -288,7 +288,17 @@ export default function InventoryPage() {
             <Eye className="h-3 w-3 text-muted" />
             <span>Détails</span>
           </Link>
-         
+          {hasPermission("inventory:movement") && (
+            <button
+              type="button"
+              onClick={() => openMovementModal(item)}
+              className="rounded-lg border border-border bg-surface px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-surface-hover transition-colors inline-flex items-center gap-1"
+              title="Enregistrer un mouvement de stock"
+            >
+              <ArrowLeftRight className="h-3 w-3" />
+              <span>Mouvement</span>
+            </button>
+          )}
         </div>
       ),
     },
@@ -597,6 +607,16 @@ export default function InventoryPage() {
                       >
                         {item.name}
                       </Link>
+                      {hasPermission("inventory:movement") && (
+                        <button
+                          type="button"
+                          onClick={() => openMovementModal(item)}
+                          className="rounded-lg border border-border bg-surface px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-surface-hover inline-flex items-center gap-1"
+                        >
+                          <ArrowLeftRight className="h-3 w-3" />
+                          <span>Mouvement</span>
+                        </button>
+                      )}
                       <div className="text-[10px] text-muted font-mono">{item.sku}</div>
                     </div>
                     <div className="text-right shrink-0">

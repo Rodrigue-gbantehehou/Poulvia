@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useCallback, useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import {
   Plus,
@@ -33,6 +33,8 @@ export default function EggsPage() {
   const { toast } = useToast();
   const canViewEggs = hasModule("eggs") &&
     (hasPermission("egg:read") || hasPermission("egg:view") || isOwner);
+  const canViewFlocks = hasModule("flocks") &&
+    (hasPermission("flock:read") || hasPermission("flock:view") || isOwner);
 
   const [productions, setProductions] = useState<EggProduction[]>([]);
   const [sessionFilter, setSessionFilter] = useState<"ALL" | EggSession>("ALL");
@@ -106,13 +108,7 @@ export default function EggsPage() {
     setModalOpen(true);
   }
 
-  useEffect(() => {
-    if (activeFarm?.id && canViewEggs) {
-      loadData();
-    }
-  }, [activeFarm?.id, canViewEggs]);
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     if (!activeFarm?.id || !canViewEggs) {
       setIsLoading(false);
       return;
@@ -124,8 +120,6 @@ export default function EggsPage() {
         api.eggs.list({ farmId: activeFarm.id }),
         api.eggs.getSummary(activeFarm.id),
       ]);
-      const canViewFlocks = hasModule("flocks") &&
-        (hasPermission("flock:read") || hasPermission("flock:view") || isOwner);
       const flocksData = canViewFlocks
         ? await api.flocks.list({ farmId: activeFarm.id, type: "LAYER", status: "ACTIVE" }).catch(() => [])
         : [];
@@ -141,7 +135,12 @@ export default function EggsPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [activeFarm, canViewEggs, canViewFlocks, selectedFlockId]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadData(), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadData]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

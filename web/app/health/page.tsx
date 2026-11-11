@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   HeartPulse,
   Plus,
@@ -108,14 +108,11 @@ export default function HealthPage() {
   const [completeDeductStock, setCompleteDeductStock] = useState(true);
   const [submittingComplete, setSubmittingComplete] = useState(false);
 
-  useEffect(() => {
-    if (activeFarm?.id && canViewHealth) {
-      loadData();
+  const loadData = useCallback(async () => {
+    if (!activeFarm?.id || !canViewHealth) {
+      setIsLoading(false);
+      return;
     }
-  }, [activeFarm?.id, selectedFlockId, selectedStatus, canViewHealth]);
-
-  async function loadData() {
-    if (!activeFarm?.id || !canViewHealth) return;
     setIsLoading(true);
     setLoadError(false);
     try {
@@ -145,7 +142,12 @@ export default function HealthPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [activeFarm, canViewHealth, canViewFlocks, canViewInventory, selectedFlockId, selectedStatus, createFlockId]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadData(), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadData]);
 
   function handleOpenCreateModal() {
     setCreateTitle("");

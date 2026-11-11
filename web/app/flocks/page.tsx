@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useCallback, useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { Plus, Bird, Calendar, Warehouse, ArrowRight, Eye, AlertCircle, Utensils } from "lucide-react";
 import { Shell } from "@/components/layout/shell";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
-import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, ColumnDef } from "@/components/ui/data-table";
 import { RecordFeedingModal } from "@/components/dashboard";
 import { useAuth } from "@/context/auth-context";
@@ -103,14 +102,11 @@ export default function FlocksPage() {
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [feedingModalOpen, setFeedingModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (activeFarm?.id && canViewFlocks) {
-      loadFlocks();
+  const loadFlocks = useCallback(async () => {
+    if (!activeFarm?.id || !canViewFlocks) {
+      setIsLoading(false);
+      return;
     }
-  }, [activeFarm?.id, canViewFlocks]);
-
-  async function loadFlocks() {
-    if (!activeFarm?.id || !canViewFlocks) return;
     setIsLoading(true);
     setLoadError(null);
     try {
@@ -129,7 +125,12 @@ export default function FlocksPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [activeFarm, canViewFlocks, canViewBuildings, canViewInventory]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadFlocks(), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadFlocks]);
 
   async function handleCreateFlock(e: React.FormEvent) {
     e.preventDefault();
@@ -283,7 +284,6 @@ export default function FlocksPage() {
       accessor: (f) => f.initialQuantity - f.currentQuantity,
       cell: (flock) => {
         const losses = flock.initialQuantity - flock.currentQuantity;
-        const mortalityRate = flock.initialQuantity > 0 ? (losses / flock.initialQuantity) * 100 : 0;
         return (
           <span className={`font-mono font-semibold ${losses > 0 ? "text-danger" : "text-muted"}`}>
             {losses}

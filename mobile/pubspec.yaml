@@ -5,10 +5,11 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.5.0
-  flutter: ">=3.24.0"
+  sdk: ^3.13.0
+  flutter: ">=3.47.0"
 
 dependencies:
+  material_ui: ^1.11.0
   flutter:
     sdk: flutter
 
@@ -23,7 +24,7 @@ dependencies:
   crypto: ^3.0.7
 
   # Formatting & Localizations
-  intl: ^0.19.0
+  intl: ^0.20.3
 
   # Unique Identifiers (ULID/UUID offline creation)
   uuid: ^4.5.1

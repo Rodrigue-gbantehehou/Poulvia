@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, Bird, Warehouse, AlertCircle } from "lucide-react";
+import { Plus, AlertCircle } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { api } from "@/lib/api-client";
 import { Building } from "@/lib/types";

@@ -7,14 +7,12 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  Calendar,
   ChevronLeft,
   ChevronRight,
   LayoutGrid,
   List,
   Filter,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TimePeriod, TIME_PERIOD_LABELS, isDateInPeriod } from "@/lib/utils";
 

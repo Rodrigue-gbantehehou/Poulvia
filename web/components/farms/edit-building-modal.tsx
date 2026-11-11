@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Save, Warehouse, Building2, Box, Archive, RotateCcw, Trash2, AlertTriangle, Sparkles } from "lucide-react";
+import { Save, Warehouse, Building2, Box, Archive, RotateCcw, Trash2, AlertTriangle } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { api } from "@/lib/api-client";
 import { useAuth } from "@/context/auth-context";

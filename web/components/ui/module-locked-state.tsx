@@ -15,7 +15,6 @@ interface ModuleLockedStateProps {
 export function ModuleLockedState({
   moduleName,
   description,
-  recommendedPlan = "Standard ou Pro",
 }: ModuleLockedStateProps) {
   const { activePlan } = useAuth();
   const [modalOpen, setModalOpen] = useState(false);

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useCallback, useEffect, useState, useMemo } from "react";
 import {
   ContactRound,
   Plus,
@@ -63,6 +63,7 @@ export default function ContactsPage() {
   // Permissions effectives du catalogue officiel Symfony (contact:view / contact:create)
   const canViewContacts = isOwner || hasPermission("contact:view");
   const canManageContacts = isOwner || hasPermission("contact:create");
+  const canLoadContacts = hasModule("contacts") && canViewContacts;
 
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [filterType, setFilterType] = useState<string>("ALL");
@@ -89,14 +90,11 @@ export default function ContactsPage() {
   const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    if (activeFarm?.id && hasModule("contacts") && canViewContacts) {
-      loadContacts();
+  const loadContacts = useCallback(async () => {
+    if (!activeFarm?.id || !canLoadContacts) {
+      setIsLoading(false);
+      return;
     }
-  }, [activeFarm?.id, canViewContacts]);
-
-  async function loadContacts() {
-    if (!activeFarm?.id || !canViewContacts) return;
     try {
       const data = await api.contacts.list({
         farmId: activeFarm.id,
@@ -108,7 +106,12 @@ export default function ContactsPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [activeFarm, canLoadContacts]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadContacts(), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadContacts]);
 
   function openCreateModal(defaultType: ContactType = "CLIENT") {
     if (!canManageContacts) {

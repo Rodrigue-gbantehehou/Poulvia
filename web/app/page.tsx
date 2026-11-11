@@ -1,25 +1,21 @@
 ﻿"use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Plus,
   Building2,
-  RefreshCw,
   Egg,
   Utensils,
   AlertTriangle,
   ArrowUpRight,
   ArrowDownRight,
   Bird,
-  Wallet,
   Clock,
   ChevronRight,
   Warehouse,
-  Package,
   HeartPulse,
   CheckCircle2,
-  Calendar,
 } from "lucide-react";
 import { Shell } from "@/components/layout/shell";
 import { CreateFarmModal } from "@/components/farms/create-farm-modal";
@@ -33,7 +29,6 @@ import {
 } from "@/components/dashboard";
 import { StatCard } from "@/components/ui/stat-card";
 import { EggProductionChart } from "@/components/dashboard/egg-production-chart";
-import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/context/auth-context";
 import { api } from "@/lib/api-client";
 import {
@@ -43,7 +38,7 @@ import {
   Transaction,
   InventoryItem,
 } from "@/lib/types";
-import { formatFcfa, formatNumber, formatPercent, formatDate, cn, localDateString } from "@/lib/utils";
+import { formatFcfa, formatNumber, formatDate, cn, localDateString } from "@/lib/utils";
 
 export default function DashboardPage() {
   const { activeFarm, hasPermission, hasModule, activePlan, isOwner } = useAuth();
@@ -89,11 +84,10 @@ export default function DashboardPage() {
     setFinanceModalOpen(true);
   }
 
-  useEffect(() => {
-    if (activeFarm?.id) {
-      loadDashboardData();
-    }
-  }, [activeFarm?.id]);
+  const canLoadFlocks = hasPermission("flock:read") || hasPermission("flock:view");
+  const canLoadEggs = hasPermission("egg:read") || hasPermission("egg:view");
+  const canLoadFinance = hasPermission("finance:read") || hasPermission("finance:view");
+  const canLoadInventory = hasPermission("inventory:read") || hasPermission("inventory:view");
 
   // Écouteur pour les actions rapides déclenchées depuis le BottomNav ou la barre d'action
   useEffect(() => {
@@ -129,23 +123,23 @@ export default function DashboardPage() {
     return () => window.removeEventListener("open-dashboard-action", handleAction);
   }, [flocks]);
 
-  async function loadDashboardData() {
+  const loadDashboardData = useCallback(async () => {
     try {
       const [kpiData, flocksData, eggsData, txData, invData] = await Promise.all([
         api.dashboard.getKpi(activeFarm?.id).catch((err) => {
           console.warn("KPIs non accessibles:", err);
           return null;
         }),
-        hasPermission("flock:read") || hasPermission("flock:view")
+        canLoadFlocks
           ? api.flocks.list({ farmId: activeFarm?.id, status: "ACTIVE" }).catch(() => [])
           : Promise.resolve([]),
-        hasPermission("egg:read") || hasPermission("egg:view")
+        canLoadEggs
           ? api.eggs.list({ farmId: activeFarm?.id }).catch(() => [])
           : Promise.resolve([]),
-        hasPermission("finance:read") || hasPermission("finance:view")
+        canLoadFinance
           ? api.finance.listTransactions({ farmId: activeFarm?.id }).catch(() => [])
           : Promise.resolve([]),
-        hasPermission("inventory:read") || hasPermission("inventory:view")
+        canLoadInventory
           ? api.inventory.listItems({ farmId: activeFarm?.id }).catch(() => [])
           : Promise.resolve([]),
       ]);
@@ -164,7 +158,12 @@ export default function DashboardPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [activeFarm, canLoadFlocks, canLoadEggs, canLoadFinance, canLoadInventory, selectedFlockId]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadDashboardData(), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadDashboardData]);
 
   // Calculs synthétiques
   const computedLiveBirds =
@@ -211,22 +210,6 @@ export default function DashboardPage() {
   const overdueHealthCount = kpi?.health?.overdueCount || 0;
   const pendingHealthCount = kpi?.health?.pendingCount || 0;
 
-  const todayIncome = recentTransactions
-    .filter((t) => t.type === "INCOME" && (todayStr ? t.date === todayStr : true))
-    .reduce((sum, t) => sum + (t.amountFcfa || 0), 0);
-
-  const totalIncome = recentTransactions
-    .filter((t) => t.type === "INCOME")
-    .reduce((sum, t) => sum + (t.amountFcfa || 0), 0);
-  const totalExpense = recentTransactions
-    .filter((t) => t.type === "EXPENSE")
-    .reduce((sum, t) => sum + (t.amountFcfa || 0), 0);
-
-  const computedNet =
-    kpi?.financialSummary?.netCashflowFcfa !== undefined && kpi.financialSummary.netCashflowFcfa !== 0
-      ? kpi.financialSummary.netCashflowFcfa
-      : totalIncome - totalExpense;
-
   // Inventaire d'aliments pour les stats opérationnelles
   const feedItems = inventoryItems.filter(
     (i) =>
@@ -243,16 +226,12 @@ export default function DashboardPage() {
 
   // Double vérification stricte : Abonnement de la ferme (Modules) & Droits du compte utilisateur (Permissions)
   const canViewEgg = hasModule("eggs") && !isBroiler && (hasPermission("egg:read") || hasPermission("egg:view") || isOwner);
-  const canCreateEgg = hasModule("eggs") && !isBroiler && (hasPermission("egg:create") || isOwner);
 
   const canFeed = (hasModule("inventory") || hasModule("feed_rationing")) && (hasPermission("inventory:movement") || hasPermission("flock:update") || isOwner);
-  const canRecordMovement = hasPermission("flock:movement") || hasPermission("flock:create") || hasPermission("flock:update") || isOwner;
 
   const canViewFinance = hasModule("finance") && (hasPermission("finance:read") || hasPermission("finance:view") || isOwner);
-  const canCreateFinance = hasModule("finance") && (hasPermission("finance:create") || isOwner);
 
   const canViewHealth = hasModule("health") && (hasPermission("health:view") || hasPermission("health:read") || isOwner);
-  const canManageHealth = hasModule("health") && (hasPermission("health:manage") || isOwner);
 
   const canViewInventory = hasModule("inventory") && (hasPermission("inventory:read") || hasPermission("inventory:view") || isOwner);
 

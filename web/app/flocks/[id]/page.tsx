@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, Suspense } from "react";
+import React, { useCallback, useEffect, useState, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -14,12 +14,8 @@ import {
   Wallet,
   RefreshCw,
   Edit2,
-  TrendingDown,
-  TrendingUp,
   Clock,
   CheckCircle2,
-  Users,
-  ShieldAlert,
   Printer,
   AlertCircle,
   Info,
@@ -50,10 +46,8 @@ import {
 import {
   formatDate,
   formatNumber,
-  formatPercent,
   formatFcfa,
   calcEggTrays,
-  formatEggTraysSummary,
 } from "@/lib/utils";
 import { FlockSummaryReportModal } from "@/components/flocks/flock-summary-report-modal";
 import { RecordFeedingModal } from "@/components/dashboard/record-feeding-modal";
@@ -126,13 +120,14 @@ function FlockDetailContent() {
   // Modale Bilan Imprimable (PDF)
   const [reportModalOpen, setReportModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (flockId) {
-      loadAllFlockData();
-    }
-  }, [flockId, activeFarm?.id]);
+  const canViewEggs = hasModule("eggs");
+  const canViewHealth = Boolean(activeFarm?.id && hasModule("health"));
+  const canViewInventory = Boolean(activeFarm?.id && hasModule("inventory"));
+  const canViewFinance = hasModule("finance") &&
+    (hasPermission("finance:read") || hasPermission("finance:view") || isOwner);
 
-  async function loadAllFlockData() {
+  const loadAllFlockData = useCallback(async () => {
+    if (!flockId) return;
     setIsLoading(true);
     try {
       const [flockData, buildingsData] = await Promise.all([
@@ -147,21 +142,21 @@ function FlockDetailContent() {
       const promises: Promise<unknown>[] = [];
 
       // Œufs si pondeuse ou mixte et module eggs inclus dans l'abonnement
-      if ((flockData.type === "LAYER" || flockData.type === "MIXED") && hasModule("eggs")) {
+      if ((flockData.type === "LAYER" || flockData.type === "MIXED") && canViewEggs) {
         promises.push(
           api.eggs.list({ flockId }).then((prods) => setEggProductions(prods)).catch(() => {})
         );
       }
 
       // Santé si module health inclus dans l'abonnement
-      if (activeFarm?.id && hasModule("health")) {
+      if (canViewHealth && activeFarm?.id) {
         promises.push(
           api.health.list(activeFarm.id, { flockId }).then((res) => setTreatments(res.data)).catch(() => {})
         );
       }
 
       // Alimentation & Consommations si module inventaire
-      if (activeFarm?.id && hasModule("inventory")) {
+      if (canViewInventory && activeFarm?.id) {
         promises.push(
           api.inventory.listFarmMovements(activeFarm.id, { flockId }).then((res) => {
             setFeedingMovements(res || []);
@@ -175,7 +170,7 @@ function FlockDetailContent() {
       }
 
       // Finances uniquement si module finance inclus dans l'abonnement et autorisé
-      if (hasModule("finance") && (hasPermission("finance:read") || hasPermission("finance:view") || isOwner)) {
+      if (canViewFinance) {
         promises.push(
           api.flocks.getTransactions(flockId).then((res) => {
             setTransactions(res.transactions);
@@ -190,7 +185,11 @@ function FlockDetailContent() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [flockId, activeFarm?.id, canViewEggs, canViewHealth, canViewInventory, canViewFinance]);
+
+  useEffect(() => {
+    void loadAllFlockData();
+  }, [loadAllFlockData]);
 
   // Action Mouvement
   async function handleAddMovement(e: React.FormEvent) {
@@ -1435,6 +1434,18 @@ function FlockDetailContent() {
           totalIncome={financialSummary.totalIncome}
           totalExpense={financialSummary.totalExpense}
           grossMargin={financialSummary.grossMargin}
+        />
+        <RecordFeedingModal
+          isOpen={feedingModalOpen}
+          onClose={() => setFeedingModalOpen(false)}
+          onSuccess={() => {
+            setFeedingModalOpen(false);
+            void loadAllFlockData();
+          }}
+          flocks={flock ? [flock] : []}
+          inventoryItems={inventoryItems}
+          activeFarmId={activeFarm?.id}
+          defaultFlockId={flockId}
         />
       </div>
     </Shell>

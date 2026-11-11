@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Warehouse,
@@ -45,14 +45,11 @@ export default function BuildingsPage() {
   const canViewBuildings = hasModule("buildings") &&
     (hasPermission("building:manage") || hasPermission("farm:view") || isOwner);
 
-  useEffect(() => {
-    if (activeFarm?.id && canViewBuildings) {
-      loadBuildings();
+  const loadBuildings = useCallback(async () => {
+    if (!activeFarm?.id || !canViewBuildings) {
+      setIsLoading(false);
+      return;
     }
-  }, [activeFarm?.id, canViewBuildings]);
-
-  async function loadBuildings() {
-    if (!activeFarm?.id || !canViewBuildings) return;
     setIsLoading(true);
     setLoadError(false);
     try {
@@ -64,7 +61,12 @@ export default function BuildingsPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [activeFarm, canViewBuildings]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadBuildings(), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadBuildings]);
 
   async function handleDelete(id: string) {
     if (!activeFarm?.id) return;

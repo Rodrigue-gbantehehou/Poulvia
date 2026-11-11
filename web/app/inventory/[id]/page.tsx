@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, Suspense } from "react";
+import React, { useCallback, useEffect, useState, useMemo, Suspense } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import {
   Package,
   ArrowLeft,
@@ -44,7 +44,6 @@ import {
   StockMovementType,
   InventoryCategory,
   Flock,
-  Contact,
 } from "@/lib/types";
 import { formatDate, formatNumber, formatFcfa } from "@/lib/utils";
 import {
@@ -114,15 +113,13 @@ const MOVEMENT_CONFIG: Record<
 
 function InventoryItemDetailContent() {
   const params = useParams();
-  const router = useRouter();
-  const { activeFarm, hasPermission, hasModule, isOwner } = useAuth();
+  const { activeFarm, hasPermission, hasModule } = useAuth();
   const { toast } = useToast();
   const itemId = params?.id as string;
 
   // Main state
   const [item, setItem] = useState<(InventoryItem & { movements?: StockMovement[] }) | null>(null);
   const [flocks, setFlocks] = useState<Flock[]>([]);
-  const [suppliers, setSuppliers] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"movements" | "details">("movements");
   const [movementFilter, setMovementFilter] = useState<string>("ALL");
@@ -167,19 +164,12 @@ function InventoryItemDetailContent() {
   const [submittingEdit, setSubmittingEdit] = useState(false);
 
   useEffect(() => {
-    if (itemId) {
-      loadItemData();
-    }
-  }, [itemId]);
-
-  useEffect(() => {
     if (activeFarm?.id) {
       api.flocks.list({ farmId: activeFarm.id, status: "ACTIVE" }).then(setFlocks).catch(() => {});
-      api.contacts.list({ farmId: activeFarm.id, type: "SUPPLIER" }).then(setSuppliers).catch(() => {});
     }
   }, [activeFarm?.id]);
 
-  async function loadItemData() {
+  const loadItemData = useCallback(async () => {
     setLoading(true);
     try {
       const data = await api.inventory.get(itemId);
@@ -198,7 +188,12 @@ function InventoryItemDetailContent() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [itemId]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadItemData(), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadItemData]);
 
   function openMovementModal(type: StockMovementType) {
     setMoveError(null);
