@@ -66,6 +66,12 @@ export default function DashboardPage() {
   const [financeTxType, setFinanceTxType] = useState<"INCOME" | "EXPENSE">("INCOME");
   const [selectedFlockId, setSelectedFlockId] = useState("");
   const [todayStr] = useState(() => localDateString());
+  const [today] = useState(() => new Date());
+  const trialEndsAt = activeFarm?.subscription?.trialEndsAt;
+  const isTrial = activeFarm?.subscription?.status?.toUpperCase() === "TRIAL";
+  const trialDaysLeft = trialEndsAt
+    ? Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - today.getTime()) / 86400000))
+    : null;
   const showDashboardLoading = isLoading && Boolean(activeFarm?.id);
 
   function openCreateEggModal() {
@@ -306,6 +312,21 @@ export default function DashboardPage() {
         </div>
       ) : (
         <div className="space-y-6 sm:space-y-7">
+          {isTrial && trialDaysLeft !== null && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Votre essai gratuit Poulvia est en cours</p>
+                <p className="mt-0.5 text-xs text-muted">
+                  {trialDaysLeft === 0
+                    ? "Votre période d’essai se termine aujourd’hui."
+                    : `Il vous reste ${trialDaysLeft} ${trialDaysLeft === 1 ? "jour" : "jours"} d’essai gratuit.`}
+                </p>
+              </div>
+              <Link href="/settings/subscription" className="text-xs font-semibold text-primary hover:underline">
+                Voir mon abonnement
+              </Link>
+            </div>
+          )}
           <div className="flex items-end justify-between gap-4 border-b border-border pb-4">
             <div>
               <p className="text-caption font-medium text-muted">TABLEAU DE BORD</p>
