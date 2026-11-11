@@ -186,10 +186,11 @@ function FlockDetailContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [flockId, activeFarm?.id, canViewEggs, canViewHealth, canViewInventory, canViewFinance]);
+  }, [flockId, activeFarm, canViewEggs, canViewHealth, canViewInventory, canViewFinance]);
 
   useEffect(() => {
-    void loadAllFlockData();
+    const timer = window.setTimeout(() => void loadAllFlockData(), 0);
+    return () => window.clearTimeout(timer);
   }, [loadAllFlockData]);
 
   // Action Mouvement
