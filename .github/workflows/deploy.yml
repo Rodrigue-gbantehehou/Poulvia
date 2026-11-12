@@ -79,7 +79,8 @@ jobs:
       - name: Deploy Landing via rsync SSH
         uses: burnett01/rsync-deployments@7.0.1
         with:
-          switches: -avzr --delete --exclude='.git'
+          # Le dossier de téléchargement de la bêta est géré manuellement sur le serveur.
+          switches: -avzr --delete --exclude='.git' --exclude='downloads/'
           path: landing/out/
           remote_path: ~/public_html/
           remote_host: ${{ secrets.O2SWITCH_SSH_HOST }}

@@ -160,10 +160,9 @@ export default function LandingPage() {
                 <p className="text-xs font-bold uppercase tracking-[.2em] text-accent">Poulvia sur mobile</p>
                 <h2 className="mt-4 max-w-xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Le suivi de votre ferme vous accompagne.</h2>
               </div>
-              <p className="max-w-xl text-sm leading-7 text-muted md:justify-self-end">La version Android est en bêta. Consultez sa page dédiée pour en savoir plus sur l’installation et vérifier la disponibilité du fichier.</p>
+              <p className="max-w-xl text-sm leading-7 text-muted md:justify-self-end">La version Android est en bêta et réservée aux testeurs invités. Les informations d’accès sont communiquées directement aux personnes qui participent au test.</p>
             </div>
             <div className="mt-8 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-              <Link href="/beta-android" className="inline-flex min-h-12 w-fit items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary-hover">Découvrir la bêta Android <ArrowRight className="h-4 w-4" /></Link>
               <div>
                 <p className="text-xs font-semibold text-muted">Les stores ne sont pas encore disponibles</p>
                 <div className="mt-3 flex flex-col gap-3 sm:flex-row">

@@ -16,6 +16,7 @@ export const metadata: Metadata = {
   title: "Bêta Android | Poulvia",
   description: "Découvrez les fonctions de Poulvia sur Android et les étapes pour installer la version bêta.",
   alternates: { canonical: "/beta-android" },
+  robots: { index: false, follow: false },
 };
 
 const apkUrl = "/downloads/poulvia-beta.apk";
@@ -69,7 +70,7 @@ export default function AndroidBetaPage() {
                 </a>
               </div>
               <p className="mt-4 max-w-xl text-xs leading-5 text-muted">
-                  Fichier APK officiel Poulvia · environ 60 Mo.
+                Fichier APK officiel Poulvia · environ 60 Mo. Le téléchargement demandera les identifiants communiqués aux testeurs.
               </p>
             </div>
 
