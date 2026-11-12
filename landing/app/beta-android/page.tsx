@@ -70,7 +70,7 @@ export default function AndroidBetaPage() {
                 </a>
               </div>
               <p className="mt-4 max-w-xl text-xs leading-5 text-muted">
-                Fichier APK officiel Poulvia · environ 60 Mo. Au téléchargement, saisissez l’identifiant « testeur » et le code reçu.
+                Fichier APK officiel Poulvia · environ 60 Mo. Le téléchargement démarre directement.
               </p>
             </div>
 
