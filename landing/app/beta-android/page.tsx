@@ -5,7 +5,6 @@ import {
   Bird,
   Download,
   Egg,
-  ExternalLink,
   Info,
   Smartphone,
   Stethoscope,
@@ -19,7 +18,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/beta-android" },
 };
 
-const apkUrl = process.env.NEXT_PUBLIC_ANDROID_APK_URL;
+const apkUrl = "/downloads/poulvia-beta.apk";
 
 const features = [
   {
@@ -40,7 +39,7 @@ const features = [
 ];
 
 const installSteps = [
-  ["01", "Téléchargez le fichier", "Utilisez le lien officiel Poulvia lorsque le fichier APK sera disponible."],
+  ["01", "Téléchargez le fichier", "Utilisez le bouton de téléchargement sur cette page."],
   ["02", "Ouvrez le fichier APK", "Retrouvez-le dans les téléchargements de votre téléphone Android."],
   ["03", "Confirmez l’installation", "Si Android le demande, autorisez temporairement l’installation depuis votre navigateur."],
 ];
@@ -58,27 +57,19 @@ export default function AndroidBetaPage() {
                 Poulvia vous accompagne aussi sur Android.
               </h1>
               <p className="mt-6 max-w-xl text-base leading-8 text-muted sm:text-lg">
-                La version mobile Poulvia est en préparation. Découvrez les fonctions prévues et les étapes d’installation avant de télécharger la bêta Android.
+                Testez Poulvia sur votre téléphone Android. Téléchargez la bêta et suivez les étapes ci-dessous pour l’installer.
               </p>
 
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-                {apkUrl ? (
-                  <a href={apkUrl} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover">
-                    <Download className="h-4 w-4" /> Télécharger la bêta Android <ExternalLink className="h-4 w-4" />
-                  </a>
-                ) : (
-                  <a href="#telechargement" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover">
-                    Voir l’état du téléchargement <ArrowRight className="h-4 w-4" />
-                  </a>
-                )}
+                <a href={apkUrl} download className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-hover">
+                  <Download className="h-4 w-4" /> Télécharger la bêta Android
+                </a>
                 <a href="#installation" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-5 text-sm font-semibold text-foreground transition hover:bg-surface-hover">
                   Comment l’installer ?
                 </a>
               </div>
               <p className="mt-4 max-w-xl text-xs leading-5 text-muted">
-                  {apkUrl
-                    ? "Le téléchargement est fourni depuis le lien officiel Poulvia."
-                    : "Le fichier APK n’est pas encore disponible. Cette page indiquera ici quand le téléchargement sera prêt."}
+                  Fichier APK officiel Poulvia · environ 60 Mo.
               </p>
             </div>
 
@@ -124,7 +115,7 @@ export default function AndroidBetaPage() {
             <div className="max-w-2xl">
               <p className="text-xs font-bold uppercase tracking-[.18em] text-accent">Installation</p>
               <h2 className="mt-3 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">Installer la bêta Android</h2>
-              <p className="mt-3 text-sm leading-7 text-muted">Quand le fichier APK sera disponible, vous pourrez l’installer directement sur votre appareil, en dehors de Google Play.</p>
+              <p className="mt-3 text-sm leading-7 text-muted">Installez le fichier APK directement sur votre appareil Android, en dehors de Google Play.</p>
             </div>
             <div className="mt-9 grid gap-7 sm:grid-cols-3 sm:gap-8">
               {installSteps.map(([number, title, text]) => (
@@ -146,22 +137,14 @@ export default function AndroidBetaPage() {
             <div className="flex flex-col gap-5 pb-8 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[.18em] text-accent">Téléchargement</p>
-                <h2 className="mt-2 text-xl font-semibold text-foreground">{apkUrl ? "La bêta est prête à installer." : "Le fichier APK n’est pas encore disponible."}</h2>
+                <h2 className="mt-2 text-xl font-semibold text-foreground">La bêta Android est disponible.</h2>
                 <p className="mt-2 max-w-xl text-sm leading-6 text-muted">
-                  {apkUrl
-                    ? "Téléchargez l’application depuis le lien officiel Poulvia, puis suivez les étapes d’installation ci-dessus."
-                    : "Le lien de téléchargement apparaîtra sur cette page dès que le fichier Android sera publié."}
+                  Téléchargez le fichier APK d’environ 60 Mo, puis suivez les étapes d’installation ci-dessus.
                 </p>
               </div>
-              {apkUrl ? (
-                <a href={apkUrl} className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary-hover">
-                  <Download className="h-4 w-4" /> Télécharger l’APK
-                </a>
-              ) : (
-                <span aria-disabled="true" className="inline-flex min-h-12 shrink-0 cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-primary/55 px-5 text-sm font-semibold text-white">
-                  <Download className="h-4 w-4" /> Téléchargement indisponible
-                </span>
-              )}
+              <a href={apkUrl} download className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary-hover">
+                <Download className="h-4 w-4" /> Télécharger l’APK
+              </a>
             </div>
 
             <div className="mt-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

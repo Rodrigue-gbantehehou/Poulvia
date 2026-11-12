@@ -88,23 +88,12 @@ export default function LandingPage() {
 
         <section id="suivi" className="scroll-mt-20 bg-surface py-20 md:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid gap-8 md:grid-cols-[1fr_.9fr] md:items-center">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[.2em] text-accent">Un outil pour vos opérations</p>
-                <h2 className="mt-4 max-w-xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Les informations clés de votre ferme, réunies.</h2>
-                <p className="mt-4 max-w-xl text-sm leading-7 text-muted">Chaque élevage a son rythme. Poulvia vous aide à consigner les opérations et à retrouver leur historique, depuis votre espace web ou votre téléphone.</p>
-              </div>
-              <div className="relative mx-auto aspect-[1.55/1] w-full max-w-[28rem] overflow-hidden rounded-2xl md:justify-self-end">
-                <Image
-                  src="/images/farmer-hero.jpg"
-                  alt="Éleveur utilisant Poulvia sur son téléphone dans son exploitation"
-                  fill
-                  sizes="(max-width: 768px) 100vw, 40vw"
-                  className="object-cover"
-                />
-              </div>
+            <div className="max-w-3xl">
+              <p className="text-xs font-bold uppercase tracking-[.2em] text-accent">Un outil pour vos opérations</p>
+              <h2 className="mt-4 max-w-xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Les informations clés de votre ferme, réunies.</h2>
+              <p className="mt-4 max-w-xl text-sm leading-7 text-muted">Chaque élevage a son rythme. Poulvia vous aide à consigner les opérations et à retrouver leur historique, depuis votre espace web ou votre téléphone.</p>
             </div>
-            <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {capabilities.map(({ icon: Icon, number, title, text, tag }) => (
                 <article key={number} className="group rounded-2xl border border-border bg-background p-6 transition hover:-translate-y-1 hover:border-primary/25 hover:shadow-lg">
                   <div className="flex items-start justify-between"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-soft text-primary"><Icon className="h-5 w-5" /></span><span className="font-mono text-xs text-muted/60">{number}</span></div>
@@ -143,10 +132,23 @@ export default function LandingPage() {
         </section>
 
         <section id="demarrage" className="scroll-mt-24 bg-primary py-16 text-white md:py-20">
-          <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[.85fr_1.15fr] lg:items-center lg:px-8">
-            <div><p className="text-xs font-bold uppercase tracking-[.2em] text-white/65">Pour commencer</p><h2 className="mt-4 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">Une mise en route simple, à votre rythme.</h2><p className="mt-4 max-w-md text-sm leading-7 text-white/75">Créez l’espace de votre exploitation, ajoutez vos bandes, puis consignez les opérations au fil des journées.</p></div>
-            <div className="grid gap-7 sm:grid-cols-3 sm:gap-5">
-              {steps.map(([number, title, text]) => <article key={number} className="border-l border-white/25 pl-4"><span className="font-mono text-xs font-semibold text-accent">{number}</span><h3 className="mt-3 text-sm font-semibold">{title}</h3><p className="mt-2 text-xs leading-5 text-white/70">{text}</p></article>)}
+          <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-[.9fr_1.1fr] lg:px-8">
+            <div className="relative aspect-[1.45/1] overflow-hidden rounded-2xl">
+              <Image
+                src="/images/poultry-farm.png"
+                alt="Poules pondeuses dans un bâtiment d’élevage avicole"
+                fill
+                sizes="(max-width: 1024px) 100vw, 42vw"
+                className="object-cover"
+              />
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[.2em] text-white/65">Pour commencer</p>
+              <h2 className="mt-4 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">Une mise en route simple, à votre rythme.</h2>
+              <p className="mt-4 max-w-xl text-sm leading-7 text-white/75">Créez l’espace de votre exploitation, ajoutez vos bandes, puis consignez les opérations au fil des journées.</p>
+              <div className="mt-8 grid gap-6 sm:grid-cols-3 sm:gap-5">
+                {steps.map(([number, title, text]) => <article key={number} className="border-l border-white/25 pl-4"><span className="font-mono text-xs font-semibold text-accent">{number}</span><h3 className="mt-3 text-sm font-semibold">{title}</h3><p className="mt-2 text-xs leading-5 text-white/70">{text}</p></article>)}
+              </div>
             </div>
           </div>
         </section>
